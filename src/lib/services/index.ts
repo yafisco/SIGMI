@@ -1,0 +1,9 @@
+export { collaborateursService } from './collaborateurs';
+export { projetsService } from './projets';
+export { documentsService } from './documents';
+export { clientsService } from './clients';
+export { opportunitiesService } from './opportunities';
+export { tasksService } from './tasks';
+export { contactsService } from './contacts';
+export { interactionsService } from './interactions';
+export { storageService } from './storage';
