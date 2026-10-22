@@ -1,307 +1,119 @@
-# SIGMI - Système d'Information GROUP MI
+# SIGMI, Système d'Information de GROUP MI
 
-<div align="center">
+SIGMI centralise les clients, opportunités, projets, collaborateurs, documents et factures des 6 pôles de GROUP MI (Ingénierie informatique, Génie civil et BTP, Agrobusiness, Trading international, Transition énergétique, Centre d'incubation et d'impulsion des entreprises), avec un espace de travail par profil (direction, commercial, trésorerie, pôle).
 
-![SIGMI Logo](public/logo-group-mi.png)
+Stack : Next.js 16 (App Router), React 19, TypeScript strict, Tailwind CSS 4, Supabase (PostgreSQL, Auth, Storage, RLS).
 
-**CRM Multi-Pôles Professionnel pour GROUP MI**
+> Dépôt privé, propriété de GROUP MI. Ne jamais y committer de données réelles de clients ni de clés secrètes.
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.3.6-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ecf8e?style=for-the-badge&logo=supabase)](https://supabase.com/)
+## Prérequis
 
-[![MVP Progress](https://img.shields.io/badge/MVP-90%25-success?style=for-the-badge)](./MVP_CHECKLIST.md)
-[![License](https://img.shields.io/badge/License-Private-red?style=for-the-badge)]()
+- Node.js 20.9 ou plus récent (exigé par Next.js 16)
+- npm
+- Un projet Supabase (un projet distinct par environnement : développement, préproduction, production)
+- Pour appliquer les migrations : le [CLI Supabase](https://supabase.com/docs/guides/local-development/cli/getting-started) (`npx supabase ...` suffit)
 
-</div>
+## Installation
 
----
-
-## 📖 Description
-
-SIGMI est un **Système d'Information Gestion Multi-pôles Intégré** développé pour GROUP MI. C'est une application CRM moderne et professionnelle qui centralise la gestion des clients, opportunités, projets, collaborateurs, contacts, documents, tâches et interactions pour les 6 pôles business de l'entreprise.
-
-### 🎯 Mission
-
-> Centraliser et structurer les informations dispersées de GROUP MI dans une interface intuitive, professionnelle et sécurisée.
-
-### 🏢 Les 6 Pôles Business
-
-1. **Ingénierie Informatique** - Solutions technologiques et logicielles
-2. **Génie Civil et BTP** - Construction et infrastructures
-3. **Agrobusiness** - Agriculture et agroalimentaire
-4. **Trading International** - Commerce international
-5. **Transition Énergétique** - Énergies renouvelables
-6. **Centre d'Incubation et d'Impulsion des Entreprises** - Accompagnement entrepreneurial
-
----
-
-## ✨ Fonctionnalités
-
-### 🏠 Page d'accueil
-- Design premium avec animations Framer Motion
-- Section héro avec call-to-action
-- Statistiques globales animées
-- Présentation des 6 pôles business
-- Responsive design
-
-### 👤 Authentification & Gestion des Utilisateurs
-- Inscription avec sélection de pôle
-- Connexion sécurisée via Supabase Auth
-- Rôles : Direction, Administrateur Système, Responsable de Pôle, Commercial, Gestionnaire de Projet
-- Redirection automatique vers le dashboard du pôle assigné
-- Profil collaborateur dans la base de données
-
-### 📊 Dashboard Global
-- Vue d'ensemble des KPIs (opportunités, pipeline, projets, collaborateurs)
-- Pipeline commercial avec étapes visuelles
-- Tâches urgentes
-- Activité récente
-- Performance par pôle (cliquable pour les administrateurs)
-
-### 🏢 Dashboard par Pôle
-- KPIs spécifiques au pôle
-- Opportunités, projets et valeur du pôle
-- Taux de conversion
-- Protection d'accès par pôle
-
-### 📋 Gestion Clients
-- Liste avec filtres (recherche, pôle)
-- Création, modification, suppression
-- Fiche détaillée 360°
-- Historique des interactions
-- Statistiques par client
-
-### 💼 Gestion Opportunités
-- Pipeline commercial (Nouveau → Qualifié → Proposition → Négociation → Gagné/Perdu)
-- Vue Kanban du pipeline
-- Gestion de la valeur et probabilité
-- Association avec clients et pôles
-- Fiche détaillée 360°
-
-### 🏗️ Gestion Projets
-- Liste avec filtres (recherche, pôle, statut)
-- Suivi du budget et de l'avancement
-- Association avec opportunités
-- Fiche détaillée 360°
-
-### 👥 Gestion Collaborateurs
-- Liste avec filtres (recherche, pôle, rôle)
-- Gestion des rôles et permissions
-- Assignation aux pôles
-- Statistiques des collaborateurs
-
-### 📞 Gestion Contacts
-- Liste avec filtres (recherche)
-- Association avec clients
-- Gestion des informations de contact
-- Fiche détaillée 360°
-
-### 📄 Gestion Documents
-- Liste avec filtres (recherche, type, statut)
-- Upload via Supabase Storage
-- Téléchargement de fichiers
-- Association avec entités
-- Fiche détaillée 360°
-
-### ✅ Gestion Tâches
-- Liste avec filtres (recherche, pôle, statut, priorité)
-- Indicateur de tâches en retard
-- Assignation aux collaborateurs
-- Association avec projets/entités
-- Fiche détaillée 360°
-
-### 💬 Gestion Interactions
-- Types : Email, Appel, Réunion, Visite, Autre
-- Association avec clients/opportunités/projets
-- Suivi des résultats et notes
-- Fiche détaillée 360°
-
-### 🔒 Permissions & Sécurité
-- Filtrage automatique par pôle pour les membres
-- Filtres UI masqués pour les non-administrateurs
-- Protection des dashboards par pôle
-- Détection des administrateurs
-- RLS Supabase (à finaliser pour sécurité maximale)
-
----
-
-## 🎨 Design & UX
-
-- **Identité visuelle GROUP MI** : Bleu professionnel (#1D4ED8) et Or élégant (#D4AF37)
-- **Animations** : Framer Motion pour des transitions fluides
-- **Glassmorphism** : Effets de transparence et flou modernes
-- **Cartes rotatives** : Design premium avec halos lumineux
-- **Responsive** : Optimisé pour mobile, tablette et desktop
-- **Accessibilité** : Contrastes élevés, navigation clavier
-
----
-
-## 🛠️ Stack Technique
-
-### Frontend
-- **Framework** : Next.js 16.3.6 (App Router)
-- **Langage** : TypeScript 5.0
-- **Styling** : Tailwind CSS 3.4
-- **Animations** : Framer Motion
-- **UI Components** : shadcn/ui
-- **Forms** : React Hook Form + Zod
-- **State Management** : React Context + Custom Hooks
-- **Icons** : Lucide React
-
-### Backend
-- **BaaS** : Supabase (PostgreSQL, Auth, Storage)
-- **Database** : PostgreSQL managé
-- **Authentication** : Supabase Auth
-- **File Storage** : Supabase Storage
-- **API** : Supabase PostgREST
-
-### Infrastructure
-- **Hosting** : Vercel (recommandé)
-- **Database** : Supabase Cloud
-- **CI/CD** : GitHub Actions (optionnel)
-
----
-
-## 📦 Installation
-
-### Prérequis
-
-- Node.js 18+ 
-- npm ou yarn
-- Un compte Supabase
-
-### Étapes d'installation
-
-1. **Cloner le repository**
 ```bash
-git clone https://github.com/yafisco/SIGMI.git
-cd SIGMI
-```
-
-2. **Installer les dépendances**
-```bash
+git clone <url-du-depot> sigmi
+cd sigmi
 npm install
+cp .env.example .env.local
 ```
 
-3. **Configurer les variables d'environnement**
+Renseigner ensuite `.env.local` (voir ci-dessous).
 
-Créer un fichier `.env.local` à la racine du projet :
+## Variables d'environnement
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=votre_url_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=votre_cle_anon_supabase
-```
+| Variable | Obligatoire | Où la trouver | Exposée au navigateur |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | oui | Dashboard Supabase > Project Settings > API | oui |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | oui | Même page : clé **publishable** (`sb_publishable_...`) ou ancienne clé `anon` | oui |
 
-4. **Configurer Supabase**
+Règles :
 
-Suivez les guides dans le dossier documentation :
-- [SETUP_DATABASE.md](./SETUP_DATABASE.md) - Configuration de la base de données
-- [SETUP_STORAGE.md](./SETUP_STORAGE.md) - Configuration du stockage
-- [SETUP_EMAIL_CONFIRMATION.md](./SETUP_EMAIL_CONFIRMATION.md) - Configuration des emails
+- Tout ce qui commence par `NEXT_PUBLIC_` est inclus dans le JavaScript envoyé au navigateur. Seule la clé publique y a sa place : la sécurité des données repose entièrement sur les politiques RLS.
+- La clé **secrète / `service_role`** contourne le RLS. Elle ne doit jamais apparaître dans `.env.local` sous un nom `NEXT_PUBLIC_*`, ni dans le code client, ni dans le dépôt. L'application n'en a pas besoin aujourd'hui.
+- `.env.local` est ignoré par git (`.gitignore` exclut `.env*` sauf `.env.example`).
+- Les variables sont lues **au moment du build** : elles doivent être définies sur la plateforme de déploiement avant de lancer `npm run build`, sinon le build échoue.
 
-5. **Lancer le serveur de développement**
+## Base de données et migrations
+
+Le schéma vit dans `supabase/migrations/`. Règle du projet : tout changement de schéma passe par un nouveau fichier de migration, jamais par une modification directe en production ni dans le SQL Editor.
+
+### Appliquer les migrations sur un projet Supabase
+
 ```bash
-npm run dev
+npx supabase login
+npx supabase link --project-ref <ref-du-projet>
+npx supabase db push
 ```
 
-L'application sera disponible sur [http://localhost:3000](http://localhost:3000)
+`db push` applique, dans l'ordre des noms de fichiers, les migrations pas encore enregistrées dans le projet distant.
 
----
+### État actuel (à lire avant un premier déploiement)
 
-## 📚 Documentation
+L'historique actuel **n'est pas rejouable tel quel** sur une base vide ; `db push` échouera :
 
-- [MVP_CHECKLIST.md](./MVP_CHECKLIST.md) - Checklist du MVP et progression
-- [CREATE_TEST_USER.md](./CREATE_TEST_USER.md) - Création d'un utilisateur de test
-- [DATABASE_SETUP_INSTRUCTIONS.md](./DATABASE_SETUP_INSTRUCTIONS.md) - Instructions détaillées pour la base de données
-- [PLAN_DE_TESTS.md](./PLAN_DE_TESTS.md) - Plan de tests
+- `001_initial_schema.sql` commence par des `DROP TABLE ... CASCADE` (destructif si rejoué sur une base contenant des données).
+- `002` et `003` visent des tables qui n'existent pas (`users`, `poles`, `client_poles`).
+- `004` crée des politiques sur une colonne `poles` absente de `clients`, `contacts`, `documents`, `tasks`, `interactions`.
+- Deux fichiers portent la même version `20240215_*` (conflit pour le CLI) et deux fichiers contiennent des `\'`, invalides en SQL.
+- Les politiques permissives (`USING (true)`) des premières migrations ne sont jamais supprimées, donc le RLS reste ouvert.
 
----
+Avant la préproduction, il faut consolider ces fichiers en une migration de référence propre (schéma actuel + RLS par rôle), puis repartir de là. Les données de démonstration doivent aller dans `supabase/seed.sql`, avec des données fictives uniquement.
 
-## 🚀 Déploiement
+### Storage
 
-### Vercel (Recommandé)
+Le bucket `documents` est créé par `005_storage_bucket.sql`. Il est actuellement public ; pour la préproduction il doit passer en privé avec des URL signées.
 
-1. Pusher le code sur GitHub
-2. Connecter votre compte Vercel
-3. Importer le repository depuis GitHub
-4. Configurer les variables d'environnement dans Vercel
-5. Déployer
+## Lancement
 
-### Autres plateformes
+```bash
+npm run dev     # serveur de développement sur http://localhost:3000
+npm run lint    # ESLint
+npm run build   # build de production (vérifie aussi les types)
+npm run start   # sert le build de production
+```
 
-Le projet peut être déployé sur n'importe quelle plateforme supportant Next.js :
-- Netlify
-- Railway
-- Render
-- AWS Amplify
+## Déploiement (préproduction)
 
----
+Recommandé : Vercel, avec un projet Supabase dédié à la préproduction.
 
-## 📊 Progression du MVP
+1. Importer le dépôt GitHub dans Vercel.
+2. Définir `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` du projet Supabase de préproduction (environnements Preview et Production selon le besoin).
+3. Brancher la branche `dev` sur l'environnement de préproduction, `main` sur la production.
+4. Dans Supabase > Authentication > URL Configuration, ajouter l'URL de préproduction aux Redirect URLs (callback `/auth/callback`).
 
-**Progression globale : 90%**
+## Organisation du code
 
-| Module | Progression | Status |
-|--------|------------|--------|
-| Authentification | 100% | ✅ Terminé |
-| Page d'accueil | 100% | ✅ Terminé |
-| Clients | 100% | ✅ Terminé |
-| Opportunités | 100% | ✅ Terminé |
-| Projets | 100% | ✅ Terminé |
-| Collaborateurs | 100% | ✅ Terminé |
-| Contacts | 100% | ✅ Terminé |
-| Documents | 100% | ✅ Terminé |
-| Tâches | 100% | ✅ Terminé |
-| Interactions | 100% | ✅ Terminé |
-| Pôles Business | 100% | ✅ Terminé |
-| Permissions | 80% | ⏳ En cours |
-| Design & UX | 100% | ✅ Terminé |
-| Infrastructure | 100% | ✅ Terminé |
+```
+src/
+  app/            Routes (App Router) : /clients, /opportunites, /projets, /taches,
+                  /collaborateurs, /documents, /contacts, /interactions, /pipeline,
+                  /poles/[pole], /commercial, /tresorerie, /dashboard, /login, /register
+  components/     Composants partagés (ui/ = composants de base style shadcn)
+  hooks/          useAuth, useWorkspace, useData, ...
+  lib/services/   Accès aux données Supabase, un service par entité
+  lib/supabase/   Client Supabase navigateur (@supabase/ssr)
+  proxy.ts        Rafraîchissement de la session Supabase (équivalent du middleware)
+  types/          Types TypeScript partagés
+supabase/migrations/  Migrations SQL
+```
 
-**Pour atteindre 100% du MVP** :
-- RLS Supabase (sécurité serveur)
+Les pages sont des Client Components qui interrogent Supabase directement depuis le navigateur : le RLS est la seule barrière de sécurité côté données.
 
----
+## Branches
 
-## 🔮 Roadmap Post-MVP
+- `main` : code stable, déployé en production.
+- `dev` : intégration et préproduction. Les fonctionnalités partent de `dev` et y reviennent par pull request.
 
-### Fonctionnalités futures
+## Documentation complémentaire
 
-- [ ] Pipeline Kanban Interactif (drag-and-drop)
-- [ ] Recherche Globale (multi-entités)
-- [ ] Export CSV des données
-- [ ] Dashboard Avancé (graphiques, tendances)
-- [ ] Notifications In-App
-- [ ] Tests Automatisés
-- [ ] Sécurité Avancée (2FA, logs d'audit)
-- [ ] Application Mobile (React Native)
+- [MVP_CHECKLIST.md](./MVP_CHECKLIST.md), [PLAN_DE_TESTS.md](./PLAN_DE_TESTS.md)
+- Guides de configuration Supabase : [SETUP_DATABASE.md](./SETUP_DATABASE.md), [SETUP_RLS.md](./SETUP_RLS.md), [SETUP_STORAGE.md](./SETUP_STORAGE.md), [SETUP_EMAIL_CONFIRMATION.md](./SETUP_EMAIL_CONFIRMATION.md)
 
----
+## Licence
 
-## 👥 Contributeurs
-
-Développé pour **GROUP MI** par l'équipe technique.
-
----
-
-## 📄 Licence
-
-**Propriétaire** - Tous droits réservés GROUP MI
-
----
-
-## 📞 Support
-
-Pour toute question ou problème, contactez l'équipe technique de GROUP MI.
-
----
-
-<div align="center">
-
-**Développé avec ❤️ pour GROUP MI**
-
-[⬆ Retour en haut](#sigmi---système-dinformation-group-mi)
-
-</div>
+Propriétaire, tous droits réservés GROUP MI.
