@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, User, Mail, Phone, Building2, Edit, Trash2, MessageSquare, Calendar, Plus, FileText, CheckCircle, AlertCircle } from 'lucide-react';
-import { useData } from '@/hooks/useData';
+import { useSingleData } from '@/hooks/useData';
 import { interactionsService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/AnimatedCard';
@@ -12,8 +12,9 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
+import type { LucideIcon } from 'lucide-react';
 
-const interactionIcons: Record<string, any> = {
+const interactionIcons: Record<string, LucideIcon> = {
   email: Mail,
   appel: Phone,
   réunion: MessageSquare,
@@ -42,8 +43,9 @@ export default function InteractionDetailPage() {
   const router = useRouter();
   const id = params.id as string;
 
-  const { data: interaction, loading, error, refresh } = useData({
-    fetchFn: () => interactionsService.getById(id),
+  const { data: interaction, loading, error, refresh } = useSingleData({
+    fetchFn: interactionsService.getById,
+    id,
   });
 
   const handleDelete = async () => {
@@ -244,7 +246,7 @@ export default function InteractionDetailPage() {
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-slate-400" />
                     <div>
-                      <p className="text-xs text-slate-500">Date d'interaction</p>
+                      <p className="text-xs text-slate-500">Date d&apos;interaction</p>
                       <p className="text-sm font-medium text-slate-900">
                         {interaction.interaction_date ? new Date(interaction.interaction_date).toLocaleDateString('fr-FR') : '-'}
                       </p>

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Building2, Users, FolderKanban, FileText, LayoutDashboard, LogOut, Users2, Briefcase, Kanban, MessageSquare, CheckSquare, Contact, Menu, X } from 'lucide-react';
+import { Building2, Users, FolderKanban, FileText, LayoutDashboard, LogOut, Users2, Briefcase, Kanban, MessageSquare, CheckSquare, Contact, Menu, X, Wallet, Receipt, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
 export default function GlobalHeader() {
@@ -20,6 +20,9 @@ export default function GlobalHeader() {
     { href: '/projets', label: 'Projets', icon: FolderKanban },
     { href: '/collaborateurs', label: 'Collaborateurs', icon: Users },
     { href: '/documents', label: 'Documents', icon: FileText },
+    { href: '/tresorerie', label: 'Trésorerie', icon: Wallet },
+    { href: '/tresorerie/factures', label: 'Factures', icon: Receipt },
+    { href: '/commercial', label: 'Dashboard Commercial', icon: TrendingUp },
   ];
 
   const isAuthPage = pathname === '/' || pathname === '/login' || pathname === '/register';

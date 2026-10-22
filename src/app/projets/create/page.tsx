@@ -5,16 +5,21 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FolderKanban, Calendar, DollarSign, Users, Save, Flag, Building2 } from 'lucide-react';
 import Link from 'next/link';
-import { projetsService } from '@/lib/services';
+import { collaborateursService, projetsService } from '@/lib/services';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import { useData } from '@/hooks/useData';
+import { POLE_OPTIONS, PROJECT_PRIORITY_OPTIONS, PROJECT_STATUS_OPTIONS } from '@/lib/constants';
+import type { Pole, ProjectPriority, ProjectStatus } from '@/types';
 
 export default function CreateProjetPage() {
   const router = useRouter();
+  const { data: collaborateurs } = useData({ fetchFn: () => collaborateursService.getAll() });
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
-    poles: [''],
-    statut: 'en_cours',
-    priorite: 'moyenne',
+    pole: '',
+    statut: 'planifié' as ProjectStatus,
+    priorite: 'moyenne' as ProjectPriority,
     date_debut: '',
     date_fin_prevue: '',
     budget_estime: '',
@@ -32,17 +37,17 @@ export default function CreateProjetPage() {
       await projetsService.create({
         nom: formData.nom,
         description: formData.description,
-        poles: formData.poles.filter(p => p !== '') as any,
-        statut: formData.statut as any,
-        priorite: formData.priorite as any,
-        date_debut: formData.date_debut || null,
-        date_fin_prevue: formData.date_fin_prevue || null,
-        budget_estime: formData.budget_estime ? parseFloat(formData.budget_estime) : null,
-        responsable_id: formData.responsable_id || null,
+        poles: formData.pole ? [formData.pole as Pole] : [],
+        statut: formData.statut,
+        priorite: formData.priorite,
+        date_debut: formData.date_debut || undefined,
+        date_fin_prevue: formData.date_fin_prevue || undefined,
+        budget_estime: formData.budget_estime ? parseFloat(formData.budget_estime) : undefined,
+        responsable_id: formData.responsable_id || undefined,
       });
       router.push('/projets');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création du projet');
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création du projet'));
       setLoading(false);
     }
   };
@@ -115,13 +120,16 @@ export default function CreateProjetPage() {
                     <Building2 className="w-4 h-4 text-[#1D4ED8]" />
                     Pôle(s)
                   </label>
-                  <input
-                    type="text"
-                    value={formData.poles[0]}
-                    onChange={(e) => setFormData({ ...formData, poles: [e.target.value] })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
-                    placeholder="Ingénierie informatique"
-                  />
+                  <select
+                    value={formData.pole}
+                    onChange={(e) => setFormData({ ...formData, pole: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                  >
+                    <option value="">Aucun pôle</option>
+                    {POLE_OPTIONS.filter((option) => option.value !== 'transversal').map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -132,14 +140,12 @@ export default function CreateProjetPage() {
                     </label>
                     <select
                       value={formData.statut}
-                      onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, statut: e.target.value as ProjectStatus })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
-                      <option value="en_cours">En cours</option>
-                      <option value="planifié">Planifié</option>
-                      <option value="terminé">Terminé</option>
-                      <option value="suspendu">Suspendu</option>
-                      <option value="annulé">Annulé</option>
+                      {PROJECT_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -150,13 +156,12 @@ export default function CreateProjetPage() {
                     </label>
                     <select
                       value={formData.priorite}
-                      onChange={(e) => setFormData({ ...formData, priorite: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, priorite: e.target.value as ProjectPriority })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
-                      <option value="basse">Basse</option>
-                      <option value="moyenne">Moyenne</option>
-                      <option value="haute">Haute</option>
-                      <option value="critique">Critique</option>
+                      {PROJECT_PRIORITY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -209,13 +214,16 @@ export default function CreateProjetPage() {
                       <Users className="w-4 h-4 text-[#1D4ED8]" />
                       Responsable
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.responsable_id}
                       onChange={(e) => setFormData({ ...formData, responsable_id: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
-                      placeholder="Nom du responsable"
-                    />
+                    >
+                      <option value="">Non assigné</option>
+                      {collaborateurs.map((collab) => (
+                        <option key={collab.id} value={collab.id}>{collab.prenom} {collab.nom}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

@@ -47,7 +47,7 @@ export interface CreateCollaborateurInput {
   poste: string;
   role: Role;
   poles: Pole[];
-  date_embauche: string;
+  date_embauche?: string;
   photo_url?: string;
 }
 
@@ -83,14 +83,14 @@ export interface CreateProjetInput {
   nom: string;
   description: string;
   poles: Pole[];
-  responsable_id: string;
-  equipe: string[];
+  responsable_id?: string;
+  equipe?: string[];
   statut: ProjectStatus;
   priorite: ProjectPriority;
-  date_debut: string;
-  date_fin_prevue: string;
+  date_debut?: string;
+  date_fin_prevue?: string;
   budget_estime?: number;
-  livrables: string[];
+  livrables?: string[];
 }
 
 export interface UpdateProjetInput extends Partial<CreateProjetInput> {
@@ -165,12 +165,15 @@ export type ClientStatut = 'prospect' | 'client' | 'inactif' | 'bloqué';
 export interface Client {
   id: string;
   nom: string;
+  structure?: string;
+  secteur_activite?: string;
+  interlocuteur?: string;
+  fonction?: string;
   email?: string;
   telephone?: string;
   adresse?: string;
   ville?: string;
   pays: string;
-  secteur_activite?: string;
   chiffre_affaires_annuel?: number;
   nombre_employes?: number;
   statut: ClientStatut;
@@ -182,12 +185,15 @@ export interface Client {
 
 export interface CreateClientInput {
   nom: string;
+  structure?: string;
+  secteur_activite?: string;
+  interlocuteur?: string;
+  fonction?: string;
   email?: string;
   telephone?: string;
   adresse?: string;
   ville?: string;
   pays?: string;
-  secteur_activite?: string;
   chiffre_affaires_annuel?: number;
   nombre_employes?: number;
   statut: ClientStatut;
@@ -204,6 +210,12 @@ export type OpportunityStage = 'nouveau' | 'qualifié' | 'proposition' | 'négoc
 export interface Opportunity {
   id: string;
   name: string;
+  reference?: string;
+  structure_concernee?: string;
+  secteur_activite?: string;
+  pole_groupe_mi?: string;
+  intitule_besoin?: string;
+  source_opportunite?: string;
   description?: string;
   client_id?: string;
   client_nom?: string;
@@ -222,6 +234,12 @@ export interface Opportunity {
 
 export interface CreateOpportunityInput {
   name: string;
+  reference?: string;
+  structure_concernee?: string;
+  secteur_activite?: string;
+  pole_groupe_mi?: string;
+  intitule_besoin?: string;
+  source_opportunite?: string;
   description?: string;
   client_id?: string;
   amount: number;
@@ -245,6 +263,8 @@ export type TaskRelatedType = 'client' | 'opportunity' | 'projet' | 'document' |
 export interface Task {
   id: string;
   title: string;
+  // Utilisé par le filtre par pôle, mais absent des migrations : colonne à créer
+  pole?: Pole;
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
@@ -278,14 +298,18 @@ export interface UpdateTaskInput extends Partial<CreateTaskInput> {
 }
 
 // === CONTACT ===
+export type ContactRole = 'directeur' | 'manager' | 'technique' | 'commercial' | 'autre';
+
 export interface Contact {
   id: string;
   nom: string;
   prenom: string;
   email?: string;
   telephone?: string;
+  role: ContactRole;
   poste?: string;
-  client_id?: string;
+  notes?: string;
+  client_id?: string | null;
   client_nom?: string;
   created_at: string;
   updated_at: string;
@@ -296,8 +320,10 @@ export interface CreateContactInput {
   prenom: string;
   email?: string;
   telephone?: string;
+  role?: ContactRole;
   poste?: string;
-  client_id?: string;
+  notes?: string;
+  client_id?: string | null;
 }
 
 export interface UpdateContactInput extends Partial<CreateContactInput> {

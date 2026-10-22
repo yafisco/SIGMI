@@ -2,42 +2,28 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(req: NextRequest) {
-  const res = NextResponse.next()
+  let res = NextResponse.next({ request: req })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
+        getAll() {
+          return req.cookies.getAll()
         },
-        set(name: string, value: string, options: any) {
-          res.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          res.cookies.delete({
-            name,
-            ...options,
-          })
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
+          res = NextResponse.next({ request: req })
+          cookiesToSet.forEach(({ name, value, options }) => res.cookies.set(name, value, options))
         },
       },
     }
   )
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  // Rafraîchir la session à chaque requête
-  if (session) {
-    res.cookies.set('sb-session', JSON.stringify(session))
-  } else {
-    res.cookies.delete('sb-session')
-  }
+  // Rafraîchir la session à chaque requête : getUser() valide le jeton auprès de Supabase
+  // et réécrit les cookies de session si besoin (via setAll ci-dessus).
+  await supabase.auth.getUser()
 
   return res
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Document } from '@/types';
 import { documentsService } from '@/lib/services';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export function useDocuments() {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -14,9 +15,9 @@ export function useDocuments() {
         const data = await documentsService.getAll();
         setDocuments(data);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erreur chargement documents:', err);
-        setError(err.message || 'Erreur lors du chargement des documents');
+        setError(errorMessage(err, 'Erreur lors du chargement des documents'));
       } finally {
         setLoading(false);
       }

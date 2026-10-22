@@ -7,14 +7,19 @@ import { ArrowLeft, FileText, Upload, Tag, Calendar, Save, FolderOpen, CheckCirc
 import Link from 'next/link';
 import { documentsService } from '@/lib/services';
 import { storageService } from '@/lib/services';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import { useAuth } from '@/hooks/useAuth';
+import { DOCUMENT_STATUS_OPTIONS, DOCUMENT_TYPE_OPTIONS } from '@/lib/constants';
+import type { DocumentStatus, DocumentType } from '@/types';
 
 export default function CreateDocumentPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
-    type: 'pdf',
-    statut: 'brouillon',
+    type: 'autre' as DocumentType,
+    statut: 'brouillon' as DocumentStatus,
     tags: '',
     file: null as File | null,
   });
@@ -35,33 +40,35 @@ export default function CreateDocumentPage() {
     setError('');
 
     try {
-      let fichier_url = null;
-      let fichier_nom = null;
-      let fichier_taille = null;
-
-      // Upload du fichier si présent
-      if (formData.file) {
-        setUploading(true);
-        const uploadResult = await storageService.uploadFile(formData.file);
-        fichier_url = uploadResult.url;
-        fichier_nom = formData.file.name;
-        fichier_taille = formData.file.size;
-        setUploading(false);
+      // fichier_url, fichier_nom et uploaded_by sont obligatoires en base
+      if (!formData.file) {
+        throw new Error('Veuillez sélectionner un fichier');
       }
+      if (!user) {
+        throw new Error('Vous devez être connecté pour ajouter un document');
+      }
+
+      setUploading(true);
+      const uploadResult = await storageService.uploadFile(formData.file);
+      const fichier_url = uploadResult.url;
+      const fichier_nom = formData.file.name;
+      const fichier_taille = formData.file.size;
+      setUploading(false);
 
       await documentsService.create({
         nom: formData.nom,
         description: formData.description,
-        type: formData.type as any,
-        statut: formData.statut as any,
+        type: formData.type,
+        statut: formData.statut,
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
         fichier_url,
         fichier_nom,
         fichier_taille,
+        uploaded_by: user.id,
       });
       router.push('/documents');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création du document');
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création du document'));
       setLoading(false);
       setUploading(false);
     }
@@ -138,14 +145,12 @@ export default function CreateDocumentPage() {
                     </label>
                     <select
                       value={formData.type}
-                      onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, type: e.target.value as DocumentType })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
-                      <option value="pdf">PDF</option>
-                      <option value="doc">Document Word</option>
-                      <option value="xls">Excel</option>
-                      <option value="img">Image</option>
-                      <option value="autre">Autre</option>
+                      {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -156,12 +161,12 @@ export default function CreateDocumentPage() {
                     </label>
                     <select
                       value={formData.statut}
-                      onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, statut: e.target.value as DocumentStatus })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
-                      <option value="brouillon">Brouillon</option>
-                      <option value="valide">Validé</option>
-                      <option value="archive">Archivé</option>
+                      {DOCUMENT_STATUS_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

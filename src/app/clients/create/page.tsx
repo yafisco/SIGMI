@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, MapPin, Mail, Phone, Save, Globe, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Mail, Phone, Save, Globe, TrendingUp, Users, User, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { useCreateClient } from '@/lib/api/useClients';
 import { clientSchema, ClientFormData } from '@/lib/schemas/clientSchema';
@@ -11,10 +12,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/PageHeader';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
-export default function CreateClientPage() {
+function CreateClientPageContent() {
   const router = useRouter();
+  const { workspace } = useWorkspace();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') || '';
   const createClient = useCreateClient();
+
+  const getBackLink = () => {
+    if (from === 'commercial') return '/commercial';
+    if (from === 'tresorerie') return '/tresorerie';
+    if (workspace === 'commercial') return '/commercial';
+    if (workspace === 'tresorerie') return '/tresorerie';
+    return '/clients';
+  };
 
   const {
     register,
@@ -24,12 +37,15 @@ export default function CreateClientPage() {
     resolver: zodResolver(clientSchema),
     defaultValues: {
       nom: '',
+      structure: '',
+      secteur_activite: '',
+      interlocuteur: '',
+      fonction: '',
       email: '',
       telephone: '',
       adresse: '',
       ville: '',
       pays: 'Sénégal',
-      secteur_activite: '',
       chiffre_affaires_annuel: undefined,
       nombre_employes: undefined,
       statut: 'prospect',
@@ -40,19 +56,22 @@ export default function CreateClientPage() {
   const onSubmit = async (data: ClientFormData) => {
     try {
       await createClient.mutateAsync({
-        nom: data.nom,
+        nom: data.structure,
+        structure: data.structure || undefined,
+        secteur_activite: data.secteur_activite || undefined,
+        interlocuteur: data.interlocuteur || undefined,
+        fonction: data.fonction || undefined,
         email: data.email || undefined,
         telephone: data.telephone || undefined,
         adresse: data.adresse || undefined,
         ville: data.ville || undefined,
         pays: data.pays,
-        secteur_activite: data.secteur_activite || undefined,
         chiffre_affaires_annuel: data.chiffre_affaires_annuel,
         nombre_employes: data.nombre_employes,
         statut: data.statut,
         assigned_to: data.assigned_to || undefined,
       });
-      router.push('/clients');
+      router.push(getBackLink());
     } catch (err) {
       console.error('Erreur lors de la création du client:', err);
     }
@@ -63,7 +82,7 @@ export default function CreateClientPage() {
       <PageHeader
         title="Nouveau client"
         description="Ajoutez un nouveau client à votre portefeuille"
-        backHref="/clients"
+        backHref={getBackLink()}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -103,15 +122,15 @@ export default function CreateClientPage() {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-[#1D4ED8]" />
-                      Nom de l'entreprise *
+                      Structure (Nom de l&apos;entreprise) *
                     </label>
                     <input
-                      {...register('nom')}
+                      {...register('structure')}
                       type="text"
                       className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#1D4ED8] focus:ring-2 focus:ring-[#1D4ED8]/20 transition-all duration-300"
                       placeholder="Ex: BCEAO"
                     />
-                    {errors.nom && <p className="text-red-600 text-sm mt-1">{errors.nom.message}</p>}
+                    {errors.structure && <p className="text-red-600 text-sm mt-1">{errors.structure.message}</p>}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -206,13 +225,13 @@ export default function CreateClientPage() {
                   </motion.div>
                   <div>
                     <h2 className="text-xl font-bold text-slate-900">Informations supplémentaires</h2>
-                    <p className="text-slate-500 text-sm">Détails sur l'activité du client</p>
+                    <p className="text-slate-500 text-sm">Détails sur l&apos;activité du client</p>
                   </div>
                 </div>
                 
                 <div className="space-y-5 relative">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Secteur d'activité</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Secteur d&apos;activité</label>
                     <input
                       {...register('secteur_activite')}
                       type="text"
@@ -223,7 +242,35 @@ export default function CreateClientPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Chiffre d'affaires annuel (FCFA)</label>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                        <User className="w-4 h-4 text-[#D4AF37]" />
+                        Interlocuteur
+                      </label>
+                      <input
+                        {...register('interlocuteur')}
+                        type="text"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
+                        placeholder="Nom du contact principal"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-[#D4AF37]" />
+                        Fonction
+                      </label>
+                      <input
+                        {...register('fonction')}
+                        type="text"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
+                        placeholder="Ex: Directeur, Responsable achats"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Chiffre d&apos;affaires annuel (FCFA)</label>
                       <input
                         {...register('chiffre_affaires_annuel', { valueAsNumber: true })}
                         type="number"
@@ -235,7 +282,7 @@ export default function CreateClientPage() {
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <Users className="w-4 h-4 text-[#D4AF37]" />
-                        Nombre d'employés
+                        Nombre d&apos;employés
                       </label>
                       <input
                         {...register('nombre_employes', { valueAsNumber: true })}
@@ -271,7 +318,7 @@ export default function CreateClientPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex gap-4"
             >
-              <Link href="/clients" className="flex-1">
+              <Link href={getBackLink()} className="flex-1">
                 <Button
                   type="button"
                   variant="outline"
@@ -309,5 +356,14 @@ export default function CreateClientPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams exige une frontière <Suspense> pour le prerender
+export default function CreateClientPage() {
+  return (
+    <Suspense>
+      <CreateClientPageContent />
+    </Suspense>
   );
 }

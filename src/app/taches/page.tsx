@@ -16,6 +16,7 @@ import { useData } from '@/hooks/useData';
 import { tasksService } from '@/lib/services';
 import Swal from 'sweetalert2';
 import { usePoleFilter } from '@/hooks/usePoleFilter';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function TachesPage() {
   const { pole: userPole, shouldFilter, user } = usePoleFilter();
@@ -55,10 +56,10 @@ export default function TachesPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression de la tâche',
+          text: errorMessage(err, 'Erreur lors de la suppression de la tâche'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,

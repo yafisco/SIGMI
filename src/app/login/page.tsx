@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Building2, Eye, EyeOff, Loader2, ArrowRight, Users, FolderKanban, FileText, CheckCircle2, Shield, Zap, Clock, BarChart3, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -16,21 +16,18 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
-  const [successMessage, setSuccessMessage] = useState('');
+  // Message dérivé de l'URL (pas d'état ni d'effet nécessaire)
+  const successMessage =
+    searchParams.get('confirmed') === 'true'
+      ? 'Votre e-mail a été confirmé avec succès ! Vous pouvez maintenant vous connecter.'
+      : searchParams.get('registered') === 'true'
+        ? 'Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.'
+        : '';
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-
-  useEffect(() => {
-    if (searchParams.get('registered') === 'true') {
-      setSuccessMessage('Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.');
-    }
-    if (searchParams.get('confirmed') === 'true') {
-      setSuccessMessage('Votre e-mail a été confirmé avec succès ! Vous pouvez maintenant vous connecter.');
-    }
-  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,14 +50,12 @@ export default function LoginPage() {
       setIsLoading(true);
 
       try {
-        console.log('Tentative de connexion avec:', email);
 
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        console.log('Réponse auth:', { data, error });
 
         if (error) {
           console.error("Erreur d'authentification:", error);
@@ -79,16 +74,14 @@ export default function LoginPage() {
         }
 
         if (data.user) {
-          console.log('Utilisateur connecté:', data.user.id);
 
-          // Récupérer les informations utilisateur supplémentaires
+          // Récupérer les informations utilisateur supplémentaires par ID
           const { data: userData, error: userError } = await supabase
             .from('collaborateurs')
             .select('*')
-            .eq('email', email)
-            .single();
+            .eq('id', data.user.id)
+            .maybeSingle(); // maybeSingle au lieu de single pour éviter l'erreur si pas trouvé
 
-          console.log('Données utilisateur:', { userData, userError });
 
           if (userError) {
             console.error('Erreur lors de la récupération des données utilisateur:', userError);
@@ -97,14 +90,34 @@ export default function LoginPage() {
             return;
           }
 
-          // Rediriger vers le dashboard du pôle de l'utilisateur
-          if (userData && userData.poles && userData.poles.length > 0) {
-            const firstPole = userData.poles[0];
-            console.log('Redirection vers le dashboard du pôle:', firstPole);
-            router.push(`/poles/${encodeURIComponent(firstPole)}`);
+          // Rediriger selon la fonction de l'utilisateur
+          if (userData) {
+            const poste = userData.poste?.toLowerCase() || '';
+            const role = userData.role?.toLowerCase() || '';
+
+            // Comptable → Trésorerie
+            if (poste.includes('comptable') || role.includes('comptable')) {
+              router.push('/tresorerie');
+            }
+            // Commercial → Dashboard Commercial
+            else if (poste.includes('commercial') || role.includes('commercial')) {
+              router.push('/commercial');
+            }
+            // Direction Générale → Dashboard Global
+            else if (poste.includes('direction') || role.includes('direction')) {
+              router.push('/dashboard');
+            }
+            // Autres → Dashboard du pôle
+            else if (userData.poles && userData.poles.length > 0) {
+              const firstPole = userData.poles[0];
+              router.push(`/poles/${encodeURIComponent(firstPole)}`);
+            }
+            // Fallback → Dashboard global
+            else {
+              router.push('/dashboard');
+            }
           } else {
-            // Si l'utilisateur n'a pas de pôle, rediriger vers le dashboard général
-            console.log('Redirection vers /dashboard (pas de pôle assigné)');
+            // Si l'utilisateur n'a pas de profil collaborateur, rediriger vers le dashboard général
             router.push('/dashboard');
           }
         }
@@ -316,7 +329,7 @@ export default function LoginPage() {
               href="/"
               className="text-xs sm:text-sm text-slate-600 hover:text-[#2563EB] transition-colors inline-flex items-center gap-1"
             >
-              ← Retour à l'accueil
+              ← Retour à l&apos;accueil
             </Link>
           </div>
         </div>
@@ -351,9 +364,9 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <h3 className="text-3xl font-bold text-white mb-4">Système d'Information Unifié</h3>
+            <h3 className="text-3xl font-bold text-white mb-4">Système d&apos;Information Unifié</h3>
             <p className="text-blue-100 text-lg mb-8">
-              Centralisez la gestion de vos 6 pôles d'activité dans une interface unifiée et performante.
+              Centralisez la gestion de vos 6 pôles d&apos;activité dans une interface unifiée et performante.
             </p>
 
             {/* Features */}
@@ -390,5 +403,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams exige une frontière <Suspense> pour le prerender
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageContent />
+    </Suspense>
   );
 }

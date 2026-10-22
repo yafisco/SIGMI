@@ -9,6 +9,16 @@ import { supabase } from '@/lib/supabase';
 import { POLE_OPTIONS } from '@/lib/constants';
 import { Pole } from '@/types';
 
+const FONCTION_OPTIONS = [
+  { value: 'direction générale', label: 'Direction Générale' },
+  { value: 'comptable', label: 'Comptable' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'responsable de pôle', label: 'Responsable de Pôle' },
+  { value: 'gestionnaire de projet', label: 'Gestionnaire de Projet' },
+  { value: 'assistant', label: 'Assistant' },
+  { value: 'autre', label: 'Autre' },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -17,7 +27,8 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    pole: '' as Pole | '',
+    pole: '' as Pole | 'transversal' | '',
+    fonction: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -29,6 +40,7 @@ export default function RegisterPage() {
     password?: string;
     confirmPassword?: string;
     pole?: string;
+    fonction?: string;
     general?: string;
   }>({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -51,6 +63,8 @@ export default function RegisterPage() {
       email?: string;
       password?: string;
       confirmPassword?: string;
+      pole?: string;
+      fonction?: string;
       general?: string;
     } = {};
 
@@ -84,13 +98,16 @@ export default function RegisterPage() {
       newErrors.pole = 'Le pôle est requis';
     }
 
+    if (!formData.fonction) {
+      newErrors.fonction = 'La fonction est requise';
+    }
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
 
       try {
-        console.log('Tentative d\'inscription avec:', formData.email);
 
         // 1. Créer l'utilisateur dans Supabase Auth SANS confirmation email
         const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -104,7 +121,6 @@ export default function RegisterPage() {
           },
         });
 
-        console.log('Réponse auth:', { authData, authError });
 
         if (authError) {
           console.error("Erreur d'inscription:", authError);
@@ -114,23 +130,30 @@ export default function RegisterPage() {
         }
 
         if (authData.user) {
-          console.log('Utilisateur créé:', authData.user.id);
 
-          // Créer directement le collaborateur avec le pôle sélectionné
+          // Préparer les données du collaborateur
+          const collaborateurData: Record<string, unknown> = {
+            id: authData.user.id,
+            nom: formData.nom,
+            prenom: formData.prenom,
+            email: formData.email,
+            telephone: '',
+            poste: formData.fonction,
+            role: formData.fonction === 'direction générale' ? 'direction' : formData.fonction === 'comptable' ? 'comptable' : 'commercial',
+            date_embauche: new Date().toISOString().split('T')[0],
+            actif: true,
+          };
+
+          // N'inclure poles que si un pôle est sélectionné et n'est pas vide
+          if (formData.pole && formData.pole !== 'transversal') {
+            collaborateurData.poles = [formData.pole];
+          }
+
+
+          // Créer le collaborateur
           const { error: collabError } = await supabase
             .from('collaborateurs')
-            .insert({
-              id: authData.user.id,
-              nom: formData.nom,
-              prenom: formData.prenom,
-              email: formData.email,
-              telephone: '',
-              poste: 'Nouveau collaborateur',
-              role: 'commercial',
-              poles: [formData.pole], // Utiliser le pôle sélectionné
-              date_embauche: new Date().toISOString().split('T')[0],
-              actif: true,
-            });
+            .insert(collaborateurData);
 
           if (collabError) {
             console.error('Erreur lors de la création du collaborateur:', collabError);
@@ -138,6 +161,7 @@ export default function RegisterPage() {
             setIsLoading(false);
             return;
           }
+
 
           // Afficher le message de succès
           setSuccessMessage('Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.');
@@ -166,7 +190,7 @@ export default function RegisterPage() {
           </div>
           <h1 className="text-xl font-bold text-white">SIGMI</h1>
         </div>
-        <p className="text-blue-100 text-sm">Système d'Information GROUP MI</p>
+        <p className="text-blue-100 text-sm">Système d&apos;Information GROUP MI</p>
       </div>
 
       {/* Left Column - Form */}
@@ -179,7 +203,7 @@ export default function RegisterPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">SIGMI</h1>
-              <p className="text-xs text-slate-500 -mt-1">Système d'Information GROUP MI</p>
+              <p className="text-xs text-slate-500 -mt-1">Système d&apos;Information GROUP MI</p>
             </div>
           </div>
 
@@ -277,13 +301,13 @@ export default function RegisterPage() {
             {/* Pole Field */}
             <div>
               <label htmlFor="pole" className="block text-sm font-medium text-slate-700 mb-2">
-                Pôle d'activité
+                Pôle d&apos;activité
               </label>
               <select
                 id="pole"
                 value={formData.pole}
                 onChange={(e) => {
-                  setFormData({ ...formData, pole: e.target.value as Pole });
+                  setFormData({ ...formData, pole: e.target.value as Pole | 'transversal' });
                   if (errors.pole) setErrors({ ...errors, pole: undefined });
                 }}
                 className={`w-full px-4 py-3 rounded-lg border bg-white transition-all duration-200 text-slate-900 ${
@@ -300,6 +324,34 @@ export default function RegisterPage() {
                 ))}
               </select>
               {errors.pole && <p className="mt-1 text-sm text-red-600">{errors.pole}</p>}
+            </div>
+
+            {/* Fonction Field */}
+            <div>
+              <label htmlFor="fonction" className="block text-sm font-medium text-slate-700 mb-2">
+                Fonction dans l&apos;entreprise *
+              </label>
+              <select
+                id="fonction"
+                value={formData.fonction}
+                onChange={(e) => {
+                  setFormData({ ...formData, fonction: e.target.value });
+                  if (errors.fonction) setErrors({ ...errors, fonction: undefined });
+                }}
+                className={`w-full px-4 py-3 rounded-lg border bg-white transition-all duration-200 text-slate-900 ${
+                  errors.fonction
+                    ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                    : 'border-slate-300 focus:ring-[#2563EB] focus:border-[#2563EB]'
+                } focus:outline-none focus:ring-2`}
+              >
+                <option value="">Sélectionnez votre fonction</option>
+                {FONCTION_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.fonction && <p className="mt-1 text-sm text-red-600">{errors.fonction}</p>}
             </div>
 
             {/* Password Field */}
@@ -415,7 +467,7 @@ export default function RegisterPage() {
               href="/"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors inline-flex items-center gap-1"
             >
-              ← Retour à l'accueil
+              ← Retour à l&apos;accueil
             </Link>
           </div>
         </div>
@@ -452,7 +504,7 @@ export default function RegisterPage() {
 
             <h3 className="text-3xl font-bold text-white mb-4">Rejoignez SIGMI</h3>
             <p className="text-blue-100 text-lg">
-              Créez votre compte et commencez à centraliser l'ensemble de vos activités GROUP MI.
+              Créez votre compte et commencez à centraliser l&apos;ensemble de vos activités GROUP MI.
             </p>
           </div>
         </div>

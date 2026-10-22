@@ -7,25 +7,27 @@ export function useCollaborateurs(poleFilter?: Pole) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCollaborateurs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await collaborateursService.getAll();
+  // setState uniquement dans les callbacks de la promesse (pas de rendu en cascade dans l'effet)
+  const fetchCollaborateurs = useCallback(
+    () =>
+      collaborateursService
+        .getAll()
+        .then((data) => {
+          // Filtrer par pôle si spécifié
+          const filteredData = poleFilter
+            ? data.filter(collab => collab.poles && collab.poles.includes(poleFilter))
+            : data;
 
-      // Filtrer par pôle si spécifié
-      const filteredData = poleFilter
-        ? data.filter(collab => collab.poles && collab.poles.includes(poleFilter))
-        : data;
-
-      setCollaborateurs(filteredData);
-      setError(null);
-    } catch (err) {
-      setError('Erreur lors du chargement des collaborateurs');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [poleFilter]);
+          setCollaborateurs(filteredData);
+          setError(null);
+        })
+        .catch((err) => {
+          setError('Erreur lors du chargement des collaborateurs');
+          console.error(err);
+        })
+        .finally(() => setLoading(false)),
+    [poleFilter]
+  );
 
   useEffect(() => {
     fetchCollaborateurs();
@@ -42,7 +44,6 @@ export function useCollaborateurStats() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        setLoading(true);
         const data = await collaborateursService.getStats();
         setStats(data);
         setError(null);

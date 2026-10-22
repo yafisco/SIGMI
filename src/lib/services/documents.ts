@@ -4,7 +4,6 @@ import { Document, CreateDocumentInput, UpdateDocumentInput } from '@/types';
 export const documentsService = {
   // Récupérer tous les documents avec détails
   async getAll(): Promise<Document[]> {
-    console.log('Récupération des documents...');
     const { data, error } = await supabase
       .from('documents')
       .select('*')
@@ -14,7 +13,6 @@ export const documentsService = {
       console.error('Erreur Supabase documents:', error);
       throw error;
     }
-    console.log('Documents récupérés:', data);
     return data || [];
   },
 
@@ -145,18 +143,6 @@ export const documentsService = {
       .from('documents')
       .select('*')
       .contains('tags', [tag])
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  },
-
-  // Filtrer par projet
-  async getByProjet(projetId: string): Promise<Document[]> {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('projet_id', projetId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

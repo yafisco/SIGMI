@@ -15,6 +15,7 @@ import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { collaborateursService } from '@/lib/services';
 import Swal from 'sweetalert2';
 import { usePoleFilter } from '@/hooks/usePoleFilter';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 const roleLabels: Record<Role, string> = {
   'commercial': 'Commercial',
@@ -87,10 +88,10 @@ export default function CollaborateursPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du collaborateur',
+          text: errorMessage(err, 'Erreur lors de la suppression du collaborateur'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,

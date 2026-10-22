@@ -1,46 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, DollarSign, Calendar, Building2, Save, TrendingUp, Target } from 'lucide-react';
+import { ArrowLeft, DollarSign, Calendar, Building2, Save, TrendingUp, Target, Briefcase, Tag, Users, Search } from 'lucide-react';
 import Link from 'next/link';
 import { opportunitiesService, clientsService } from '@/lib/services';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import { POLE_OPTIONS } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import { useData } from '@/hooks/useData';
+import type { OpportunityStage } from '@/types';
 
-interface Client {
-  id: string;
-  nom: string;
-}
-
-export default function CreateOpportunityPage() {
+function CreateOpportunityPageContent() {
   const router = useRouter();
+  const { workspace } = useWorkspace();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') || '';
   const [formData, setFormData] = useState({
+    reference: '',
+    structure_concernee: '',
+    secteur_activite: '',
+    pole_groupe_mi: '',
+    intitule_besoin: '',
+    source_opportunite: '',
     name: '',
     client_id: '',
     amount: '',
-    probability: 50,
-    stage: 'nouveau',
+    probability: '',
+    stage: 'nouveau' as OpportunityStage,
     expected_close_date: '',
     description: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loadingClients, setLoadingClients] = useState(true);
+  const { data: clients, loading: loadingClients } = useData({ fetchFn: () => clientsService.getAll() });
 
-  useEffect(() => {
-    loadClients();
-  }, []);
-
-  const loadClients = async () => {
-    try {
-      const data = await clientsService.getAll();
-      setClients(data);
-    } catch (err) {
-      console.error('Erreur lors du chargement des clients:', err);
-    } finally {
-      setLoadingClients(false);
-    }
+  const getBackLink = () => {
+    if (from === 'commercial') return '/commercial';
+    if (from === 'tresorerie') return '/tresorerie';
+    if (workspace === 'commercial') return '/commercial';
+    if (workspace === 'tresorerie') return '/tresorerie';
+    return '/opportunites';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,17 +51,23 @@ export default function CreateOpportunityPage() {
 
     try {
       await opportunitiesService.create({
-        name: formData.name,
-        client_id: formData.client_id || null,
-        amount: formData.amount ? parseFloat(formData.amount) : null,
-        probability: formData.probability,
-        stage: formData.stage as any,
-        expected_close_date: formData.expected_close_date || null,
+        name: formData.intitule_besoin || formData.name,
+        reference: formData.reference,
+        structure_concernee: formData.structure_concernee,
+        secteur_activite: formData.secteur_activite,
+        pole_groupe_mi: formData.pole_groupe_mi,
+        intitule_besoin: formData.intitule_besoin,
+        source_opportunite: formData.source_opportunite,
+        client_id: formData.client_id || undefined,
+        amount: formData.amount ? parseFloat(formData.amount) : 0,
+        probability: formData.probability ? parseInt(formData.probability, 10) : undefined,
+        stage: formData.stage,
+        expected_close_date: formData.expected_close_date || undefined,
         description: formData.description,
       });
-      router.push('/opportunites');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création de l\'opportunité');
+      router.push(getBackLink());
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création de l\'opportunité'));
       setLoading(false);
     }
   };
@@ -70,7 +77,7 @@ export default function CreateOpportunityPage() {
       <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
-            <Link href="/opportunites">
+            <Link href={getBackLink()}>
               <Button variant="ghost" size="icon" className="hover:bg-blue-100 hover:text-blue-600">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -94,7 +101,7 @@ export default function CreateOpportunityPage() {
                   <Target className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">Détails de l'opportunité</h2>
+                  <h2 className="text-xl font-bold text-slate-900">Détails de l&apos;opportunité</h2>
                   <p className="text-slate-500 text-sm">Informations principales</p>
                 </div>
               </div>
@@ -102,15 +109,95 @@ export default function CreateOpportunityPage() {
               <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <Target className="w-4 h-4 text-[#1D4ED8]" />
-                    Titre *
+                    <Tag className="w-4 h-4 text-[#1D4ED8]" />
+                    Référence de l&apos;opportunité *
                   </label>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    value={formData.reference}
+                    onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
+                    placeholder="Ex: OPP-2024-001"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#1D4ED8]" />
+                    Nom de la structure concernée *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.structure_concernee}
+                    onChange={(e) => setFormData({ ...formData, structure_concernee: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
+                    placeholder="Ex: BCEAO, SONATEL"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-[#1D4ED8]" />
+                      Secteur d&apos;activité
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.secteur_activite}
+                      onChange={(e) => setFormData({ ...formData, secteur_activite: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
+                      placeholder="Ex: Banque, Télécommunications"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#1D4ED8]" />
+                      Pôle du Groupe MI concerné
+                    </label>
+                    <select
+                      value={formData.pole_groupe_mi}
+                      onChange={(e) => setFormData({ ...formData, pole_groupe_mi: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                    >
+                      <option value="">Sélectionner un pôle</option>
+                      {POLE_OPTIONS.map((pole) => (
+                        <option key={pole.value} value={pole.value}>
+                          {pole.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <Target className="w-4 h-4 text-[#1D4ED8]" />
+                    Intitulé du besoin ou du marché *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.intitule_besoin}
+                    onChange={(e) => setFormData({ ...formData, intitule_besoin: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
+                    placeholder="Ex: Développement application mobile, Audit de sécurité"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <Search className="w-4 h-4 text-[#1D4ED8]" />
+                    Source de l&apos;opportunité
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.source_opportunite}
+                    onChange={(e) => setFormData({ ...formData, source_opportunite: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
+                    placeholder="Ex: Appel d'offres, Réseau, Partenaire"
                   />
                 </div>
 
@@ -164,8 +251,9 @@ export default function CreateOpportunityPage() {
                       min="0"
                       max="100"
                       value={formData.probability}
-                      onChange={(e) => setFormData({ ...formData, probability: parseInt(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, probability: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                      placeholder="Optionnel"
                     />
                   </div>
                 </div>
@@ -178,7 +266,7 @@ export default function CreateOpportunityPage() {
                     </label>
                     <select
                       value={formData.stage}
-                      onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, stage: e.target.value as OpportunityStage })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
                       <option value="nouveau">Nouveau</option>
@@ -227,7 +315,7 @@ export default function CreateOpportunityPage() {
             </div>
 
             <div className="flex items-center justify-end gap-4 pt-4">
-              <Link href="/opportunites">
+              <Link href={getBackLink()}>
                 <Button variant="outline" className="px-6 py-3 rounded-xl hover:bg-slate-100" disabled={loading}>
                   Annuler
                 </Button>
@@ -241,5 +329,14 @@ export default function CreateOpportunityPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// useSearchParams exige une frontière <Suspense> pour le prerender
+export default function CreateOpportunityPage() {
+  return (
+    <Suspense>
+      <CreateOpportunityPageContent />
+    </Suspense>
   );
 }

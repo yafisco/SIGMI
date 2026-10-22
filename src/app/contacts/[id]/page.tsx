@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, User, Mail, Phone, Building2, Edit, Trash2, MessageSquare, Calendar, Plus } from 'lucide-react';
-import { useData } from '@/hooks/useData';
+import { useData, useSingleData } from '@/hooks/useData';
 import { contactsService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/AnimatedCard';
@@ -12,18 +12,22 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function ContactDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
-  const { data: contact, loading, error, refresh } = useData({
-    fetchFn: () => contactsService.getById(id),
+  const { data: contact, loading, error, refresh } = useSingleData({
+    fetchFn: contactsService.getById,
+    id,
   });
 
+  const clientId: string | undefined = contact?.client_id ?? undefined;
   const { data: interactions } = useData({
-    fetchFn: () => contactsService.getByClient(contact?.client_id || ''),
+    fetchFn: () => (clientId ? contactsService.getByClient(clientId) : Promise.resolve([])),
+    deps: [clientId],
   });
 
   const handleDelete = async () => {
@@ -50,10 +54,10 @@ export default function ContactDetailPage() {
           customClass: SWEETALERT_CONFIG.customClass,
         });
         router.push('/contacts');
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression',
+          text: errorMessage(err, 'Erreur lors de la suppression'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,

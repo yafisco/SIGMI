@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FolderKanban, Calendar, DollarSign, Users, TrendingUp, MessageSquare, FileText, Plus, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -16,27 +16,29 @@ import { motion } from 'framer-motion';
 import { PROJECT_STATUS_COLORS, PROJECT_STATUS_LABELS } from '@/lib/constants';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Swal from 'sweetalert2';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function ProjetDetailPage({ params }: { params: { id: string } }) {
+export default function ProjetDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: projet, loading, error } = useSingleData<Projet>({
     fetchFn: projetsService.getById,
-    id: params.id,
+    id: id,
   });
 
   const { data: tasks, loading: tasksLoading } = useSingleData<Task[]>({
-    fetchFn: () => tasksService.getByProjet(params.id),
-    id: params.id,
+    fetchFn: () => tasksService.getByProjet(id),
+    id: id,
   });
 
   const { data: documents, loading: documentsLoading } = useSingleData<Document[]>({
-    fetchFn: () => documentsService.getByProjet(params.id),
-    id: params.id,
+    fetchFn: () => documentsService.getByProjet(id),
+    id: id,
   });
 
   const { data: interactions, loading: interactionsLoading } = useSingleData<Interaction[]>({
-    fetchFn: () => interactionsService.getByRelated('projet', params.id),
-    id: params.id,
+    fetchFn: () => interactionsService.getByRelated('projet', id),
+    id: id,
   });
 
   const handleDelete = async (id: string, name: string) => {
@@ -63,10 +65,10 @@ export default function ProjetDetailPage({ params }: { params: { id: string } })
           customClass: SWEETALERT_CONFIG.customClass,
         });
         router.push('/projets');
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du projet',
+          text: errorMessage(err, 'Erreur lors de la suppression du projet'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -160,7 +162,7 @@ export default function ProjetDetailPage({ params }: { params: { id: string } })
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Budget total"
-            value={formatAmount(projet.budget_total || 0)}
+            value={formatAmount(projet.budget_estime || 0)}
             icon={DollarSign}
             color="text-green-600"
             bgColor="bg-gradient-to-br from-green-100 to-green-200"
@@ -226,22 +228,16 @@ export default function ProjetDetailPage({ params }: { params: { id: string } })
                   <p className="text-slate-700">{projet.description}</p>
                 </div>
               )}
-              {projet.client_nom && (
-                <div className="flex items-center gap-3 text-slate-700">
-                  <Users className="w-5 h-5 text-[#1D4ED8]" />
-                  {projet.client_nom}
-                </div>
-              )}
               {projet.date_debut && (
                 <div className="flex items-center gap-3 text-slate-700">
                   <Calendar className="w-5 h-5 text-[#D4AF37]" />
                   Début : {new Date(projet.date_debut).toLocaleDateString('fr-FR')}
                 </div>
               )}
-              {projet.date_fin && (
+              {projet.date_fin_prevue && (
                 <div className="flex items-center gap-3 text-slate-700">
                   <Calendar className="w-5 h-5 text-[#D4AF37]" />
-                  Fin : {new Date(projet.date_fin).toLocaleDateString('fr-FR')}
+                  Fin : {new Date(projet.date_fin_prevue).toLocaleDateString('fr-FR')}
                 </div>
               )}
               {projet.responsable_nom && (
@@ -250,10 +246,10 @@ export default function ProjetDetailPage({ params }: { params: { id: string } })
                   Responsable : {projet.responsable_nom}
                 </div>
               )}
-              {projet.pole && (
+              {projet.poles?.length > 0 && (
                 <div className="flex items-center gap-3 text-slate-700">
                   <FolderKanban className="w-5 h-5 text-[#D4AF37]" />
-                  Pôle : {projet.pole}
+                  Pôle : {projet.poles.join(', ')}
                 </div>
               )}
             </div>

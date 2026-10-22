@@ -1,14 +1,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Save, Mail, Phone, Briefcase, Shield, Building2, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { collaborateursService } from '@/lib/services';
+import { supabase } from '@/lib/supabase';
+import { POLE_OPTIONS } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
+
+const FONCTION_OPTIONS = [
+  { value: 'direction générale', label: 'Direction Générale' },
+  { value: 'comptable', label: 'Comptable' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'responsable de pôle', label: 'Responsable de Pôle' },
+  { value: 'gestionnaire de projet', label: 'Gestionnaire de Projet' },
+  { value: 'assistant', label: 'Assistant' },
+  { value: 'autre', label: 'Autre' },
+];
+
+const ROLE_OPTIONS = [
+  { value: 'direction', label: 'Direction' },
+  { value: 'comptable', label: 'Comptable' },
+  { value: 'administrateur système', label: 'Administrateur Système' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'directeur', label: 'Directeur' },
+  { value: 'technique', label: 'Technique' },
+  { value: 'administratif', label: 'Administratif' },
+];
 
 export default function EditCollaborateurPage() {
   const router = useRouter();
+  const params = useParams();
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -16,7 +41,7 @@ export default function EditCollaborateurPage() {
     telephone: '',
     poste: '',
     role: 'commercial',
-    poles: [''],
+    poles: [] as string[],
     date_embauche: '',
   });
   const [loading, setLoading] = useState(true);
@@ -24,35 +49,32 @@ export default function EditCollaborateurPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const loadCollaborateur = async () => {
+      try {
+        const id = params.id as string;
+        const data = id ? await collaborateursService.getById(id) : null;
+        if (!data) {
+          setError('Collaborateur introuvable');
+        } else {
+          setFormData({
+            nom: data.nom || '',
+            prenom: data.prenom || '',
+            email: data.email || '',
+            telephone: data.telephone || '',
+            poste: data.poste || '',
+            role: data.role || 'commercial',
+            poles: Array.isArray(data.poles) ? data.poles : [],
+            date_embauche: data.date_embauche || '',
+          });
+        }
+      } catch (err) {
+        setError(errorMessage(err, 'Erreur lors du chargement du collaborateur'));
+      } finally {
+        setLoading(false);
+      }
+    };
     loadCollaborateur();
-  }, []);
-
-  const loadCollaborateur = async () => {
-    try {
-      const id = router.query.id as string;
-      if (!id) {
-        setError('ID du collaborateur manquant');
-        return;
-      }
-      const data = await collaborateursService.getById(id);
-      if (data) {
-        setFormData({
-          nom: data.nom || '',
-          prenom: data.prenom || '',
-          email: data.email || '',
-          telephone: data.telephone || '',
-          poste: data.poste || '',
-          role: data.role || 'commercial',
-          poles: data.poles || [''],
-          date_embauche: data.date_embauche || '',
-        });
-      }
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement du collaborateur');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [params.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,20 +82,42 @@ export default function EditCollaborateurPage() {
     setError('');
 
     try {
-      const id = router.query.id as string;
-      await collaborateursService.update(id, {
+      const id = params.id as string;
+      
+      // Filtrer les pôles vides
+      const polesFiltered = formData.poles.filter(p => p !== '' && p !== null);
+      
+      const updateData: Record<string, unknown> = {
         nom: formData.nom,
         prenom: formData.prenom,
         email: formData.email,
         telephone: formData.telephone,
         poste: formData.poste,
-        role: formData.role as any,
-        poles: formData.poles,
+        role: formData.role,
         date_embauche: formData.date_embauche || null,
-      });
+      };
+      
+      // N'inclure poles que si non vide
+      if (polesFiltered.length > 0) {
+        updateData.poles = polesFiltered;
+      }
+      
+      
+      // Utiliser Supabase directement
+      const { error } = await supabase
+        .from('collaborateurs')
+        .update(updateData)
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw error;
+      }
+      
       router.push('/collaborateurs');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la modification du collaborateur');
+    } catch (err) {
+      console.error('Erreur complète:', err);
+      setError(errorMessage(err, 'Erreur lors de la modification du collaborateur'));
       setSaving(false);
     }
   };
@@ -188,32 +232,40 @@ export default function EditCollaborateurPage() {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Briefcase className="w-4 h-4 text-[#1D4ED8]" />
-                      Poste
+                      Poste *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.poste}
                       onChange={(e) => setFormData({ ...formData, poste: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
-                      placeholder="Ingénieur commercial"
-                    />
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                      required
+                    >
+                      <option value="">Sélectionnez le poste</option>
+                      {FONCTION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Shield className="w-4 h-4 text-[#1D4ED8]" />
-                      Rôle
+                      Rôle *
                     </label>
                     <select
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                      required
                     >
-                      <option value="commercial">Commercial</option>
-                      <option value="manager">Manager</option>
-                      <option value="directeur">Directeur</option>
-                      <option value="technique">Technique</option>
-                      <option value="administratif">Administratif</option>
+                      <option value="">Sélectionnez le rôle</option>
+                      {ROLE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -223,19 +275,24 @@ export default function EditCollaborateurPage() {
                     <Building2 className="w-4 h-4 text-[#1D4ED8]" />
                     Pôle(s)
                   </label>
-                  <input
-                    type="text"
-                    value={formData.poles[0]}
-                    onChange={(e) => setFormData({ ...formData, poles: [e.target.value] })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
-                    placeholder="Ingénierie informatique"
-                  />
+                  <select
+                    value={formData.poles[0] || ''}
+                    onChange={(e) => setFormData({ ...formData, poles: e.target.value ? [e.target.value] : [] })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                  >
+                    <option value="">Sélectionnez le pôle</option>
+                    {POLE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#1D4ED8]" />
-                    Date d'embauche
+                    Date d&apos;embauche
                   </label>
                   <input
                     type="date"

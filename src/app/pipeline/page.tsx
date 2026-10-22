@@ -74,7 +74,7 @@ export default function PipelinePage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Pipeline Commercial</h1>
-              <p className="text-slate-600 mt-1">Vue globale du pipeline d'opportunités</p>
+              <p className="text-slate-600 mt-1">Vue globale du pipeline d&apos;opportunités</p>
             </div>
             <Link href="/opportunites/create">
               <Button className="bg-groupmi-gold-gradient hover:opacity-90 text-[#1D4ED8] shadow-lg border-2 border-[#D4AF37]">

@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Phone, Mail, MessageSquare, Calendar, Save, MessageCircle, Link2 } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MessageSquare, Calendar, Save, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { interactionsService } from '@/lib/services';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import type { InteractionType } from '@/types';
 
 export default function CreateInteractionPage() {
   const router = useRouter();
@@ -13,8 +15,6 @@ export default function CreateInteractionPage() {
     type: 'call',
     title: '',
     description: '',
-    related_type: 'client',
-    related_id: '',
     interaction_date: new Date().toISOString().split('T')[0],
   });
   const [loading, setLoading] = useState(false);
@@ -27,16 +27,14 @@ export default function CreateInteractionPage() {
 
     try {
       await interactionsService.create({
-        type: formData.type as any,
+        type: formData.type as InteractionType,
         title: formData.title,
         description: formData.description,
-        related_type: formData.related_id ? formData.related_type : null,
-        related_id: formData.related_id || null,
         interaction_date: formData.interaction_date,
       });
       router.push('/interactions');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création de l\'interaction');
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création de l\'interaction'));
       setLoading(false);
     }
   };
@@ -70,7 +68,7 @@ export default function CreateInteractionPage() {
                   <MessageCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">Détails de l'interaction</h2>
+                  <h2 className="text-xl font-bold text-slate-900">Détails de l&apos;interaction</h2>
                   <p className="text-slate-500 text-sm">Informations principales</p>
                 </div>
               </div>
@@ -79,7 +77,7 @@ export default function CreateInteractionPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-[#1D4ED8]" />
-                    Type d'interaction *
+                    Type d&apos;interaction *
                   </label>
                   <select
                     value={formData.type}
@@ -96,7 +94,7 @@ export default function CreateInteractionPage() {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-[#1D4ED8]" />
-                    Titre de l'interaction *
+                    Titre de l&apos;interaction *
                   </label>
                   <input
                     type="text"
@@ -121,42 +119,10 @@ export default function CreateInteractionPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <Link2 className="w-4 h-4 text-[#1D4ED8]" />
-                      Type de relation
-                    </label>
-                    <select
-                      value={formData.related_type}
-                      onChange={(e) => setFormData({ ...formData, related_type: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
-                    >
-                      <option value="client">Client</option>
-                      <option value="opportunity">Opportunité</option>
-                      <option value="projet">Projet</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <Link2 className="w-4 h-4 text-[#1D4ED8]" />
-                      ID de la relation
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.related_id}
-                      onChange={(e) => setFormData({ ...formData, related_id: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
-                      placeholder="ID du client/opportunité/projet"
-                    />
-                  </div>
-                </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#1D4ED8]" />
-                    Date de l'interaction
+                    Date de l&apos;interaction
                   </label>
                   <input
                     type="date"

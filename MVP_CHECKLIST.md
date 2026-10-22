@@ -2,7 +2,8 @@
 
 ## 📊 Vue d'ensemble de l'avancement
 
-**Progression globale : 100%**
+**Progression globale : 100% (MVP de base)**
+**Progression avec améliorations : 95%**
 
 ---
 
@@ -143,6 +144,33 @@
 ---
 
 ## ⏳ FONCTIONNALITÉS EN COURS
+
+---
+
+## ⏳ FONCTIONNALITÉS EN COURS (Améliorations)
+
+### 23. **Module Trésorerie** ⏳ 50%
+- [x] Page Trésorerie avec KPIs (revenus, dépenses, solde)
+- [x] Tableau des transactions
+- [x] Page Factures avec gestion
+- [ ] Création de factures
+- [ ] Suivi des paiements
+- [ ] Rapports financiers
+- [ ] Export des rapports
+
+### 24. **Dashboard Commercial** ⏳ 50%
+- [x] Page Dashboard Commercial
+- [x] KPIs commerciaux (opportunités, pipeline, conversion)
+- [x] Opportunités récentes
+- [ ] Objectifs de vente
+- [ ] Commission tracking
+- [ ] Performance par commercial
+
+### 25. **Redirection intelligente selon fonction** ✅ 100%
+- [x] Comptable → Dashboard Trésorerie
+- [x] Commercial → Dashboard Commercial
+- [x] Direction Générale → Dashboard Global
+- [x] Autres → Dashboard du pôle assigné
 
 ---
 

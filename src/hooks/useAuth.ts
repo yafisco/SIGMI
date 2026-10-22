@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Pole } from '@/types';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export interface User {
   id: string;
@@ -56,9 +57,9 @@ export function useAuth() {
           poles: collab.poles || [],
           isAdmin,
         });
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erreur chargement utilisateur:', err);
-        setError(err.message || 'Erreur lors du chargement de l\'utilisateur');
+        setError(errorMessage(err, 'Erreur lors du chargement de l\'utilisateur'));
         setUser(null);
       } finally {
         setLoading(false);
@@ -76,5 +77,11 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  return { user, loading, error };
+  const signOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  return { user, loading, error, signOut };
 }

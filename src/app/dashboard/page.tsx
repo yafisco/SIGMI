@@ -12,20 +12,60 @@ import {
   MessageSquare, Mail, Phone, Calendar,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/AnimatedCard';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { usePoleStats } from '@/hooks/usePoleStats';
 import { useAuth } from '@/hooks/useAuth';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import type { LucideIcon } from 'lucide-react';
+import type { Interaction, Task } from '@/types';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { stats: poleStats, loading: poleLoading } = usePoleStats();
-  const [userName, setUserName] = useState('Collaborateur');
+  const { workspace } = useWorkspace();
+  const { allStats: poleStats, loading: poleLoading } = usePoleStats();
+  const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  const interactionIcons: Record<string, any> = {
+  // Protection : rediriger les non-DG vers leur espace de travail
+  useEffect(() => {
+    if (!isLoading && workspace !== 'dashboard') {
+      if (workspace === 'commercial') {
+        router.push('/commercial');
+      } else if (workspace === 'tresorerie') {
+        router.push('/tresorerie');
+      }
+    }
+  }, [workspace, isLoading, router]);
+
+  // Charger le prénom de l'utilisateur
+  useEffect(() => {
+    async function fetchUserName() {
+      if (user) {
+        const { data } = await supabase
+          .from('collaborateurs')
+          .select('prenom, nom, email')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (data) {
+          if (data.prenom) {
+            setUserName(data.prenom);
+          } else if (data.email) {
+            const emailName = data.email.split('@')[0];
+            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+            setUserName(formattedName);
+          } else if (data.nom) {
+            setUserName(data.nom);
+          }
+        }
+        setIsLoading(false);
+      }
+    }
+    fetchUserName();
+  }, [user]);
+
+  const interactionIcons: Record<string, LucideIcon> = {
     email: Mail,
     appel: Phone,
     réunion: MessageSquare,
@@ -44,8 +84,8 @@ export default function DashboardPage() {
     budget: 0,
   });
 
-  const [urgentTasks, setUrgentTasks] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
+  const [urgentTasks, setUrgentTasks] = useState<Task[]>([]);
+  const [recentActivities, setRecentActivities] = useState<Interaction[]>([]);
   const [pipelineData, setPipelineData] = useState([
     { stage: 'Nouveau', count: 0, value: 0, color: 'from-slate-400 to-slate-600' },
     { stage: 'Qualifié', count: 0, value: 0, color: 'from-blue-400 to-blue-600' },
@@ -64,9 +104,15 @@ export default function DashboardPage() {
             .select('nom, prenom')
             .eq('id', user.id)
             .single();
-          
-          if (userData) {
+
+          if (userData && userData.prenom && userData.nom) {
             setUserName(`${userData.prenom} ${userData.nom}`);
+          } else if (user.email) {
+            // Fallback: utiliser l'email si le nom n'est pas disponible
+            const emailName = user.email.split('@')[0];
+            setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
+          } else {
+            setUserName('Collaborateur');
           }
         }
 
@@ -158,10 +204,22 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
-      <PageHeader
-        title="Tableau de bord"
-        description={`Bienvenue, ${userName}`}
-      />
+      {/* Welcome Banner */}
+      <div className="bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#0F172A] py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/20 via-transparent to-[#D4AF37]/20 animate-pulse" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex items-center gap-3 mb-3">
+            <Sparkles className="w-8 h-8 text-[#D4AF37]" />
+            <span className="text-[#D4AF37] font-semibold text-sm uppercase tracking-wider">Bienvenue</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+            Bonjour, {userName || 'Direction'} 👋
+          </h1>
+          <p className="text-white/80 text-lg md:text-xl">
+            Vue d&apos;ensemble de GROUP MI
+          </p>
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* KPI Cards */}
@@ -267,7 +325,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6 relative">
                 <div>
                   <h3 className="text-xl font-bold text-slate-900 mb-1">Pipeline commercial</h3>
-                  <p className="text-slate-600 text-sm">Vue d'ensemble</p>
+                  <p className="text-slate-600 text-sm">Vue d&apos;ensemble</p>
                 </div>
                 <Link href="/pipeline">
                   <Button variant="outline" size="sm" className="border-blue-200 text-blue-600 hover:bg-blue-50">
@@ -430,7 +488,7 @@ export default function DashboardPage() {
                             <Icon className="w-5 h-5 text-blue-600" />
                           </motion.div>
                           <div className="flex-1">
-                            <p className="font-bold text-slate-900 text-sm">{activity.titre || 'Interaction'}</p>
+                            <p className="font-bold text-slate-900 text-sm">{activity.title || 'Interaction'}</p>
                             <p className="text-xs text-slate-600 mt-1">{activity.description || activity.type}</p>
                             <p className="text-xs text-slate-400 mt-1">
                               {activity.created_at ? new Date(activity.created_at).toLocaleDateString('fr-FR') : '-'}

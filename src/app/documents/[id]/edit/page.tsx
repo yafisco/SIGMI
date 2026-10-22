@@ -9,8 +9,10 @@ import { clientsService } from '@/lib/services';
 import { projetsService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
 import Swal from 'sweetalert2';
-import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { DOCUMENT_STATUS_OPTIONS, DOCUMENT_TYPE_OPTIONS, SWEETALERT_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import type { Client, DocumentStatus, DocumentType, Projet } from '@/types';
 
 export default function EditDocumentPage() {
   const params = useParams();
@@ -20,14 +22,14 @@ export default function EditDocumentPage() {
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
-    type: 'contrat',
-    statut: 'actif',
+    type: 'contrat' as DocumentType,
+    statut: 'brouillon' as DocumentStatus,
     client_id: '',
     projet_id: '',
     tags: [] as string[],
   });
-  const [clients, setClients] = useState<any[]>([]);
-  const [projets, setProjets] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [projets, setProjets] = useState<Projet[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
@@ -40,6 +42,7 @@ export default function EditDocumentPage() {
           clientsService.getAll(),
           projetsService.getAll(),
         ]);
+        if (!documentData) return;
         setFormData({
           nom: documentData.nom,
           description: documentData.description || '',
@@ -76,7 +79,13 @@ export default function EditDocumentPage() {
     setSaving(true);
 
     try {
-      await documentsService.update(id, formData);
+      await documentsService.update({
+        id,
+        ...formData,
+        // Postgres refuse '' pour un uuid
+        client_id: formData.client_id || undefined,
+        projet_id: formData.projet_id || undefined,
+      });
       await Swal.fire({
         title: 'Modifié !',
         text: 'Le document a été modifié avec succès.',
@@ -85,10 +94,10 @@ export default function EditDocumentPage() {
         customClass: SWEETALERT_CONFIG.customClass,
       });
       router.push(`/documents/${id}`);
-    } catch (err: any) {
+    } catch (err) {
       await Swal.fire({
         title: 'Erreur',
-        text: err.message || 'Erreur lors de la modification',
+        text: errorMessage(err, 'Erreur lors de la modification'),
         icon: 'error',
         confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
@@ -163,26 +172,24 @@ export default function EditDocumentPage() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
                   <select
                     value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as DocumentType })}
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all"
                   >
-                    <option value="contrat">Contrat</option>
-                    <option value="facture">Facture</option>
-                    <option value="devis">Devis</option>
-                    <option value="rapport">Rapport</option>
-                    <option value="autre">Autre</option>
+                    {DOCUMENT_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">Statut</label>
                   <select
                     value={formData.statut}
-                    onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, statut: e.target.value as DocumentStatus })}
                     className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all"
                   >
-                    <option value="actif">Actif</option>
-                    <option value="archivé">Archivé</option>
-                    <option value="en_revision">En révision</option>
+                    {DOCUMENT_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>

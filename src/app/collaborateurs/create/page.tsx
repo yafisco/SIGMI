@@ -6,6 +6,30 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Mail, Phone, Building2, Save, Briefcase, Shield, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { collaborateursService } from '@/lib/services';
+import { POLE_OPTIONS } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import type { Pole, Role } from '@/types';
+
+const FONCTION_OPTIONS = [
+  { value: 'direction générale', label: 'Direction Générale' },
+  { value: 'comptable', label: 'Comptable' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'responsable de pôle', label: 'Responsable de Pôle' },
+  { value: 'gestionnaire de projet', label: 'Gestionnaire de Projet' },
+  { value: 'assistant', label: 'Assistant' },
+  { value: 'autre', label: 'Autre' },
+];
+
+const ROLE_OPTIONS = [
+  { value: 'direction', label: 'Direction' },
+  { value: 'comptable', label: 'Comptable' },
+  { value: 'administrateur système', label: 'Administrateur Système' },
+  { value: 'commercial', label: 'Commercial' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'directeur', label: 'Directeur' },
+  { value: 'technique', label: 'Technique' },
+  { value: 'administratif', label: 'Administratif' },
+];
 
 export default function CreateCollaborateurPage() {
   const router = useRouter();
@@ -16,7 +40,7 @@ export default function CreateCollaborateurPage() {
     telephone: '',
     poste: '',
     role: 'commercial',
-    poles: [''],
+    poles: [] as string[],
     date_embauche: '',
   });
   const [loading, setLoading] = useState(false);
@@ -28,19 +52,23 @@ export default function CreateCollaborateurPage() {
     setError('');
 
     try {
+      // Filtrer les pôles vides
+      const polesFiltered = formData.poles.filter(p => p !== '' && p !== null);
+      
       await collaborateursService.create({
         nom: formData.nom,
         prenom: formData.prenom,
         email: formData.email,
         telephone: formData.telephone,
         poste: formData.poste,
-        role: formData.role as any,
-        poles: formData.poles.filter(p => p !== '') as any,
-        date_embauche: formData.date_embauche || null,
+        role: formData.role as Role,
+        // Postgres refuse '' pour une date
+        date_embauche: formData.date_embauche || undefined,
+        poles: polesFiltered as Pole[],
       });
       router.push('/collaborateurs');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création du collaborateur');
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création du collaborateur'));
       setLoading(false);
     }
   };
@@ -144,32 +172,40 @@ export default function CreateCollaborateurPage() {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Briefcase className="w-4 h-4 text-[#1D4ED8]" />
-                      Poste
+                      Poste *
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.poste}
                       onChange={(e) => setFormData({ ...formData, poste: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
-                      placeholder="Ingénieur commercial"
-                    />
+                      required
+                    >
+                      <option value="">Sélectionnez le poste</option>
+                      {FONCTION_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Shield className="w-4 h-4 text-[#1D4ED8]" />
-                      Rôle
+                      Rôle *
                     </label>
                     <select
                       value={formData.role}
                       onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                      required
                     >
-                      <option value="commercial">Commercial</option>
-                      <option value="manager">Manager</option>
-                      <option value="directeur">Directeur</option>
-                      <option value="technique">Technique</option>
-                      <option value="administratif">Administratif</option>
+                      <option value="">Sélectionnez le rôle</option>
+                      {ROLE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -179,19 +215,24 @@ export default function CreateCollaborateurPage() {
                     <Building2 className="w-4 h-4 text-[#1D4ED8]" />
                     Pôle(s)
                   </label>
-                  <input
-                    type="text"
-                    value={formData.poles[0]}
-                    onChange={(e) => setFormData({ ...formData, poles: [e.target.value] })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
-                    placeholder="Ingénierie informatique"
-                  />
+                  <select
+                    value={formData.poles[0] || ''}
+                    onChange={(e) => setFormData({ ...formData, poles: e.target.value ? [e.target.value] : [] })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                  >
+                    <option value="">Sélectionnez le pôle</option>
+                    {POLE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#1D4ED8]" />
-                    Date d'embauche
+                    Date d&apos;embauche
                   </label>
                   <input
                     type="date"

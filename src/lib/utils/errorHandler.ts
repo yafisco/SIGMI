@@ -35,6 +35,16 @@ export function getErrorMessage(error: unknown, context?: string): string {
 }
 
 /**
+ * Message d'une erreur inconnue (Error ou erreur Supabase), sinon le message par défaut fourni
+ */
+export function errorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'message' in error && error.message) {
+    return String(error.message);
+  }
+  return fallback;
+}
+
+/**
  * Type pour les options de gestion d'erreur
  */
 export interface ErrorHandlerOptions {

@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/client';
 
 const supabase = createClient();
 
-const BUCKET_NAME = 'documents';
+const BUCKET_NAME = 'Documents';
 
 export const storageService = {
   async uploadFile(file: File, path?: string): Promise<{ path: string; url: string }> {

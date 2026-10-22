@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Building2, Search, Plus, MapPin, Mail, Phone, Calendar, TrendingUp, Trash2, Star } from 'lucide-react';
 import { Client } from '@/types';
@@ -14,14 +15,35 @@ import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Swal from 'sweetalert2';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function ClientsPage() {
-  const { data: clients, loading, error } = useClients();
+function ClientsPageContent() {
+  const router = useRouter();
+  const { workspace } = useWorkspace();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') || '';
+  const { data: clients, isLoading: loading, error } = useClients();
   const deleteClient = useDeleteClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatut, setFilterStatut] = useState<string>('all');
   const [filterPole, setFilterPole] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Rediriger les non-admin vers leur espace de travail
+  useEffect(() => {
+    if (from === 'commercial') {
+      router.push('/commercial');
+    } else if (from === 'tresorerie') {
+      router.push('/tresorerie');
+    } else if (workspace !== 'dashboard') {
+      if (workspace === 'commercial') {
+        router.push('/commercial');
+      } else if (workspace === 'tresorerie') {
+        router.push('/tresorerie');
+      }
+    }
+  }, [workspace, router, from]);
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
@@ -46,10 +68,10 @@ export default function ClientsPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du client',
+          text: errorMessage(err, 'Erreur lors de la suppression du client'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -105,7 +127,7 @@ export default function ClientsPage() {
           <div className="inline-block w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Building2 className="w-8 h-8 text-red-600" />
           </div>
-          <p className="text-red-600 font-medium">{error}</p>
+          <p className="text-red-600 font-medium">{error.message}</p>
         </div>
       </div>
     );
@@ -268,5 +290,14 @@ export default function ClientsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// useSearchParams exige une frontière <Suspense> pour le prerender
+export default function ClientsPage() {
+  return (
+    <Suspense>
+      <ClientsPageContent />
+    </Suspense>
   );
 }

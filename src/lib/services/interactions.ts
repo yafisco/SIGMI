@@ -31,7 +31,7 @@ export const interactionsService = {
     return data;
   },
 
-  async create(interaction: Omit<Interaction, 'id' | 'created_at' | 'updated_at'>) {
+  async create(interaction: Pick<Interaction, 'title' | 'type'> & Partial<Omit<Interaction, 'id' | 'created_at' | 'updated_at'>>) {
     const { data, error } = await supabase
       .from('interactions')
       .insert(interaction)

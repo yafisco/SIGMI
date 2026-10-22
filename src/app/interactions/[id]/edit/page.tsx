@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, X } from 'lucide-react';
-import { useData } from '@/hooks/useData';
+import { useSingleData } from '@/hooks/useData';
 import { interactionsService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
 import Swal from 'sweetalert2';
@@ -24,8 +24,6 @@ const interactionSchema = z.object({
   status: z.enum(['completed', 'pending', 'cancelled']).optional(),
   interaction_date: z.string().optional(),
   duration: z.string().optional(),
-  related_type: z.string().optional(),
-  related_id: z.string().optional(),
 });
 
 type InteractionFormData = z.infer<typeof interactionSchema>;
@@ -35,8 +33,9 @@ export default function InteractionEditPage() {
   const router = useRouter();
   const id = params.id as string;
 
-  const { data: interaction, loading, error, refresh } = useData({
-    fetchFn: () => interactionsService.getById(id),
+  const { data: interaction, loading, error, refresh } = useSingleData({
+    fetchFn: interactionsService.getById,
+    id,
   });
 
   const {
@@ -59,8 +58,6 @@ export default function InteractionEditPage() {
         status: interaction.status || 'pending',
         interaction_date: interaction.interaction_date || '',
         duration: interaction.duration || '',
-        related_type: interaction.related_type || '',
-        related_id: interaction.related_id || '',
       });
     }
   }, [interaction, reset]);
@@ -238,7 +235,7 @@ export default function InteractionEditPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Date d'interaction</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Date d&apos;interaction</label>
                   <input
                     type="date"
                     {...register('interaction_date')}
@@ -259,37 +256,6 @@ export default function InteractionEditPage() {
                   />
                   {errors.duration && (
                     <p className="text-red-600 text-sm mt-1">{errors.duration.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Type d'entité liée</label>
-                  <select
-                    {...register('related_type')}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1D4ED8] focus:border-transparent transition-all"
-                  >
-                    <option value="">Aucune</option>
-                    <option value="client">Client</option>
-                    <option value="opportunity">Opportunité</option>
-                    <option value="project">Projet</option>
-                  </select>
-                  {errors.related_type && (
-                    <p className="text-red-600 text-sm mt-1">{errors.related_type.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">ID de l'entité liée</label>
-                  <input
-                    type="text"
-                    {...register('related_id')}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#1D4ED8] focus:border-transparent transition-all"
-                    placeholder="ID de l'entité"
-                  />
-                  {errors.related_id && (
-                    <p className="text-red-600 text-sm mt-1">{errors.related_id.message}</p>
                   )}
                 </div>
               </div>

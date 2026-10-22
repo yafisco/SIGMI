@@ -15,6 +15,7 @@ import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { projetsService } from '@/lib/services';
 import Swal from 'sweetalert2';
 import { usePoleFilter } from '@/hooks/usePoleFilter';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 const statusLabels: Record<ProjectStatus, string> = {
   'planifié': 'Planifié',
@@ -117,10 +118,10 @@ export default function ProjetsPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du projet',
+          text: errorMessage(err, 'Erreur lors de la suppression du projet'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -339,7 +340,7 @@ export default function ProjetsPage() {
                     </div>
                   )}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Budget: {formatBudget(projet.budget)}</span>
+                    <span className="text-slate-600">Budget: {formatBudget(projet.budget_estime ?? 0)}</span>
                     {projet.date_debut && (
                       <span className="text-slate-600">
                         {new Date(projet.date_debut).toLocaleDateString('fr-FR')}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, MapPin, Mail, Phone, Calendar, TrendingUp, Users, FileText, MessageSquare, FolderKanban, Plus, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -21,37 +21,39 @@ import { useDelete } from '@/hooks/useDelete';
 import { CLIENT_STATUT_COLORS, CLIENT_STATUT_LABELS } from '@/lib/constants';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Swal from 'sweetalert2';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function ClientDetailPage({ params }: { params: { id: string } }) {
+export default function ClientDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: client, loading, error } = useSingleData<Client>({
     fetchFn: clientsService.getById,
-    id: params.id,
+    id: id,
   });
 
   const { data: contacts, loading: contactsLoading } = useSingleData<Contact[]>({
-    fetchFn: () => contactsService.getByClient(params.id),
-    id: params.id,
+    fetchFn: () => contactsService.getByClient(id),
+    id: id,
   });
 
   const { data: opportunities, loading: opportunitiesLoading } = useSingleData<Opportunity[]>({
-    fetchFn: () => opportunitiesService.getByClient(params.id),
-    id: params.id,
+    fetchFn: () => opportunitiesService.getByClient(id),
+    id: id,
   });
 
   const { data: projets, loading: projetsLoading } = useSingleData<Projet[]>({
-    fetchFn: () => projetsService.getByClient(params.id),
-    id: params.id,
+    fetchFn: () => projetsService.getByClient(id),
+    id: id,
   });
 
   const { data: documents, loading: documentsLoading } = useSingleData<Document[]>({
-    fetchFn: () => documentsService.getByClient(params.id),
-    id: params.id,
+    fetchFn: () => documentsService.getByClient(id),
+    id: id,
   });
 
   const { data: interactions, loading: interactionsLoading } = useSingleData<Interaction[]>({
-    fetchFn: () => interactionsService.getByClient(params.id),
-    id: params.id,
+    fetchFn: () => interactionsService.getByClient(id),
+    id: id,
   });
 
   const handleDelete = async (id: string, name: string) => {
@@ -78,10 +80,10 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
           customClass: SWEETALERT_CONFIG.customClass,
         });
         router.push('/clients');
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du client',
+          text: errorMessage(err, 'Erreur lors de la suppression du client'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -292,7 +294,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                   <MessageSquare className="w-6 h-6 text-green-600" />
                   <h3 className="text-lg font-bold text-slate-900">Contacts</h3>
                 </div>
-                <Link href={`/contacts/create?client_id=${params.id}`}>
+                <Link href={`/contacts/create?client_id=${id}`}>
                   <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8] border-2 border-[#D4AF37]">
                     <Plus className="w-4 h-4 mr-1" />
                     Nouveau
@@ -337,7 +339,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                   <FolderKanban className="w-6 h-6 text-blue-600" />
                   <h3 className="text-lg font-bold text-slate-900">Opportunités</h3>
                 </div>
-                <Link href={`/opportunites/create?client_id=${params.id}`}>
+                <Link href={`/opportunites/create?client_id=${id}`}>
                   <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8] border-2 border-[#D4AF37]">
                     <Plus className="w-4 h-4 mr-1" />
                     Nouvelle
@@ -382,7 +384,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
                   <Users className="w-6 h-6 text-purple-600" />
                   <h3 className="text-lg font-bold text-slate-900">Projets</h3>
                 </div>
-                <Link href={`/projets/create?client_id=${params.id}`}>
+                <Link href={`/projets/create?client_id=${id}`}>
                   <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8] border-2 border-[#D4AF37]">
                     <Plus className="w-4 h-4 mr-1" />
                     Nouveau

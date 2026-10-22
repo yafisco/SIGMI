@@ -10,6 +10,8 @@ import { PageHeader } from '@/components/PageHeader';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import type { Client } from '@/types';
 
 export default function EditContactPage() {
   const params = useParams();
@@ -24,10 +26,10 @@ export default function EditContactPage() {
     poste: '',
     client_id: '',
   });
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function loadData() {
@@ -69,10 +71,10 @@ export default function EditContactPage() {
         customClass: SWEETALERT_CONFIG.customClass,
       });
       router.push(`/contacts/${id}`);
-    } catch (err: any) {
+    } catch (err) {
       await Swal.fire({
         title: 'Erreur',
-        text: err.message || 'Erreur lors de la modification',
+        text: errorMessage(err, 'Erreur lors de la modification'),
         icon: 'error',
         confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,

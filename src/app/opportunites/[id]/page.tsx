@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Target, DollarSign, Calendar, TrendingUp, Users, MessageSquare, FolderKanban, Plus, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -14,17 +14,19 @@ import { motion } from 'framer-motion';
 import { OPPORTUNITY_STAGE_COLORS, OPPORTUNITY_STAGE_LABELS } from '@/lib/constants';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Swal from 'sweetalert2';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function OpportunityDetailPage({ params }: { params: { id: string } }) {
+export default function OpportunityDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: opportunity, loading, error } = useSingleData<Opportunity>({
     fetchFn: opportunitiesService.getById,
-    id: params.id,
+    id: id,
   });
 
   const { data: interactions, loading: interactionsLoading } = useSingleData<Interaction[]>({
-    fetchFn: () => interactionsService.getByRelated('opportunity', params.id),
-    id: params.id,
+    fetchFn: () => interactionsService.getByRelated('opportunity', id),
+    id: id,
   });
 
   const handleDelete = async (id: string, name: string) => {
@@ -51,10 +53,10 @@ export default function OpportunityDetailPage({ params }: { params: { id: string
           customClass: SWEETALERT_CONFIG.customClass,
         });
         router.push('/opportunites');
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || "Erreur lors de la suppression de l'opportunité",
+          text: errorMessage(err, "Erreur lors de la suppression de l'opportunité"),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -80,7 +82,7 @@ export default function OpportunityDetailPage({ params }: { params: { id: string
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full mb-4"
           />
-          <p className="text-slate-600 font-medium">Chargement de l'opportunité...</p>
+          <p className="text-slate-600 font-medium">Chargement de l&apos;opportunité...</p>
         </div>
       </div>
     );

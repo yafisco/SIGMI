@@ -290,7 +290,7 @@ export default function Home() {
                 transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
               >
-                Centralisez l'activité de GROUP MI
+                Centralisez l&apos;activité de GROUP MI
                 <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -314,8 +314,8 @@ export default function Home() {
                 transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
                 className="text-base sm:text-lg text-gray-200 max-w-2xl leading-relaxed"
               >
-                SIGMI (Système d'Information GROUP MI) offre une vision 360° sur les 6 pôles
-                d'activité de l'entreprise : ingénierie, BTP, agrobusiness, trading, énergie et incubation.
+                SIGMI (Système d&apos;Information GROUP MI) offre une vision 360° sur les 6 pôles
+                d&apos;activité de l&apos;entreprise : ingénierie, BTP, agrobusiness, trading, énergie et incubation.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -466,7 +466,7 @@ export default function Home() {
               viewport={{ once: true }}
               className="text-lg text-slate-600 max-w-2xl mx-auto"
             >
-              Une suite complète d'outils pour centraliser et optimiser toutes vos activités
+              Une suite complète d&apos;outils pour centraliser et optimiser toutes vos activités
             </motion.p>
           </div>
 
@@ -734,7 +734,7 @@ export default function Home() {
                       <p className="text-sm text-slate-600 font-medium">{testimonial.role}</p>
                     </div>
                   </div>
-                  <p className="text-slate-700 italic text-lg leading-relaxed relative">"{testimonial.quote}"</p>
+                  <p className="text-slate-700 italic text-lg leading-relaxed relative">&quot;{testimonial.quote}&quot;</p>
                   <div className="mt-4 flex gap-1">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 text-[#D4AF37] fill-current" />
@@ -759,7 +759,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-4 border border-white/20"
             >
               <Layers className="w-4 h-4 text-[#D4AF37]" />
-              <span className="text-white text-sm font-semibold">Nos 6 pôles d'activité</span>
+              <span className="text-white text-sm font-semibold">Nos 6 pôles d&apos;activité</span>
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -813,8 +813,8 @@ export default function Home() {
               Prêt à unifier la gestion ?
             </h2>
             <p className="text-lg text-gray-200 mb-8 max-w-2xl mx-auto leading-relaxed">
-              Commencez à utiliser SIGMI dès aujourd'hui et découvrez comment centraliser
-              l'ensemble des activités peut transformer l'organisation.
+              Commencez à utiliser SIGMI dès aujourd&apos;hui et découvrez comment centraliser
+              l&apos;ensemble des activités peut transformer l&apos;organisation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">

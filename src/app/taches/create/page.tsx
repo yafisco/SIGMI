@@ -1,38 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckSquare, Calendar, Clock, Save, Flag, User } from 'lucide-react';
 import Link from 'next/link';
 import { tasksService } from '@/lib/services';
 import { collaborateursService } from '@/lib/services';
+import { errorMessage } from '@/lib/utils/errorHandler';
+import { useAuth } from '@/hooks/useAuth';
+import { useData } from '@/hooks/useData';
+import type { TaskPriority } from '@/types';
 
 export default function CreateTaskPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     due_date: '',
-    priority: 'medium',
+    priority: 'medium' as TaskPriority,
     assigned_to: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [collaborateurs, setCollaborateurs] = useState<any[]>([]);
-
-  useEffect(() => {
-    loadCollaborateurs();
-  }, []);
-
-  const loadCollaborateurs = async () => {
-    try {
-      const data = await collaborateursService.getAll();
-      setCollaborateurs(data);
-    } catch (err) {
-      console.error('Erreur chargement collaborateurs:', err);
-    }
-  };
+  const { data: collaborateurs } = useData({ fetchFn: () => collaborateursService.getAll() });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,17 +32,21 @@ export default function CreateTaskPage() {
     setError('');
 
     try {
+      if (!user) {
+        throw new Error('Vous devez être connecté pour créer une tâche');
+      }
       await tasksService.create({
         title: formData.title,
         description: formData.description,
-        due_date: formData.due_date || null,
-        priority: formData.priority as any,
+        due_date: formData.due_date || undefined,
+        priority: formData.priority,
         status: 'todo',
-        assigned_to: formData.assigned_to || null,
+        assigned_to: formData.assigned_to || undefined,
+        created_by: user.id,
       });
       router.push('/taches');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création de la tâche');
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création de la tâche'));
       setLoading(false);
     }
   };
@@ -122,7 +118,7 @@ export default function CreateTaskPage() {
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-[#1D4ED8]" />
-                      Date d'échéance
+                      Date d&apos;échéance
                     </label>
                     <input
                       type="date"
@@ -139,7 +135,7 @@ export default function CreateTaskPage() {
                     </label>
                     <select
                       value={formData.priority}
-                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskPriority })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
                       <option value="low">Basse</option>

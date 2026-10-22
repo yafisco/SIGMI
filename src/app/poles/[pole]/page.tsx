@@ -1,61 +1,108 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Target, TrendingUp, DollarSign, Building2, Users, Award, AlertCircle } from 'lucide-react';
-import { usePoleStats } from '@/hooks/usePoleStats';
-import { useAuth } from '@/hooks/useAuth';
-import { Pole } from '@/types';
-import { POLE_OPTIONS } from '@/lib/constants';
-import { PageHeader } from '@/components/PageHeader';
+import { motion } from 'framer-motion';
+import { Target, TrendingUp, Users, FolderKanban, CheckCircle, DollarSign, Calendar, Settings, LogOut, Menu, X, ArrowLeft, Sparkles, Briefcase } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/AnimatedCard';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
-
-const POLE_ICONS: Record<Pole, any> = {
-  'ingénierie informatique': Target,
-  'génie civil et BTP': Building2,
-  'agrobusiness': TrendingUp,
-  'trading international': DollarSign,
-  'transition énergétique': Award,
-  "centre d'incubation et d'impulsion des entreprises": Users,
-};
-
-const POLE_COLORS: Record<Pole, string> = {
-  'ingénierie informatique': 'from-blue-100 to-blue-200',
-  'génie civil et BTP': 'from-orange-100 to-orange-200',
-  'agrobusiness': 'from-green-100 to-green-200',
-  'trading international': 'from-purple-100 to-purple-200',
-  'transition énergétique': 'from-yellow-100 to-yellow-200',
-  "centre d'incubation et d'impulsion des entreprises": 'from-pink-100 to-pink-200',
-};
-
-const POLE_TEXT_COLORS: Record<Pole, string> = {
-  'ingénierie informatique': 'text-blue-600',
-  'génie civil et BTP': 'text-orange-600',
-  'agrobusiness': 'text-green-600',
-  'trading international': 'text-purple-600',
-  'transition énergétique': 'text-yellow-600',
-  "centre d'incubation et d'impulsion des entreprises": 'text-pink-600',
-};
+import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
+import { POLE_OPTIONS } from '@/lib/constants';
+import type { Projet } from '@/types';
 
 export default function PoleDashboardPage() {
-  const params = useParams();
+  const params = useParams<{ pole: string }>();
+  const poleSlug = decodeURIComponent(params.pole ?? '');
+  const poleName = POLE_OPTIONS.find((p) => p.value === poleSlug)?.label || poleSlug || 'Pôle';
   const router = useRouter();
-  const pole = decodeURIComponent(params.pole as string) as Pole;
-  const { user, loading: authLoading } = useAuth();
+  const { user, signOut } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [userName, setUserName] = useState('');
+  const [isDG, setIsDG] = useState(false);
 
-  const { stats, loading, error } = usePoleStats(pole);
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    inProgressProjects: 0,
+    completedProjects: 0,
+    totalCollaborators: 0,
+    totalBudget: 0,
+    consumedBudget: 0,
+  });
 
-  // Vérifier les permissions
+  const [projects, setProjects] = useState<Projet[]>([]);
+
   useEffect(() => {
-    if (!authLoading && user) {
-      // Si l'utilisateur n'est pas admin et n'appartient pas à ce pôle, rediriger
-      if (!user.isAdmin && (!user.poles || !user.poles.includes(pole))) {
-        router.push('/');
+    // Récupérer le prénom de l'utilisateur et vérifier si c'est le DG
+    async function fetchUserName() {
+      if (user) {
+        const { data } = await supabase
+          .from('collaborateurs')
+          .select('prenom, nom, email, poste, role')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (data) {
+          if (data.prenom && data.prenom.trim()) {
+            setUserName(data.prenom);
+          } else if (data.email) {
+            const emailName = data.email.split('@')[0];
+            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
+            setUserName(formattedName);
+          } else if (data.nom) {
+            setUserName(data.nom);
+          }
+
+          // Vérifier si c'est le DG
+          const poste = data.poste?.toLowerCase() || '';
+          const role = data.role?.toLowerCase() || '';
+          setIsDG(poste.includes('direction') || role.includes('direction'));
+        }
       }
     }
-  }, [authLoading, user, pole, router]);
+    fetchUserName();
+
+    // Charger les données du pôle
+    async function fetchPoleData() {
+      if (poleSlug) {
+        // Projets du pôle
+        const { data: projData } = await supabase
+          .from('projets')
+          .select('*')
+          .contains('poles', [poleSlug])
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        setProjects(projData || []);
+
+        // Statistiques
+        const totalProjects = projData?.length || 0;
+        const inProgress = projData?.filter(p => p.statut === 'en cours').length || 0;
+        const completed = projData?.filter(p => p.statut === 'terminé').length || 0;
+        const totalBudget = projData?.reduce((sum, p) => sum + (p.budget_estime || 0), 0) || 0;
+        const consumedBudget = projData?.reduce((sum, p) => sum + (p.budget_consomme || 0), 0) || 0;
+
+        // Collaborateurs du pôle
+        const { count: collabCount } = await supabase
+          .from('collaborateurs')
+          .select('*', { count: 'exact', head: true })
+          .contains('poles', [poleSlug]);
+
+        setStats({
+          totalProjects,
+          inProgressProjects: inProgress,
+          completedProjects: completed,
+          totalCollaborators: collabCount || 0,
+          totalBudget,
+          consumedBudget,
+        });
+      }
+    }
+    fetchPoleData();
+  }, [poleSlug, user]);
 
   const formatAmount = (value: number) => {
     if (value >= 1000000) {
@@ -64,282 +111,272 @@ export default function PoleDashboardPage() {
     return `${(value / 1000).toFixed(0)}K FCFA`;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full mb-4"
-          />
-          <p className="text-slate-600 font-medium">Chargement du dashboard pôle...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <AlertCircle className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-red-600 font-medium">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const PoleIcon = POLE_ICONS[pole] || Target;
-  const poleColor = POLE_COLORS[pole] || 'from-blue-100 to-blue-200';
-  const poleTextColor = POLE_TEXT_COLORS[pole] || 'text-blue-600';
-
-  const poleLabel = POLE_OPTIONS.find((p) => p.value === pole)?.label || pole;
+  const sidebarItems = [
+    { id: 'overview', label: 'Vue d\'ensemble', icon: Target },
+    { id: 'projects', label: 'Projets', icon: FolderKanban },
+    { id: 'team', label: 'Équipe', icon: Users },
+    { id: 'budget', label: 'Budget', icon: DollarSign },
+    { id: 'settings', label: 'Paramètres', icon: Settings },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
-      <PageHeader
-        title={`Dashboard - ${poleLabel}`}
-        description="Statistiques et KPIs par pôle"
-        actionHref="/"
-        actionLabel="Retour"
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header du pôle */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative mb-8"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-1" />
-          <div className={`relative bg-gradient-to-br ${poleColor} rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-opacity-50 transition-all duration-500 overflow-hidden`}>
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/30 rounded-full blur-2xl" />
-            <div className="flex items-center gap-4 relative">
-              <motion.div
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.6 }}
-                className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg"
-              >
-                <PoleIcon className={`w-8 h-8 ${poleTextColor}`} />
-              </motion.div>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">{poleLabel}</h2>
-                <p className="text-slate-600 mt-1">Performance du pôle</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Statistiques principales */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Opportunités"
-            value={stats?.totalOpportunities || 0}
-            icon={Target}
-            color={poleTextColor}
-            bgColor={poleColor}
-            delay={0}
-          />
-          <StatCard
-            title="Projets"
-            value={stats?.totalProjects || 0}
-            icon={Building2}
-            color="text-blue-600"
-            bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
-            delay={0.1}
-          />
-          <StatCard
-            title="Valeur pipeline"
-            value={formatAmount(stats?.totalValue || 0)}
-            icon={DollarSign}
-            color="text-amber-600"
-            bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
-            delay={0.2}
-          />
-          <StatCard
-            title="Valeur pondérée"
-            value={formatAmount(stats?.weightedValue || 0)}
-            icon={TrendingUp}
-            color="text-purple-600"
-            bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
-            delay={0.3}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
+      {/* Sidebar Desktop */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#1D4ED8] to-[#1e40af] text-white flex-col">
+        <div className="p-6 border-b border-white/10">
+          <h2 className="text-xl font-bold">SIGMI</h2>
+          <p className="text-sm text-white/70 mt-1">{poleName}</p>
         </div>
+        
+        <nav className="flex-1 p-4 space-y-2">
+          {sidebarItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                activeTab === item.id
+                  ? 'bg-[#D4AF37] text-[#1D4ED8] font-semibold'
+                  : 'hover:bg-white/10 text-white/80'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
-        {/* Statistiques détaillées */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="relative"
+        <div className="p-4 border-t border-white/10">
+          {isDG && (
+            <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+              <ArrowLeft className="w-5 h-5" />
+              Dashboard global
+            </Link>
+          )}
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 text-white/80 transition-all mt-2"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-xl transform rotate-1" />
-            <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500">
-              <div className="flex items-center gap-3 mb-4">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.6 }}
-                  className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <Target className="w-6 h-6 text-green-600" />
-                </motion.div>
-                <div>
-                  <h3 className="font-bold text-slate-900">En pipeline</h3>
-                  <p className="text-sm text-slate-600">Opportunités actives</p>
-                </div>
-              </div>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="text-3xl font-bold text-green-600"
-              >
-                <AnimatedCounter value={stats?.inPipeline || 0} />
-              </motion.p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-xl transform rotate-1" />
-            <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500">
-              <div className="flex items-center gap-3 mb-4">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.6 }}
-                  className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <Award className="w-6 h-6 text-blue-600" />
-                </motion.div>
-                <div>
-                  <h3 className="font-bold text-slate-900">Gagnées</h3>
-                  <p className="text-sm text-slate-600">Opportunités signées</p>
-                </div>
-              </div>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="text-3xl font-bold text-blue-600"
-              >
-                <AnimatedCounter value={stats?.won || 0} />
-              </motion.p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-xl transform rotate-1" />
-            <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500">
-              <div className="flex items-center gap-3 mb-4">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.6 }}
-                  className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <AlertCircle className="w-6 h-6 text-red-600" />
-                </motion.div>
-                <div>
-                  <h3 className="font-bold text-slate-900">Perdues</h3>
-                  <p className="text-sm text-slate-600">Opportunités perdues</p>
-                </div>
-              </div>
-              <motion.p
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="text-3xl font-bold text-red-600"
-              >
-                <AnimatedCounter value={stats?.lost || 0} />
-              </motion.p>
-            </div>
-          </motion.div>
+            <LogOut className="w-5 h-5" />
+            Déconnexion
+          </button>
         </div>
+      </aside>
 
-        {/* Taux de conversion */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="relative mb-8"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-1" />
-          <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500 overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-2xl" />
-            <h3 className="text-xl font-bold text-slate-900 mb-4 relative">Taux de conversion</h3>
-            <div className="flex items-center gap-4">
-              <motion.div
-                whileHover={{ rotate: 360, scale: 1.1 }}
-                transition={{ duration: 0.6 }}
-                className="w-16 h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-lg"
-              >
-                <TrendingUp className="w-8 h-8 text-purple-600" />
-              </motion.div>
-              <div>
-                <motion.p
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="text-4xl font-bold text-purple-600"
+      {/* Mobile Header */}
+      <header className="md:hidden bg-gradient-to-r from-[#1D4ED8] to-[#1e40af] text-white p-4 sticky top-0 z-50">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-white/10 rounded-lg"
+          >
+            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+          <h1 className="text-lg font-bold">{poleName}</h1>
+          <button
+            onClick={() => signOut()}
+            className="p-2 hover:bg-white/10 rounded-lg"
+          >
+            <LogOut className="w-6 h-6" />
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Sidebar */}
+      {sidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setSidebarOpen(false)}>
+          <aside className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-[#1D4ED8] to-[#1e40af] text-white flex-col p-4">
+            <div className="p-6 border-b border-white/10">
+              <h2 className="text-xl font-bold">SIGMI</h2>
+              <p className="text-sm text-white/70 mt-1">{poleName}</p>
+            </div>
+            
+            <nav className="flex-1 p-4 space-y-2">
+              {sidebarItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    activeTab === item.id
+                      ? 'bg-[#D4AF37] text-[#1D4ED8] font-semibold'
+                      : 'hover:bg-white/10 text-white/80'
+                  }`}
                 >
-                  <AnimatedCounter value={stats?.conversionRate || 0} suffix="%" />
-                </motion.p>
-                <p className="text-slate-600 mt-1">des opportunités sont converties</p>
+                  <item.icon className="w-5 h-5" />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="p-4 border-t border-white/10">
+              {isDG && (
+                <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10 text-white/80 transition-all">
+                  <ArrowLeft className="w-5 h-5" />
+                  Dashboard global
+                </Link>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="md:ml-64 p-4 md:p-8">
+        {activeTab === 'overview' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Welcome Banner */}
+            <div className="mb-8 bg-gradient-to-r from-[#1D4ED8] via-[#1e40af] to-[#1D4ED8] rounded-2xl p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/20 rounded-full blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-3">
+                  <Sparkles className="w-8 h-8 text-[#D4AF37]" />
+                  <span className="text-[#D4AF37] font-semibold text-sm uppercase tracking-wider">Bienvenue</span>
+                </div>
+                <h1 className="text-4xl font-bold mb-2">
+                  Bonjour, {userName || 'Responsable'} 👋
+                </h1>
+                <p className="text-white/80 text-lg">
+                  Prêt à gérer {poleName} aujourd&apos;hui ?
+                </p>
               </div>
             </div>
-          </div>
-        </motion.div>
 
-        {/* Actions rapides */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="relative"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-1" />
-          <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500 overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-amber-100/50 to-transparent rounded-full blur-2xl" />
-            <h3 className="text-xl font-bold text-slate-900 mb-4 relative">Actions rapides</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <button
-                onClick={() => router.push('/opportunites/create')}
-                className="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:shadow-lg transition-all"
-              >
-                <Target className="w-5 h-5 text-blue-600" />
-                <span className="font-medium text-slate-900">Nouvelle opportunité</span>
-              </button>
-              <button
-                onClick={() => router.push('/projets/create')}
-                className="flex items-center gap-3 p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover:shadow-lg transition-all"
-              >
-                <Building2 className="w-5 h-5 text-green-600" />
-                <span className="font-medium text-slate-900">Nouveau projet</span>
-              </button>
-              <button
-                onClick={() => router.push('/opportunites')}
-                className="flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover:shadow-lg transition-all"
-              >
-                <TrendingUp className="w-5 h-5 text-purple-600" />
-                <span className="font-medium text-slate-900">Voir le pipeline</span>
-              </button>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <StatCard
+                title="Projets en cours"
+                value={stats.inProgressProjects}
+                icon={FolderKanban}
+                color="text-blue-600"
+                bgColor="bg-blue-100"
+              />
+              <StatCard
+                title="Projets terminés"
+                value={stats.completedProjects}
+                icon={CheckCircle}
+                color="text-green-600"
+                bgColor="bg-green-100"
+              />
+              <StatCard
+                title="Total collaborateurs"
+                value={stats.totalCollaborators}
+                icon={Users}
+                color="text-purple-600"
+                bgColor="bg-purple-100"
+              />
+              <StatCard
+                title="Budget total"
+                value={formatAmount(stats.totalBudget)}
+                icon={DollarSign}
+                color="text-amber-600"
+                bgColor="bg-amber-100"
+              />
+              <StatCard
+                title="Budget consommé"
+                value={formatAmount(stats.consumedBudget)}
+                icon={TrendingUp}
+                color="text-red-600"
+                bgColor="bg-red-100"
+              />
+              <StatCard
+                title="Total projets"
+                value={stats.totalProjects}
+                icon={Briefcase}
+                color="text-indigo-600"
+                bgColor="bg-indigo-100"
+              />
             </div>
-          </div>
-        </motion.div>
-      </div>
+
+            {/* Recent Projects */}
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-200">
+                <h3 className="text-xl font-bold text-slate-900">Projets récents</h3>
+              </div>
+              <div className="p-6">
+                {projects.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8">Aucun projet pour le moment</p>
+                ) : (
+                  <div className="space-y-4">
+                    {projects.map((project) => (
+                      <div key={project.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all">
+                        <div>
+                          <h4 className="font-semibold text-slate-900">{project.nom}</h4>
+                          <p className="text-sm text-slate-600">{project.description}</p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          project.statut === 'en cours' ? 'bg-blue-100 text-blue-700' :
+                          project.statut === 'terminé' ? 'bg-green-100 text-green-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {project.statut}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'projects' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Projets de {poleName}</h2>
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+              <p className="text-slate-500">Liste des projets de ce pôle...</p>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'team' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Équipe de {poleName}</h2>
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+              <p className="text-slate-500">Liste des collaborateurs de ce pôle...</p>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'budget' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Budget de {poleName}</h2>
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+              <p className="text-slate-500">Détails du budget de ce pôle...</p>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'settings' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Paramètres de {poleName}</h2>
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+              <p className="text-slate-500">Paramètres de ce pôle...</p>
+            </div>
+          </motion.div>
+        )}
+      </main>
     </div>
   );
 }

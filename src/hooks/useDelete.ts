@@ -3,6 +3,7 @@
 
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 interface UseDeleteOptions {
   entityName: string; // ex: "le client", "l'opportunité", "la tâche"
@@ -43,10 +44,10 @@ export function useDelete(options: UseDeleteOptions) {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || `Erreur lors de la suppression de ${entityName}`,
+          text: errorMessage(err, `Erreur lors de la suppression de ${entityName}`),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,

@@ -1,12 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Target, DollarSign, Calendar, TrendingUp, Users, Save } from 'lucide-react';
 import Link from 'next/link';
 import { useSingleData } from '@/hooks/useData';
 import { opportunitiesService } from '@/lib/services';
-import { Opportunity } from '@/types';
+import { Opportunity, OpportunityStage } from '@/types';
 import { OPPORTUNITY_STAGE_OPTIONS } from '@/lib/constants';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,20 +14,33 @@ import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function EditOpportunityPage({ params }: { params: { id: string } }) {
+type OpportunityFormValues = {
+  name: string;
+  description: string;
+  amount: number;
+  stage: OpportunityStage;
+  probability: number;
+  expected_close_date: string;
+  assigned_to: string;
+};
+
+export default function EditOpportunityPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { data: opportunity, loading, error } = useSingleData<Opportunity>({
     fetchFn: opportunitiesService.getById,
-    id: params.id,
+    id: id,
   });
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({
-    defaultValues: opportunity ? {
+  } = useForm<OpportunityFormValues>({
+    // `values` (et non defaultValues) : l'opportunité est chargée après le premier rendu
+    values: opportunity ? {
       name: opportunity.name,
       description: opportunity.description || '',
       amount: opportunity.amount,
@@ -38,11 +51,14 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
     } : undefined,
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: OpportunityFormValues) => {
     try {
       await opportunitiesService.update({
-        id: params.id,
+        id: id,
         ...data,
+        // Postgres refuse '' pour une date ou un uuid
+        expected_close_date: data.expected_close_date || undefined,
+        assigned_to: data.assigned_to || undefined,
       });
       await Swal.fire({
         title: 'Modifié !',
@@ -51,11 +67,11 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
         confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
       });
-      router.push(`/opportunites/${params.id}`);
-    } catch (err: any) {
+      router.push(`/opportunites/${id}`);
+    } catch (err) {
       await Swal.fire({
         title: 'Erreur',
-        text: err.message || "Erreur lors de la modification de l'opportunité",
+        text: errorMessage(err, "Erreur lors de la modification de l'opportunité"),
         icon: 'error',
         confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
@@ -72,7 +88,7 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full mb-4"
           />
-          <p className="text-slate-600 font-medium">Chargement de l'opportunité...</p>
+          <p className="text-slate-600 font-medium">Chargement de l&apos;opportunité...</p>
         </div>
       </div>
     );
@@ -109,7 +125,7 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
       <PageHeader
         title="Modifier l'opportunité"
         description="Modifiez les informations de l'opportunité"
-        backHref={`/opportunites/${params.id}`}
+        backHref={`/opportunites/${id}`}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -140,13 +156,13 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
                   </motion.div>
                   <div>
                     <h2 className="text-xl font-bold text-slate-900">Informations de base</h2>
-                    <p className="text-slate-500 text-sm">Détails de l'opportunité</p>
+                    <p className="text-slate-500 text-sm">Détails de l&apos;opportunité</p>
                   </div>
                 </div>
                 
                 <div className="space-y-5 relative">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Nom de l'opportunité *</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Nom de l&apos;opportunité *</label>
                     <input
                       {...register('name')}
                       type="text"
@@ -187,6 +203,7 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
                         min="0"
                         max="100"
                         className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
+                        placeholder="Optionnel"
                       />
                     </div>
                   </div>
@@ -228,7 +245,7 @@ export default function EditOpportunityPage({ params }: { params: { id: string }
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex gap-4"
             >
-              <Link href={`/opportunites/${params.id}`} className="flex-1">
+              <Link href={`/opportunites/${id}`} className="flex-1">
                 <Button
                   type="button"
                   variant="outline"

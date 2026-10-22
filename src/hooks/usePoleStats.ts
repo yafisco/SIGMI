@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { poleStatsService, PoleStats } from '@/lib/services/poleStats';
 import { Pole } from '@/types';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export function usePoleStats(pole?: Pole) {
   const [stats, setStats] = useState<PoleStats | null>(null);
@@ -23,9 +24,9 @@ export function usePoleStats(pole?: Pole) {
           const data = await poleStatsService.getAll();
           setAllStats(data);
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error('Erreur chargement stats pôle:', err);
-        setError(err.message || 'Erreur lors du chargement des statistiques');
+        setError(errorMessage(err, 'Erreur lors du chargement des statistiques'));
       } finally {
         setLoading(false);
       }

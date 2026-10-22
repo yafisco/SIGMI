@@ -214,6 +214,7 @@ export const DOCUMENT_STATUS_OPTIONS: Array<{ value: DocumentStatus; label: stri
 
 // === PÔLES ===
 export const POLE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'transversal', label: 'Aucun pôle / Transversal' },
   { value: 'ingénierie informatique', label: 'Ingénierie informatique' },
   { value: 'génie civil et BTP', label: 'Génie civil et BTP' },
   { value: 'agrobusiness', label: 'Agrobusiness' },
@@ -237,6 +238,7 @@ export const SWEETALERT_CONFIG = {
   confirmButtonColor: '#d33',
   cancelButtonColor: '#3085d6',
   successButtonColor: '#1D4ED8',
+  errorButtonColor: '#d33',
   customClass: {
     popup: 'rounded-xl',
     confirmButton: 'rounded-lg',

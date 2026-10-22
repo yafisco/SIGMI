@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Plus, TrendingUp, DollarSign, Calendar, Building2, Trash2, Target, Star } from 'lucide-react';
-import { Opportunity } from '@/types';
+import { Opportunity, Pole } from '@/types';
 import Link from 'next/link';
 import { useOpportunities, useDeleteOpportunity } from '@/lib/api/useOpportunities';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
@@ -15,10 +16,16 @@ import { motion } from 'framer-motion';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Swal from 'sweetalert2';
 import { usePoleFilter } from '@/hooks/usePoleFilter';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function OpportunitesPage() {
+function OpportunitesPageContent() {
+  const router = useRouter();
+  const { workspace } = useWorkspace();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') || '';
   const { pole: userPole, shouldFilter, user } = usePoleFilter();
-  const { data: opportunities, loading, error } = useOpportunities(shouldFilter ? userPole || undefined : undefined);
+  const { data: opportunities, isLoading: loading, error } = useOpportunities(shouldFilter ? userPole || undefined : undefined);
   const deleteOpportunity = useDeleteOpportunity();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStage, setFilterStage] = useState<string>('all');
@@ -27,6 +34,21 @@ export default function OpportunitesPage() {
 
   // Masquer le filtre par pôle pour les non-administrateurs
   const canFilterByPole = user?.isAdmin || false;
+
+  // Rediriger les non-admin vers leur espace de travail
+  useEffect(() => {
+    if (from === 'commercial') {
+      router.push('/commercial');
+    } else if (from === 'tresorerie') {
+      router.push('/tresorerie');
+    } else if (workspace !== 'dashboard' && user && !user.isAdmin) {
+      if (workspace === 'commercial') {
+        router.push('/commercial');
+      } else if (workspace === 'tresorerie') {
+        router.push('/tresorerie');
+      }
+    }
+  }, [workspace, user, router, from]);
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
@@ -51,10 +73,10 @@ export default function OpportunitesPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || "Erreur lors de la suppression de l'opportunité",
+          text: errorMessage(err, "Erreur lors de la suppression de l'opportunité"),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -70,7 +92,7 @@ export default function OpportunitesPage() {
       opp.client_nom?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStage = filterStage === 'all' || opp.stage === filterStage;
-    const matchesPole = filterPole === 'all' || (opp.poles && opp.poles.includes(filterPole));
+    const matchesPole = filterPole === 'all' || (opp.poles && opp.poles.includes(filterPole as Pole));
 
     return matchesSearch && matchesStage && matchesPole;
   });
@@ -124,7 +146,7 @@ export default function OpportunitesPage() {
           <div className="inline-block w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Target className="w-8 h-8 text-red-600" />
           </div>
-          <p className="text-red-600 font-medium">{error}</p>
+          <p className="text-red-600 font-medium">{error.message}</p>
         </div>
       </div>
     );
@@ -339,5 +361,14 @@ export default function OpportunitesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// useSearchParams exige une frontière <Suspense> pour le prerender
+export default function OpportunitesPage() {
+  return (
+    <Suspense>
+      <OpportunitesPageContent />
+    </Suspense>
   );
 }

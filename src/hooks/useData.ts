@@ -1,12 +1,12 @@
 // Hook personnalisé pour centraliser le chargement de données
 // Réutilisable dans toutes les pages qui chargent des données depuis un service
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type DependencyList } from 'react';
 import { handleError } from '@/lib/utils/errorHandler';
 
 interface UseDataOptions<T> {
   fetchFn: () => Promise<T[]>;
-  deps?: any[];
+  deps?: DependencyList;
   initialData?: T[];
   onError?: (error: string) => void;
 }
@@ -30,32 +30,46 @@ export function useData<T>(options: UseDataOptions<T>): UseDataReturn<T> {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const result = await fetchFn();
-      setData(result);
-    } catch (err) {
-      const errorMessage = handleError(err, 'useData');
-      setError(errorMessage);
-      if (onError) {
-        onError(errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
+  // Les setState ne sont appelés que dans les callbacks de la promesse :
+  // l'effet ne déclenche pas de rendu en cascade, et une réponse arrivée après démontage est ignorée.
+  const load = (isActive: () => boolean = () => true) =>
+    fetchFn()
+      .then((result) => {
+        if (!isActive()) return;
+        setData(result);
+        setError('');
+      })
+      .catch((err) => {
+        if (!isActive()) return;
+        const errorMessage = handleError(err, { context: 'useData' });
+        setError(errorMessage);
+        if (onError) {
+          onError(errorMessage);
+        }
+      })
+      .finally(() => {
+        if (isActive()) setLoading(false);
+      });
+
+  const refresh = async () => {
+    setLoading(true);
+    await load();
   };
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    load(() => active);
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return {
     data,
     loading,
     error,
-    refresh: loadData,
+    refresh,
   };
 }
 
@@ -63,7 +77,7 @@ export function useData<T>(options: UseDataOptions<T>): UseDataReturn<T> {
  * Hook pour charger une seule entité par ID
  */
 interface UseSingleDataOptions<T> {
-  fetchFn: (id: string) => Promise<T>;
+  fetchFn: (id: string) => Promise<T | null>;
   id: string;
   onError?: (error: string) => void;
 }
@@ -79,39 +93,48 @@ export function useSingleData<T>(options: UseSingleDataOptions<T>): UseSingleDat
   const { fetchFn, id, onError } = options;
 
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id));
   const [error, setError] = useState('');
 
-  const loadData = async () => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
+  const load = (isActive: () => boolean = () => true) =>
+    fetchFn(id)
+      .then((result) => {
+        if (!isActive()) return;
+        setData(result);
+        setError('');
+      })
+      .catch((err) => {
+        if (!isActive()) return;
+        const errorMessage = handleError(err, { context: 'useSingleData' });
+        setError(errorMessage);
+        if (onError) {
+          onError(errorMessage);
+        }
+      })
+      .finally(() => {
+        if (isActive()) setLoading(false);
+      });
 
-    try {
-      setLoading(true);
-      setError('');
-      const result = await fetchFn(id);
-      setData(result);
-    } catch (err) {
-      const errorMessage = handleError(err, 'useSingleData');
-      setError(errorMessage);
-      if (onError) {
-        onError(errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
+  const refresh = async () => {
+    if (!id) return;
+    setLoading(true);
+    await load();
   };
 
   useEffect(() => {
-    loadData();
+    if (!id) return;
+    let active = true;
+    load(() => active);
+    return () => {
+      active = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   return {
     data,
     loading,
     error,
-    refresh: loadData,
+    refresh,
   };
 }

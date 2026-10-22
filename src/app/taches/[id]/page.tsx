@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, User, Calendar, Clock, AlertCircle, Edit, Trash2, CheckCircle, Zap, Target, Plus, FileText } from 'lucide-react';
-import { useData } from '@/hooks/useData';
+import { useSingleData } from '@/hooks/useData';
 import { tasksService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/AnimatedCard';
@@ -13,8 +13,10 @@ import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { TASK_STATUS_COLORS, TASK_STATUS_LABELS, TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from '@/lib/constants';
 import Link from 'next/link';
+import type { LucideIcon } from 'lucide-react';
+import type { Task } from '@/types';
 
-const statusIcons: Record<string, any> = {
+const statusIcons: Record<string, LucideIcon> = {
   todo: Target,
   in_progress: Zap,
   done: CheckCircle,
@@ -49,7 +51,7 @@ const priorityTextColors: Record<string, string> = {
   urgent: 'text-red-600',
 };
 
-function isOverdue(task: any) {
+function isOverdue(task: Pick<Task, 'due_date' | 'status'>) {
   if (!task.due_date || task.status === 'done') return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -62,8 +64,9 @@ export default function TaskDetailPage() {
   const router = useRouter();
   const id = params.id as string;
 
-  const { data: task, loading, error, refresh } = useData({
-    fetchFn: () => tasksService.getById(id),
+  const { data: task, loading, error, refresh } = useSingleData({
+    fetchFn: tasksService.getById,
+    id,
   });
 
   const handleDelete = async () => {
@@ -257,7 +260,7 @@ export default function TaskDetailPage() {
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-slate-400" />
                     <div>
-                      <p className="text-xs text-slate-500">Date d'échéance</p>
+                      <p className="text-xs text-slate-500">Date d&apos;échéance</p>
                       <p className={`text-sm font-medium ${overdue ? 'text-red-600' : 'text-slate-900'}`}>
                         {task.due_date ? new Date(task.due_date).toLocaleDateString('fr-FR') : '-'}
                         {overdue && <span className="text-xs ml-2">(En retard)</span>}

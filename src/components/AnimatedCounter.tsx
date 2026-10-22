@@ -15,11 +15,7 @@ export function AnimatedCounter({ value, suffix = '', duration = 2 }: AnimatedCo
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (isInView) {
-      if (value === 0) {
-        setCount(0);
-        return;
-      }
+    if (isInView && value !== 0) {
       let start = 0;
       const end = value;
       const incrementTime = (duration * 1000) / end;
@@ -41,7 +37,7 @@ export function AnimatedCounter({ value, suffix = '', duration = 2 }: AnimatedCo
       animate={isInView ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {count}{suffix}
+      {value === 0 ? 0 : count}{suffix}
     </motion.span>
   );
 }

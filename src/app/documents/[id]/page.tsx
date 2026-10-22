@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Edit, Trash2, Download, Building2, FolderKanban, Calendar, User, Tag } from 'lucide-react';
-import { useData } from '@/hooks/useData';
+import { useSingleData } from '@/hooks/useData';
 import { documentsService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/AnimatedCard';
@@ -11,14 +11,16 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function DocumentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
-  const { data: document, loading, error } = useData({
-    fetchFn: () => documentsService.getById(id),
+  const { data: document, loading, error } = useSingleData({
+    fetchFn: documentsService.getById,
+    id,
   });
 
   const handleDelete = async () => {
@@ -45,10 +47,10 @@ export default function DocumentDetailPage() {
           customClass: SWEETALERT_CONFIG.customClass,
         });
         router.push('/documents');
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression',
+          text: errorMessage(err, 'Erreur lors de la suppression'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,

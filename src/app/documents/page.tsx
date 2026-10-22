@@ -14,6 +14,7 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { documentsService } from '@/lib/services';
 import Swal from 'sweetalert2';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 const typeLabels: Record<DocumentType, string> = {
   'contrat': 'Contrat',
@@ -105,10 +106,10 @@ export default function DocumentsPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du document',
+          text: errorMessage(err, 'Erreur lors de la suppression du document'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -266,7 +267,7 @@ export default function DocumentsPage() {
                   </motion.div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-slate-900 mb-1">{doc.nom}</h3>
-                    <p className="text-sm text-slate-600">{formatFileSize(doc.taille)}</p>
+                    <p className="text-sm text-slate-600">{formatFileSize(doc.fichier_taille)}</p>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -302,8 +303,8 @@ export default function DocumentsPage() {
                       {new Date(doc.created_at).toLocaleDateString('fr-FR')}
                     </div>
                   )}
-                  {doc.url && (
-                    <Link href={doc.url} target="_blank" rel="noopener noreferrer">
+                  {doc.fichier_url && (
+                    <Link href={doc.fichier_url} target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="sm" className="w-full mt-2">
                         <Download className="w-4 h-4 mr-2" />
                         Télécharger

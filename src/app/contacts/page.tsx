@@ -13,6 +13,7 @@ import { motion } from 'framer-motion';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { useData } from '@/hooks/useData';
 import Swal from 'sweetalert2';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 const roleColors: Record<ContactRole, string> = {
   directeur: 'bg-purple-100 text-purple-700',
@@ -70,10 +71,10 @@ export default function ContactsPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || 'Erreur lors de la suppression du contact',
+          text: errorMessage(err, 'Erreur lors de la suppression du contact'),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -243,8 +244,8 @@ export default function ContactsPage() {
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${roleColors[contact.role]}`}>
-                      {roleLabels[contact.role]}
+                    <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${roleColors[contact.role as ContactRole]}`}>
+                      {roleLabels[contact.role as ContactRole]}
                     </span>
                   </div>
                   {contact.client_nom && (

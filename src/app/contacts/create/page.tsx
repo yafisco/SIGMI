@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, Mail, Phone, Building2, Save, Briefcase, Sticker } from 'lucide-react';
 import Link from 'next/link';
 import { contactsService } from '@/lib/services';
+import type { ContactRole } from '@/types';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function CreateContactPage() {
   const router = useRouter();
@@ -33,17 +35,16 @@ export default function CreateContactPage() {
         prenom: formData.prenom,
         email: formData.email,
         telephone: formData.telephone,
-        role: formData.role as any,
+        role: formData.role as ContactRole,
         poste: formData.poste,
         client_id: formData.client_id || null,
         notes: formData.notes,
       });
       router.push('/contacts');
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création du contact');
+    } catch (err) {
+      setError(errorMessage(err, 'Erreur lors de la création du contact'));
       setLoading(false);
     }
-  };
   };
 
   return (

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Plus, MessageSquare, Calendar, User, Phone, Mail, Trash2, Clock } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { interactionsService } from '@/lib/services';
 import { Interaction, InteractionType } from '@/types';
@@ -13,8 +14,9 @@ import { motion } from 'framer-motion';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { useData } from '@/hooks/useData';
 import Swal from 'sweetalert2';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
-const typeLabels: Record<InteractionType, string> = {
+const typeLabels: Record<string, string> = {
   email: 'Email',
   appel: 'Appel',
   réunion: 'Réunion',
@@ -22,7 +24,7 @@ const typeLabels: Record<InteractionType, string> = {
   autre: 'Autre',
 };
 
-const typeIcons: Record<InteractionType, any> = {
+const typeIcons: Record<string, LucideIcon> = {
   email: Mail,
   appel: Phone,
   réunion: MessageSquare,
@@ -30,7 +32,7 @@ const typeIcons: Record<InteractionType, any> = {
   autre: Clock,
 };
 
-const typeColors: Record<InteractionType, string> = {
+const typeColors: Record<string, string> = {
   email: 'bg-blue-100 text-blue-700',
   appel: 'bg-green-100 text-green-700',
   réunion: 'bg-purple-100 text-purple-700',
@@ -78,10 +80,10 @@ export default function InteractionsPage() {
           confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
         });
-      } catch (err: any) {
+      } catch (err) {
         await Swal.fire({
           title: 'Erreur',
-          text: err.message || "Erreur lors de la suppression de l'interaction",
+          text: errorMessage(err, "Erreur lors de la suppression de l'interaction"),
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
