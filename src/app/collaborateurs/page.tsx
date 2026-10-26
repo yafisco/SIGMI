@@ -62,7 +62,7 @@ export default function CollaborateursPage() {
   const [filterRole, setFilterRole] = useState<Role | 'tous'>('tous');
 
   // Masquer le filtre par pôle pour les non-administrateurs
-  const canFilterByPole = user?.isAdmin || false;
+  const canFilterByPole = user?.canSeeAllPoles || false;
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({

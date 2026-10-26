@@ -40,8 +40,8 @@ export default function PoleDashboardPage() {
     async function fetchUserName() {
       if (user) {
         const { data } = await supabase
-          .from('collaborateurs')
-          .select('prenom, nom, email, poste, role')
+          .from('profiles')
+          .select('prenom, nom, email, role')
           .eq('id', user.id)
           .maybeSingle();
         
@@ -57,9 +57,7 @@ export default function PoleDashboardPage() {
           }
 
           // Vérifier si c'est le DG
-          const poste = data.poste?.toLowerCase() || '';
-          const role = data.role?.toLowerCase() || '';
-          setIsDG(poste.includes('direction') || role.includes('direction'));
+          setIsDG(data.role === 'direction_generale');
         }
       }
     }

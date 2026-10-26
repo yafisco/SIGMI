@@ -16,7 +16,32 @@ export type Role =
   | 'gestionnaire de projet'
   | 'administrateur système';
 
-export type ProjectStatus = 'planifié' | 'en cours' | 'en pause' | 'terminé' | 'annulé';
+// Rôles applicatifs (enum SQL app_role), voir docs/matrice-droits.md
+export type AppRole =
+  | 'direction_generale'
+  | 'commercial'
+  | 'finance_comptabilite'
+  | 'responsable_pole'
+  | 'back_office'
+  | 'admin';
+
+// Compte de connexion lié à une personne (table profiles, id = auth.users.id)
+export interface Profile {
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone?: string | null;
+  fonction?: string | null;
+  pole: Pole | null;
+  role: AppRole;
+  actif: boolean;
+  collaborateur_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ProjectStatus ='planifié' | 'en cours' | 'en pause' | 'terminé' | 'annulé';
 export type ProjectPriority = 'basse' | 'moyenne' | 'haute' | 'critique';
 
 export type DocumentType = 'contrat' | 'facture' | 'rapport' | 'plan' | 'autre';
@@ -373,4 +398,478 @@ export interface DashboardStats {
   opportunities_by_stage: Record<OpportunityStage, number>;
   tasks_by_status: Record<TaskStatus, number>;
   clients_by_statut: Record<ClientStatut, number>;
+}
+
+// === GESTION COMMERCIALE ===
+
+export type DevisStatut = 'brouillon' | 'envoyé' | 'accepté' | 'refusé';
+export type VenteModePaiement = 'especes' | 'cheque' | 'virement' | 'mobile_money' | 'carte';
+export type AchatStatut = 'en_cours' | 'reçu' | 'annulé';
+export type MouvementType = 'entree' | 'sortie' | 'ajustement';
+export type MouvementSource = 'achat' | 'vente' | 'ajustement';
+
+export interface Fournisseur {
+  id: string;
+  raison_sociale: string;
+  contact_principal?: string;
+  telephone?: string;
+  email?: string;
+  adresse?: string;
+  secteur_activite?: string;
+  conditions_paiement?: string;
+  notes?: string;
+  actif: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateFournisseurInput {
+  raison_sociale: string;
+  contact_principal?: string;
+  telephone?: string;
+  email?: string;
+  adresse?: string;
+  secteur_activite?: string;
+  conditions_paiement?: string;
+  notes?: string;
+}
+
+export interface UpdateFournisseurInput extends Partial<CreateFournisseurInput> {
+  id: string;
+  actif?: boolean;
+}
+
+export interface Produit {
+  id: string;
+  reference: string;
+  designation: string;
+  description?: string;
+  prix_unitaire: number;
+  unite_mesure: string;
+  fournisseur_id?: string;
+  fournisseur_nom?: string;
+  pole?: string;
+  stock_minimum: number;
+  actif: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateProduitInput {
+  reference: string;
+  designation: string;
+  description?: string;
+  prix_unitaire: number;
+  unite_mesure?: string;
+  fournisseur_id?: string;
+  pole?: string;
+  stock_minimum?: number;
+}
+
+export interface UpdateProduitInput extends Partial<CreateProduitInput> {
+  id: string;
+  actif?: boolean;
+}
+
+export interface MouvementStock {
+  id: string;
+  produit_id: string;
+  produit_nom?: string;
+  type: MouvementType;
+  quantite: number;
+  date: string;
+  source: MouvementSource;
+  responsable_id?: string;
+  responsable_nom?: string;
+  notes?: string;
+  created_at: string;
+}
+
+export interface CreateMouvementStockInput {
+  produit_id: string;
+  type: MouvementType;
+  quantite: number;
+  source: MouvementSource;
+  responsable_id?: string;
+  notes?: string;
+}
+
+export interface Devis {
+  id: string;
+  numero: string;
+  client_id?: string;
+  client_nom?: string;
+  date: string;
+  date_validite?: string;
+  statut: DevisStatut;
+  total_ht: number;
+  total_ttc: number;
+  notes?: string;
+  created_by?: string;
+  created_by_nom?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateDevisInput {
+  numero: string;
+  client_id?: string;
+  date: string;
+  date_validite?: string;
+  statut?: DevisStatut;
+  notes?: string;
+  lignes?: Array<{
+    produit_id?: string;
+    designation: string;
+    quantite: number;
+    prix_unitaire: number;
+  }>;
+}
+
+export interface LigneDevis {
+  id: string;
+  devis_id: string;
+  produit_id?: string;
+  designation: string;
+  quantite: number;
+  prix_unitaire: number;
+  sous_total: number;
+  created_at: string;
+}
+
+export interface Vente {
+  id: string;
+  numero: string;
+  client_id?: string;
+  client_nom?: string;
+  date: string;
+  total: number;
+  mode_paiement?: VenteModePaiement;
+  created_by?: string;
+  created_by_nom?: string;
+  bon_livraison_id?: string;
+  created_at: string;
+}
+
+export interface CreateVenteInput {
+  client_id?: string;
+  mode_paiement?: VenteModePaiement;
+  lignes: Array<{
+    produit_id: string;
+    quantite: number;
+    prix_unitaire: number;
+  }>;
+}
+
+export interface LigneVente {
+  id: string;
+  vente_id: string;
+  produit_id: string;
+  produit_nom?: string;
+  quantite: number;
+  prix_unitaire: number;
+  sous_total: number;
+  created_at: string;
+}
+
+export interface BonLivraison {
+  id: string;
+  numero: string;
+  vente_id?: string;
+  facture_id?: string;
+  date: string;
+  destinataire?: string;
+  statut: 'émis' | 'annulé';
+  created_by?: string;
+  created_by_nom?: string;
+  created_at: string;
+}
+
+export interface AchatFournisseur {
+  id: string;
+  numero: string;
+  fournisseur_id: string;
+  fournisseur_nom?: string;
+  date: string;
+  prix_total: number;
+  statut: AchatStatut;
+  mode_paiement?: string;
+  valide_par?: string;
+  valide_par_nom?: string;
+  created_at: string;
+}
+
+export interface CreateAchatInput {
+  fournisseur_id: string;
+  prix_total: number;
+  mode_paiement?: string;
+  lignes: Array<{
+    produit_id: string;
+    quantite: number;
+    prix_unitaire: number;
+  }>;
+}
+
+export interface LigneAchat {
+  id: string;
+  achat_id: string;
+  produit_id: string;
+  produit_nom?: string;
+  quantite: number;
+  prix_unitaire: number;
+  sous_total: number;
+  created_at: string;
+}
+
+// === EMAIL TEMPLATES ===
+export type EmailTemplateCategory = 'prospection' | 'agrement' | 'relance' | 'rendez-vous' | 'devis' | 'livraison' | 'contrat' | 'autre';
+
+export interface EmailTemplate {
+  id: string;
+  nom: string;
+  categorie: EmailTemplateCategory;
+  sujet: string;
+  corps: string;
+  variables?: string[]; // Liste des variables utilisables (ex: {nom_client}, {nom_prospect})
+  actif: boolean;
+  created_by?: string;
+  created_by_nom?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateEmailTemplateInput {
+  nom: string;
+  categorie: EmailTemplateCategory;
+  sujet: string;
+  corps: string;
+  variables?: string[];
+  actif?: boolean;
+}
+
+export interface UpdateEmailTemplateInput extends Partial<CreateEmailTemplateInput> {
+  id: string;
+}
+
+// === BUDGETS ===
+export type BudgetStatut = 'actif' | 'archive' | 'depasse';
+
+export interface Budget {
+  id: string;
+  nom: string;
+  description?: string;
+  montant_budget: number;
+  montant_depense: number;
+  pole?: string;
+  projet_id?: string;
+  annee: number;
+  mois?: number;
+  statut: BudgetStatut;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateBudgetInput {
+  nom: string;
+  description?: string;
+  montant_budget: number;
+  pole?: string;
+  projet_id?: string;
+  annee: number;
+  mois?: number;
+  statut?: BudgetStatut;
+}
+
+export interface UpdateBudgetInput extends Partial<CreateBudgetInput> {
+  id: string;
+}
+
+// === TRANSACTIONS FINANCIERES ===
+export type TransactionType = 'encaissement' | 'decaissement';
+export type TransactionCategorie = 'vente' | 'achat' | 'salaire' | 'frais' | 'divers';
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  categorie: TransactionCategorie;
+  montant: number;
+  description: string;
+  reference?: string;
+  pole?: string;
+  projet_id?: string;
+  facture_id?: string;
+  date_transaction: string;
+  statut: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTransactionInput {
+  type: TransactionType;
+  categorie: TransactionCategorie;
+  montant: number;
+  description: string;
+  reference?: string;
+  pole?: string;
+  projet_id?: string;
+  facture_id?: string;
+  date_transaction: string;
+  statut?: string;
+}
+
+export interface UpdateTransactionInput extends Partial<CreateTransactionInput> {
+  id: string;
+}
+
+// === CAMPAGNES MARKETING ===
+export type CampagneStatut = 'planifie' | 'en_cours' | 'termine' | 'annule';
+
+export interface CampagneMarketing {
+  id: string;
+  nom: string;
+  description?: string;
+  type: string;
+  canal: string;
+  budget?: number;
+  date_debut?: string;
+  date_fin?: string;
+  statut: CampagneStatut;
+  leads_generes: number;
+  taux_conversion?: number;
+  objectif?: string;
+  pole?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCampagneInput {
+  nom: string;
+  description?: string;
+  type: string;
+  canal: string;
+  budget?: number;
+  date_debut?: string;
+  date_fin?: string;
+  statut?: CampagneStatut;
+  leads_generes?: number;
+  taux_conversion?: number;
+  objectif?: string;
+  pole?: string;
+}
+
+export interface UpdateCampagneInput extends Partial<CreateCampagneInput> {
+  id: string;
+}
+
+// === POSTES ===
+export type TypeContrat = 'CDI' | 'CDD' | 'Freelance' | 'Stage';
+export type PosteStatut = 'ouvert' | 'ferme' | 'pourvu';
+
+export interface Poste {
+  id: string;
+  titre: string;
+  description?: string;
+  departement?: string;
+  type_contrat?: TypeContrat;
+  lieu?: string;
+  salaire_min?: number;
+  salaire_max?: number;
+  statut: PosteStatut;
+  competences_requises?: string[];
+  date_publication: string;
+  date_limite?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePosteInput {
+  titre: string;
+  description?: string;
+  departement?: string;
+  type_contrat?: TypeContrat;
+  lieu?: string;
+  salaire_min?: number;
+  salaire_max?: number;
+  statut?: PosteStatut;
+  competences_requises?: string[];
+  date_limite?: string;
+}
+
+export interface UpdatePosteInput extends Partial<CreatePosteInput> {
+  id: string;
+}
+
+// === CANDIDATURES ===
+export type CandidatureStatut = 'en_attente' | 'en_revision' | 'entretien' | 'accepte' | 'refuse';
+
+export interface Candidature {
+  id: string;
+  nom_complet: string;
+  email: string;
+  telephone?: string;
+  poste_id?: string;
+  poste_nom?: string;
+  cv_url?: string;
+  lettre_motivation?: string;
+  experience_annees?: number;
+  competences?: string[];
+  date_candidature: string;
+  statut: CandidatureStatut;
+  note?: number;
+  commentaires?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCandidatureInput {
+  nom_complet: string;
+  email: string;
+  telephone?: string;
+  poste_id?: string;
+  poste_nom?: string;
+  cv_url?: string;
+  lettre_motivation?: string;
+  experience_annees?: number;
+  competences?: string[];
+  statut?: CandidatureStatut;
+  note?: number;
+  commentaires?: string;
+}
+
+export interface UpdateCandidatureInput extends Partial<CreateCandidatureInput> {
+  id: string;
+}
+
+// === SOURCES PROSPECTS ===
+export type QualiteLeads = 'haute' | 'moyenne' | 'faible';
+
+export interface SourceProspect {
+  id: string;
+  nom: string;
+  type: string;
+  description?: string;
+  conversion_rate?: number;
+  qualite_leads: QualiteLeads;
+  actif: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSourceProspectInput {
+  nom: string;
+  type: string;
+  description?: string;
+  conversion_rate?: number;
+  qualite_leads?: QualiteLeads;
+  actif?: boolean;
+}
+
+export interface UpdateSourceProspectInput extends Partial<CreateSourceProspectInput> {
+  id: string;
 }

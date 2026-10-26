@@ -1,7 +1,7 @@
 // Constantes partagées pour SIGMI
 // Couleurs, labels, options utilisées dans toute l'application
 
-import { ClientStatut, OpportunityStage, TaskStatus, TaskPriority, InteractionType, ProjectStatus, ProjectPriority, DocumentType, DocumentStatus } from '@/types';
+import { AppRole, ClientStatut, OpportunityStage, TaskStatus, TaskPriority, InteractionType, ProjectStatus, ProjectPriority, DocumentType, DocumentStatus } from '@/types';
 
 // === CLIENT ===
 export const CLIENT_STATUT_COLORS: Record<ClientStatut, string> = {
@@ -222,6 +222,20 @@ export const POLE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'transition énergétique', label: 'Transition énergétique' },
   { value: "centre d'incubation et d'impulsion des entreprises", label: "Centre d'incubation et d'impulsion des entreprises" },
 ];
+
+// === RÔLES APPLICATIFS ===
+export const APP_ROLE_LABELS: Record<AppRole, string> = {
+  direction_generale: 'Direction générale',
+  commercial: 'Commercial',
+  finance_comptabilite: 'Finance et comptabilité',
+  responsable_pole: 'Responsable de pôle',
+  back_office: 'Back office',
+  admin: 'Administrateur',
+};
+
+export const APP_ROLE_OPTIONS: Array<{ value: AppRole; label: string }> = (
+  Object.keys(APP_ROLE_LABELS) as AppRole[]
+).map((value) => ({ value, label: APP_ROLE_LABELS[value] }));
 
 // === COULEURS GROUP MI ===
 export const GROUP_MI_COLORS = {

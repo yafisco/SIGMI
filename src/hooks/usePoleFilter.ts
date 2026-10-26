@@ -1,36 +1,24 @@
 'use client';
 
 import { useAuth } from './useAuth';
-import { Pole } from '@/types';
 
+// Filtre d'affichage par pôle. La sécurité est assurée par le RLS (current_pole()) ;
+// ce filtre ne fait que restreindre les listes d'un responsable de pôle à son pôle.
 export function usePoleFilter() {
   const { user, loading: authLoading } = useAuth();
 
-  // Si l'utilisateur est admin, il voit tout
-  if (user?.isAdmin) {
+  if (user?.role === 'responsable_pole' && user.pole) {
     return {
-      pole: null, // null = pas de filtre (voir tout)
-      shouldFilter: false,
-      loading: authLoading,
-      user,
-    };
-  }
-
-  // Si l'utilisateur a des pôles assignés, on filtre par le premier pôle
-  // (Pour simplifier, on suppose qu'un utilisateur appartient à un seul pôle principal)
-  if (user?.poles && user.poles.length > 0) {
-    return {
-      pole: user.poles[0],
+      pole: user.pole,
       shouldFilter: true,
       loading: authLoading,
       user,
     };
   }
 
-  // Si l'utilisateur n'a pas de pôle assigné, il ne voit rien
   return {
-    pole: null,
-    shouldFilter: true,
+    pole: null, // null = pas de filtre côté interface
+    shouldFilter: false,
     loading: authLoading,
     user,
   };

@@ -23,7 +23,7 @@ export default function TresoreriePage() {
     async function fetchUserName() {
       if (user) {
         const { data, error } = await supabase
-          .from('collaborateurs')
+          .from('profiles')
           .select('prenom, nom, email')
           .eq('id', user.id)
           .maybeSingle();

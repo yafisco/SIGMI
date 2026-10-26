@@ -30,7 +30,7 @@ export default function TachesPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Masquer le filtre par pôle pour les non-administrateurs
-  const canFilterByPole = user?.isAdmin || false;
+  const canFilterByPole = user?.canSeeAllPoles || false;
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({

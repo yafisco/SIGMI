@@ -1,50 +1,23 @@
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
+// Retour des liens e-mail Supabase (confirmation, réinitialisation) : échange du code contre une session.
+// Aucun profil n'est créé ici : les comptes et leurs rôles sont gérés par l'administrateur.
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code')
+  const code = requestUrl.searchParams.get('code');
 
   if (code) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = await createClient();
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-
-    if (!error && data.user) {
-      // Créer le collaborateur si n'existe pas encore
-      const { data: existingCollab } = await supabase
-        .from('collaborateurs')
-        .select('*')
-        .eq('id', data.user.id)
-        .single()
-
-      if (!existingCollab) {
-        const metadata = data.user.user_metadata
-        await supabase.from('collaborateurs').insert({
-          id: data.user.id,
-          nom: metadata?.nom || 'Inconnu',
-          prenom: metadata?.prenom || '',
-          email: data.user.email || '',
-          poste: 'Nouveau collaborateur',
-          role: 'commercial',
-          poles: [],
-          date_embauche: new Date().toISOString().split('T')[0],
-          actif: true,
-        })
-      }
-
-      const forwardedHost = request.headers.get('host')
-      const forwardedProto = request.headers.get('x-forwarded-proto') || 'https'
-      const url = requestUrl.searchParams.get('redirect_to')?.toString()
-      
-      const redirectUrl = url || `${forwardedProto}://${forwardedHost}/dashboard`
-      
-      return Response.redirect(redirectUrl)
+    if (!error) {
+      // Redirection limitée au même site (pas d'URL externe via un paramètre)
+      const next = requestUrl.searchParams.get('next');
+      const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : '/login?confirmed=true';
+      return NextResponse.redirect(new URL(destination, requestUrl.origin));
     }
   }
 
-  // Retourner à la page de login avec une erreur
-  return Response.redirect(`${requestUrl.origin}/login?error=auth`)
+  return NextResponse.redirect(new URL('/login?error=auth', requestUrl.origin));
 }

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
   Target, TrendingUp, Clock, FolderKanban, Users,
-  DollarSign, CheckCircle, AlertCircle, ArrowRight, Plus,
+  DollarSign, CheckCircle, AlertCircle, ArrowRight, Plus, ArrowLeftRight,
   Briefcase, FileText, Activity, BarChart3, Star, Sparkles,
   MessageSquare, Mail, Phone, Calendar,
 } from 'lucide-react';
@@ -28,23 +28,12 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Protection : rediriger les non-DG vers leur espace de travail
-  useEffect(() => {
-    if (!isLoading && workspace !== 'dashboard') {
-      if (workspace === 'commercial') {
-        router.push('/commercial');
-      } else if (workspace === 'tresorerie') {
-        router.push('/tresorerie');
-      }
-    }
-  }, [workspace, isLoading, router]);
-
   // Charger le prénom de l'utilisateur
   useEffect(() => {
     async function fetchUserName() {
       if (user) {
         const { data } = await supabase
-          .from('collaborateurs')
+          .from('profiles')
           .select('prenom, nom, email')
           .eq('id', user.id)
           .maybeSingle();
@@ -100,7 +89,7 @@ export default function DashboardPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           const { data: userData } = await supabase
-            .from('collaborateurs')
+            .from('profiles')
             .select('nom, prenom')
             .eq('id', user.id)
             .single();
@@ -187,6 +176,440 @@ export default function DashboardPage() {
     return `${(value / 1000).toFixed(0)}K FCFA`;
   };
 
+  // Dashboard spécifique par rôle
+  const renderRoleSpecificContent = () => {
+    if (!user) return null;
+
+    switch (user.role) {
+      case 'commercial':
+        return (
+          <>
+            {/* KPI Commercial */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Opportunités"
+                value={stats.opportunities}
+                icon={Target}
+                color="text-blue-600"
+                bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+                delay={0}
+              />
+              <StatCard
+                title="Pipeline"
+                value={formatAmount(stats.pipelineValue)}
+                icon={DollarSign}
+                color="text-amber-600"
+                bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
+                delay={0.1}
+              />
+              <StatCard
+                title="Clients"
+                value={stats.clients}
+                icon={Users}
+                color="text-green-600"
+                bgColor="bg-gradient-to-br from-green-100 to-green-200"
+                delay={0.2}
+              />
+              <StatCard
+                title="Projets"
+                value={stats.projects}
+                icon={FolderKanban}
+                color="text-purple-600"
+                bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
+                delay={0.3}
+              />
+            </div>
+
+            {/* Actions rapides Commercial */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="relative mb-8"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl transform rotate-1" />
+              <div className="relative bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl p-6 border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1D4ED8] mb-1 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Actions rapides
+                    </h3>
+                    <p className="text-[#1D4ED8]/80 text-sm">Gérez vos activités commerciales</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/opportunites/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <Target className="w-4 h-4 mr-2" />
+                        Opportunité
+                      </Button>
+                    </Link>
+                    <Link href="/clients/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        Client
+                      </Button>
+                    </Link>
+                    <Link href="/taches/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Tâche
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        );
+
+      case 'finance_comptabilite':
+        return (
+          <>
+            {/* KPI Finance */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Budget"
+                value={formatAmount(stats.budget)}
+                icon={DollarSign}
+                color="text-green-600"
+                bgColor="bg-gradient-to-br from-green-100 to-green-200"
+                delay={0}
+              />
+              <StatCard
+                title="Projets"
+                value={stats.projects}
+                icon={FolderKanban}
+                color="text-blue-600"
+                bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+                delay={0.1}
+              />
+              <StatCard
+                title="Collaborateurs"
+                value={stats.collaborators}
+                icon={Users}
+                color="text-purple-600"
+                bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
+                delay={0.2}
+              />
+              <StatCard
+                title="Tâches"
+                value={stats.tasks}
+                icon={CheckCircle}
+                color="text-amber-600"
+                bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
+                delay={0.3}
+              />
+            </div>
+
+            {/* Actions rapides Finance */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="relative mb-8"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl transform rotate-1" />
+              <div className="relative bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl p-6 border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1D4ED8] mb-1 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Actions rapides
+                    </h3>
+                    <p className="text-[#1D4ED8]/80 text-sm">Gérez les finances</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/finance/budgets/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <DollarSign className="w-4 h-4 mr-2" />
+                        Budget
+                      </Button>
+                    </Link>
+                    <Link href="/finance/encaissements-decaissements/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <ArrowLeftRight className="w-4 h-4 mr-2" />
+                        Transaction
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        );
+
+      case 'back_office':
+        return (
+          <>
+            {/* KPI Back Office */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Projets"
+                value={stats.projects}
+                icon={FolderKanban}
+                color="text-blue-600"
+                bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+                delay={0}
+              />
+              <StatCard
+                title="Tâches"
+                value={stats.tasks}
+                icon={CheckCircle}
+                color="text-amber-600"
+                bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
+                delay={0.1}
+              />
+              <StatCard
+                title="Collaborateurs"
+                value={stats.collaborators}
+                icon={Users}
+                color="text-green-600"
+                bgColor="bg-gradient-to-br from-green-100 to-green-200"
+                delay={0.2}
+              />
+              <StatCard
+                title="Documents"
+                value={stats.documents}
+                icon={FileText}
+                color="text-purple-600"
+                bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
+                delay={0.3}
+              />
+            </div>
+
+            {/* Actions rapides Back Office */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="relative mb-8"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl transform rotate-1" />
+              <div className="relative bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl p-6 border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1D4ED8] mb-1 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Actions rapides
+                    </h3>
+                    <p className="text-[#1D4ED8]/80 text-sm">Gérez les opérations</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/projets/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <FolderKanban className="w-4 h-4 mr-2" />
+                        Projet
+                      </Button>
+                    </Link>
+                    <Link href="/taches/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Tâche
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        );
+
+      case 'responsable_pole':
+        return (
+          <>
+            {/* KPI Responsable Pôle */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Projets"
+                value={stats.projects}
+                icon={FolderKanban}
+                color="text-blue-600"
+                bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+                delay={0}
+              />
+              <StatCard
+                title="Tâches"
+                value={stats.tasks}
+                icon={CheckCircle}
+                color="text-amber-600"
+                bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
+                delay={0.1}
+              />
+              <StatCard
+                title="Collaborateurs"
+                value={stats.collaborators}
+                icon={Users}
+                color="text-green-600"
+                bgColor="bg-gradient-to-br from-green-100 to-green-200"
+                delay={0.2}
+              />
+              <StatCard
+                title="Documents"
+                value={stats.documents}
+                icon={FileText}
+                color="text-purple-600"
+                bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
+                delay={0.3}
+              />
+            </div>
+
+            {/* Stats spécifiques au pôle */}
+            {!poleLoading && poleStats && (
+              <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 mb-8">
+                <h3 className="text-xl font-bold text-slate-900 mb-4">Statistiques de votre pôle : {user.pole}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-600">Projets en cours</p>
+                    <p className="text-2xl font-bold text-slate-900">{poleStats.projects || 0}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-600">Tâches assignées</p>
+                    <p className="text-2xl font-bold text-slate-900">{poleStats.tasks || 0}</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-sm text-slate-600">Collaborateurs</p>
+                    <p className="text-2xl font-bold text-slate-900">{poleStats.collaborators || 0}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions rapides Responsable Pôle */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="relative mb-8"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl transform rotate-1" />
+              <div className="relative bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl p-6 border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1D4ED8] mb-1 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Actions rapides
+                    </h3>
+                    <p className="text-[#1D4ED8]/80 text-sm">Gérez votre pôle</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/projets/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <FolderKanban className="w-4 h-4 mr-2" />
+                        Projet
+                      </Button>
+                    </Link>
+                    <Link href="/taches/create">
+                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Tâche
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        );
+
+      case 'direction_generale':
+      default:
+        // Dashboard complet pour le DG
+        return (
+          <>
+            {/* KPI Cards DG */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Opportunités"
+                value={stats.opportunities}
+                icon={Target}
+                color="text-blue-600"
+                bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+                delay={0}
+              />
+              <div className="relative group cursor-pointer">
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-2 group-hover:rotate-4 transition-all duration-500" />
+                  <div className="relative bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-amber-200 transition-all duration-500 overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100/50 to-transparent rounded-full blur-2xl group-hover:from-amber-200/50 transition-all duration-500" />
+                    <div className="flex items-center justify-between relative">
+                      <div>
+                        <p className="text-sm text-slate-600 font-medium">Pipeline</p>
+                        <p className="text-2xl font-bold text-slate-900 mt-1">{formatAmount(stats.pipelineValue)}</p>
+                      </div>
+                      <DollarSign className="w-8 h-8 text-amber-600" />
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+              <StatCard
+                title="Projets"
+                value={stats.projects}
+                icon={FolderKanban}
+                color="text-purple-600"
+                bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
+                delay={0.2}
+              />
+              <StatCard
+                title="Collaborateurs"
+                value={stats.collaborators}
+                icon={Users}
+                color="text-green-600"
+                bgColor="bg-gradient-to-br from-green-100 to-green-200"
+                delay={0.3}
+              />
+            </div>
+
+            {/* Actions rapides DG */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
+              className="relative mb-8"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl transform rotate-1" />
+              <div className="relative bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl p-6 border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#1D4ED8] mb-1 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Actions rapides
+                    </h3>
+                    <p className="text-[#1D4ED8]/80 text-sm">Créez rapidement de nouveaux éléments</p>
+                  </div>
+                  <div className="flex gap-3">
+                    {[
+                      { href: '/clients', icon: Briefcase, label: 'Client' },
+                      { href: '/opportunites', icon: Target, label: 'Opportunité' },
+                      { href: '/taches', icon: CheckCircle, label: 'Tâche' },
+                    ].map((action, index) => (
+                      <motion.div
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <Link href={action.href}>
+                          <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
+                            <action.icon className="w-4 h-4 mr-2" />
+                            {action.label}
+                          </Button>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        );
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
@@ -222,94 +645,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Opportunités"
-            value={stats.opportunities}
-            icon={Target}
-            color="text-blue-600"
-            bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
-            delay={0}
-          />
-          <div className="relative group cursor-pointer">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-              whileHover={{ scale: 1.05, y: -5 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-2 group-hover:rotate-4 transition-all duration-500" />
-              <div className="relative bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-amber-200 transition-all duration-500 overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100/50 to-transparent rounded-full blur-2xl group-hover:from-amber-200/50 transition-all duration-500" />
-                <div className="flex items-center justify-between relative">
-                  <div>
-                    <p className="text-sm text-slate-600 font-medium">Pipeline</p>
-                    <p className="text-2xl font-bold text-slate-900 mt-1">{formatAmount(stats.pipelineValue)}</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-amber-600" />
-                </div>
-              </div>
-            </motion.div>
-          </div>
-          <StatCard
-            title="Projets"
-            value={stats.projects}
-            icon={FolderKanban}
-            color="text-purple-600"
-            bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
-            delay={0.2}
-          />
-          <StatCard
-            title="Collaborateurs"
-            value={stats.collaborators}
-            icon={Users}
-            color="text-green-600"
-            bgColor="bg-gradient-to-br from-green-100 to-green-200"
-            delay={0.3}
-          />
-        </div>
-
-        {/* Actions rapides */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
-          className="relative mb-8"
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl transform rotate-1" />
-          <div className="relative bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient rounded-2xl p-6 border-2 border-[#D4AF37] shadow-2xl shadow-[#D4AF37]/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-[#1D4ED8] mb-1 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  Actions rapides
-                </h3>
-                <p className="text-[#1D4ED8]/80 text-sm">Créez rapidement de nouveaux éléments</p>
-              </div>
-              <div className="flex gap-3">
-                {[
-                  { href: '/clients', icon: Briefcase, label: 'Client' },
-                  { href: '/opportunites', icon: Target, label: 'Opportunité' },
-                  { href: '/taches', icon: CheckCircle, label: 'Tâche' },
-                ].map((action, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Link href={action.href}>
-                      <Button className="bg-white hover:bg-slate-100 text-[#1D4ED8] font-medium px-4 py-2 shadow-lg transition-all duration-300">
-                        <action.icon className="w-4 h-4 mr-2" />
-                        {action.label}
-                      </Button>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        {/* Contenu spécifique au rôle */}
+        {renderRoleSpecificContent()}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Pipeline commercial */}
@@ -527,7 +864,7 @@ export default function DashboardPage() {
                 ) : poleStats && poleStats.length > 0 ? (
                   poleStats.map((stat, index) => {
                     const poleOption = { value: stat.pole, label: stat.pole };
-                    const canClickPole = user?.isAdmin || false;
+                    const canClickPole = user?.canSeeAllPoles || false;
                     const CardContent = (
                       <motion.div
                         key={index}

@@ -30,13 +30,20 @@ Renseigner ensuite `.env.local` (voir ci-dessous).
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | oui | Dashboard Supabase > Project Settings > API | oui |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | oui | Même page : clé **publishable** (`sb_publishable_...`) ou ancienne clé `anon` | oui |
+| `SUPABASE_SERVICE_ROLE_KEY` | oui (gestion des comptes, tests) | Même page : clé **secrète** (`sb_secret_...`) ou ancienne clé `service_role` | **non**, serveur uniquement |
 
 Règles :
 
 - Tout ce qui commence par `NEXT_PUBLIC_` est inclus dans le JavaScript envoyé au navigateur. Seule la clé publique y a sa place : la sécurité des données repose entièrement sur les politiques RLS.
-- La clé **secrète / `service_role`** contourne le RLS. Elle ne doit jamais apparaître dans `.env.local` sous un nom `NEXT_PUBLIC_*`, ni dans le code client, ni dans le dépôt. L'application n'en a pas besoin aujourd'hui.
+- La clé **secrète / `service_role`** contourne le RLS. Elle n'est lue que par `src/lib/supabase/admin.ts` (marqué `server-only`) pour créer et gérer les comptes. Elle ne doit jamais porter un nom `NEXT_PUBLIC_*`, ni être importée côté client, ni être committée.
 - `.env.local` est ignoré par git (`.gitignore` exclut `.env*` sauf `.env.example`).
 - Les variables sont lues **au moment du build** : elles doivent être définies sur la plateforme de déploiement avant de lancer `npm run build`, sinon le build échoue.
+
+## Comptes, rôles et droits
+
+- Il n'y a plus d'inscription publique : un **admin** crée les comptes, attribue un rôle et un pôle, et désactive les comptes depuis `/admin/utilisateurs`.
+- Rôles : direction générale, commercial, finance et comptabilité, responsable de pôle, back office, admin. Le détail des droits table par table est dans [docs/matrice-droits.md](./docs/matrice-droits.md).
+- Vérification automatique des droits avec des comptes fictifs : `node scripts/test-roles.mjs --seed`, puis `node scripts/test-roles.mjs`, puis `node scripts/test-roles.mjs --cleanup`.
 
 ## Base de données et migrations
 

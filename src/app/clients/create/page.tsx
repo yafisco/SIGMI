@@ -23,9 +23,9 @@ function CreateClientPageContent() {
 
   const getBackLink = () => {
     if (from === 'commercial') return '/commercial';
-    if (from === 'tresorerie') return '/tresorerie';
+    if (from === 'finance') return '/finance';
     if (workspace === 'commercial') return '/commercial';
-    if (workspace === 'tresorerie') return '/tresorerie';
+    if (workspace === 'finance') return '/finance';
     return '/clients';
   };
 

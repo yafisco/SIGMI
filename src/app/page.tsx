@@ -112,7 +112,7 @@ function PoleStatsSection() {
     : allStats;
 
   // Déterminer si les cartes sont cliquables (seulement pour les admins)
-  const canClickPoles = user?.isAdmin || false;
+  const canClickPoles = user?.canSeeAllPoles || false;
 
   const formatAmount = (value: number) => {
     if (value >= 1000000) {
