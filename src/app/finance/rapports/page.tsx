@@ -2,53 +2,51 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Download, Calendar, Filter, Search, TrendingUp, TrendingDown, DollarSign, FileText, ArrowRight } from 'lucide-react';
+import { BarChart3, Download, Calendar, Filter, Search, TrendingUp, TrendingDown, DollarSign, FileText, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
-import Link from 'next/link';
+import { StatCard } from '@/components/AnimatedCard';
+import { rapportsService } from '@/lib/services';
+import { useData } from '@/hooks/useData';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
 
 export default function RapportsFinanciersPage() {
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
-  const [filterPeriode, setFilterPeriode] = useState<string>('mois');
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [generateForm, setGenerateForm] = useState({
+    type: 'mensuel' as 'mensuel' | 'trimestriel' | 'annuel' | 'budget',
+    periode: '',
+  });
 
-  const rapports = [
-    {
-      id: 1,
-      titre: 'Rapport mensuel - Janvier 2024',
-      type: 'mensuel',
-      periode: '2024-01',
-      statut: 'disponible',
-      created_at: '2024-01-31',
-    },
-    {
-      id: 2,
-      titre: 'Rapport trimestriel - T1 2024',
-      type: 'trimestriel',
-      periode: '2024-T1',
-      statut: 'disponible',
-      created_at: '2024-03-31',
-    },
-    {
-      id: 3,
-      titre: 'Rapport annuel - 2023',
-      type: 'annuel',
-      periode: '2023',
-      statut: 'disponible',
-      created_at: '2024-01-15',
-    },
-    {
-      id: 4,
-      titre: 'Rapport budget prévisionnel - 2024',
-      type: 'budget',
-      periode: '2024',
-      statut: 'en_cours',
-      created_at: '2024-01-20',
-    },
-  ];
+  const { data: rapports, refresh } = useData({
+    fetchFn: () => rapportsService.getAll(),
+  });
 
-  const filteredRapports = rapports.filter(r => {
+  // Abonnement Realtime
+  useEffect(() => {
+    const subscription = rapportsService.subscribeToChanges(() => {
+      refresh();
+    });
+
+    return () => {
+      rapportsService.unsubscribe();
+    };
+  }, [refresh]);
+
+  // Calculer les statistiques en temps réel
+  const stats = {
+    totalRapports: rapports?.length || 0,
+    totalEncaissements: 0,
+    totalDecaissements: 0,
+    soldeNet: 0,
+  };
+
+  const filteredRapports = (rapports || []).filter(r => {
     const matchesSearch = r.titre.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || r.type === filterType;
     return matchesSearch && matchesType;
@@ -59,7 +57,7 @@ export default function RapportsFinanciersPage() {
       mensuel: 'bg-blue-100 text-blue-700',
       trimestriel: 'bg-purple-100 text-purple-700',
       annuel: 'bg-green-100 text-green-700',
-      budget: 'bg-amber-100 text-700',
+      budget: 'bg-amber-100 text-amber-700',
     };
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
@@ -72,8 +70,121 @@ export default function RapportsFinanciersPage() {
     return colors[statut] || colors.disponible;
   };
 
-  const handleDownload = (id: number) => {
-    alert(`Téléchargement du rapport ${id} - fonctionnalité à implémenter`);
+  const handleGenerateRapport = async () => {
+    if (!generateForm.periode) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Veuillez sélectionner une période',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      // Générer les statistiques
+      const statsData = await rapportsService.generateStats(generateForm.periode, generateForm.type);
+
+      // Créer le rapport
+      const titre = `Rapport ${generateForm.type} - ${generateForm.periode}`;
+      await rapportsService.create({
+        titre,
+        type: generateForm.type,
+        periode: generateForm.periode,
+        data: statsData,
+      });
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le rapport a été généré avec succès',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+
+      setShowGenerateModal(false);
+      setGenerateForm({ type: 'mensuel', periode: '' });
+      refresh();
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de la génération du rapport',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleDownload = async (id: string) => {
+    try {
+      const rapport = await rapportsService.getById(id);
+      if (rapport && rapport.data) {
+        const stats = rapport.data;
+        
+        const doc = await generateGMITPDF({
+          type: 'rapport',
+          titre: rapport.titre,
+          date: new Date().toLocaleDateString('fr-FR'),
+          objet: `Rapport ${rapport.type} - ${rapport.periode}`,
+          contenu: `Résumé financier pour la période ${rapport.periode}`,
+          data: {
+            'Période': stats.periode,
+            'Type': stats.type,
+            'Total Encaissements': `${stats.totalEncaissements.toLocaleString('fr-FR')} FCFA`,
+            'Total Décaissements': `${stats.totalDecaissements.toLocaleString('fr-FR')} FCFA`,
+            'Solde Net': `${stats.soldeNet.toLocaleString('fr-FR')} FCFA`,
+            'Budget Total': `${stats.totalBudget.toLocaleString('fr-FR')} FCFA`,
+            'Budget Utilisé': `${stats.budgetUtilise.toFixed(2)}%`,
+            'Nombre Transactions': stats.nombreTransactions.toString(),
+          },
+        });
+        
+        doc.save(`${rapport.titre}.pdf`);
+        
+        await Swal.fire({
+          title: 'Succès !',
+          text: 'Le rapport a été téléchargé en PDF',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
+  const getPeriodeOptions = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    if (generateForm.type === 'mensuel') {
+      return Array.from({ length: 12 }, (_, i) => {
+        const m = i + 1;
+        return `${year}-${m.toString().padStart(2, '0')}`;
+      });
+    } else if (generateForm.type === 'trimestriel') {
+      return [
+        `${year}-T1`,
+        `${year}-T2`,
+        `${year}-T3`,
+        `${year}-T4`,
+      ];
+    } else {
+      return [year.toString(), (year - 1).toString()];
+    }
   };
 
   return (
@@ -86,65 +197,38 @@ export default function RapportsFinanciersPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0 }}
-            className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm text-slate-600">Total Rapports</span>
-            </div>
-            <p className="text-2xl font-bold text-slate-900">{rapports.length}</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm text-slate-600">Revenus 2024</span>
-            </div>
-            <p className="text-2xl font-bold text-green-600">15M FCFA</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
-                <TrendingDown className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm text-slate-600">Dépenses 2024</span>
-            </div>
-            <p className="text-2xl font-bold text-red-600">8.5M FCFA</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg"
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-sm text-slate-600">Solde Net</span>
-            </div>
-            <p className="text-2xl font-bold text-blue-600">6.5M FCFA</p>
-          </motion.div>
+          <StatCard
+            title="Total Rapports"
+            value={stats.totalRapports}
+            icon={FileText}
+            color="text-purple-600"
+            bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
+            delay={0}
+          />
+          <StatCard
+            title="Revenus Annés"
+            value={stats.totalEncaissements}
+            icon={TrendingUp}
+            color="text-green-600"
+            bgColor="bg-gradient-to-br from-green-100 to-green-200"
+            delay={0.1}
+          />
+          <StatCard
+            title="Dépenses Années"
+            value={stats.totalDecaissements}
+            icon={TrendingDown}
+            color="text-red-600"
+            bgColor="bg-gradient-to-br from-red-100 to-red-200"
+            delay={0.2}
+          />
+          <StatCard
+            title="Solde Net"
+            value={stats.soldeNet}
+            icon={DollarSign}
+            color="text-blue-600"
+            bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+            delay={0.3}
+          />
         </div>
 
         {/* Filters and Actions */}
@@ -177,7 +261,10 @@ export default function RapportsFinanciersPage() {
               <option value="budget">Budget</option>
             </select>
           </div>
-          <Button className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
+          <Button
+            onClick={() => setShowGenerateModal(true)}
+            className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]"
+          >
             <Download className="w-4 h-4 mr-2" />
             Générer un rapport
           </Button>
@@ -200,7 +287,10 @@ export default function RapportsFinanciersPage() {
             <div className="p-12 text-center">
               <BarChart3 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
               <p className="text-slate-600 mb-4">Aucun rapport trouvé</p>
-              <Button className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
+              <Button
+                onClick={() => setShowGenerateModal(true)}
+                className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]"
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Générer le premier rapport
               </Button>
@@ -233,7 +323,7 @@ export default function RapportsFinanciersPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <FileText className="w-4 h-4" />
-                          <span>Créé le {rapport.created_at}</span>
+                          <span>Créé le {new Date(rapport.created_at).toLocaleDateString('fr-FR')}</span>
                         </div>
                       </div>
                     </div>
@@ -254,6 +344,76 @@ export default function RapportsFinanciersPage() {
           )}
         </motion.div>
       </div>
+
+      {/* Modal de génération de rapport */}
+      {showGenerateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl p-8 max-w-md w-full mx-4"
+          >
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">Générer un rapport</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Type de rapport</label>
+                <select
+                  value={generateForm.type}
+                  onChange={(e) => setGenerateForm({ ...generateForm, type: e.target.value as any, periode: '' })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                >
+                  <option value="mensuel">Mensuel</option>
+                  <option value="trimestriel">Trimestriel</option>
+                  <option value="annuel">Annuel</option>
+                  <option value="budget">Budget</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Période</label>
+                <select
+                  value={generateForm.periode}
+                  onChange={(e) => setGenerateForm({ ...generateForm, periode: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                >
+                  <option value="">Sélectionner une période</option>
+                  {getPeriodeOptions().map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <Button
+                onClick={handleGenerateRapport}
+                disabled={generating}
+                className="flex-1 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white"
+              >
+                {generating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Génération...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Générer
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => setShowGenerateModal(false)}
+                variant="outline"
+                disabled={generating}
+              >
+                Annuler
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

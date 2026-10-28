@@ -461,15 +461,15 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-slate-50 rounded-xl p-4">
                     <p className="text-sm text-slate-600">Projets en cours</p>
-                    <p className="text-2xl font-bold text-slate-900">{poleStats.projects || 0}</p>
+                    <p className="text-2xl font-bold text-slate-900">{(poleStats as any).projects || 0}</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4">
                     <p className="text-sm text-slate-600">Tâches assignées</p>
-                    <p className="text-2xl font-bold text-slate-900">{poleStats.tasks || 0}</p>
+                    <p className="text-2xl font-bold text-slate-900">{(poleStats as any).tasks || 0}</p>
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4">
                     <p className="text-sm text-slate-600">Collaborateurs</p>
-                    <p className="text-2xl font-bold text-slate-900">{poleStats.collaborators || 0}</p>
+                    <p className="text-2xl font-bold text-slate-900">{(poleStats as any).collaborators || 0}</p>
                   </div>
                 </div>
               </div>

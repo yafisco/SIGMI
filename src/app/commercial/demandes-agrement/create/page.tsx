@@ -7,6 +7,9 @@ import { ArrowLeft, FileText, Save, Printer, Download } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 export default function CreateDemandeAgrementPage() {
   const router = useRouter();
@@ -33,6 +36,39 @@ export default function CreateDemandeAgrementPage() {
     }
     fetchData();
   }, []);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const doc = await generateGMITPDF({
+        type: 'demande_agrement',
+        numero,
+        objet: formData.objet,
+        contenu: formData.contenu,
+      });
+      
+      doc.save(`Demande_Agrement_${numero}.pdf`);
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le document a été téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,11 +245,11 @@ export default function CreateDemandeAgrementPage() {
 
             <div className="flex items-center justify-end gap-4 pt-4">
               <div className="flex gap-2 mr-auto">
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" onClick={handlePrint}>
                   <Printer className="w-4 h-4 mr-2" />
                   Imprimer
                 </Button>
-                <Button type="button" variant="outline">
+                <Button type="button" variant="outline" onClick={handleDownloadPDF}>
                   <Download className="w-4 h-4 mr-2" />
                   PDF
                 </Button>

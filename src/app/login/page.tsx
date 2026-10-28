@@ -233,7 +233,7 @@ function LoginPageContent() {
                 />
                 <span className="text-xs sm:text-sm text-slate-600">Se souvenir de moi</span>
               </label>
-              <Link href="#" className="text-xs sm:text-sm text-[#2563EB] hover:text-[#1D4ED8] transition-colors font-medium">
+              <Link href="/forgot-password" className="text-xs sm:text-sm text-[#2563EB] hover:text-[#1D4ED8] transition-colors font-medium">
                 Mot de passe oublié ?
               </Link>
             </div>

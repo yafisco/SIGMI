@@ -1,21 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-
-export type EvenementType = 'réunion' | 'appel' | 'visite' | 'email' | 'autre';
-
-export interface Evenement {
-  id: string;
-  titre: string;
-  description?: string;
-  type: EvenementType;
-  date_debut: string;
-  date_fin?: string;
-  lieu?: string;
-  client_id?: string;
-  prospect_id?: string;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { EvenementType, Evenement } from '@/types';
 
 const supabase = createClient();
 

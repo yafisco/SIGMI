@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, User, Video, MapPin, Phone, Mail } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, Video, MapPin, Phone, Mail } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import { StatCard } from '@/components/AnimatedCard';
-import { evenementsService, Evenement } from '@/lib/services';
-import { useData } from '@/hooks/useData';
 
 const typeIcons: Record<string, any> = {
   réunion: Video,
@@ -25,22 +23,17 @@ const typeColors: Record<string, string> = {
   autre: 'bg-slate-100 text-slate-700',
 };
 
+// Données simulées pour le calendrier (à remplacer par Supabase une fois la table créée)
+const simulatedEvents = [
+  { id: '1', titre: 'Réunion client GMI', type: 'réunion', date_debut: new Date().toISOString(), lieu: 'Bureau' },
+  { id: '2', titre: 'Appel prospect TechCorp', type: 'appel', date_debut: new Date(Date.now() + 86400000).toISOString(), lieu: 'Téléphone' },
+  { id: '3', titre: 'Visite site Dakar', type: 'visite', date_debut: new Date(Date.now() + 172800000).toISOString(), lieu: 'Dakar' },
+  { id: '4', titre: 'Présentation devis', type: 'réunion', date_debut: new Date(Date.now() + 259200000).toISOString(), lieu: 'Visio' },
+  { id: '5', titre: 'Email de suivi', type: 'email', date_debut: new Date(Date.now() + 345600000).toISOString(), lieu: '' },
+];
+
 export default function CalendrierPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const { data: evenements, loading, error, refresh } = useData({
-    fetchFn: () => evenementsService.getAll(),
-  });
-
-  // Abonnement Realtime pour les changements
-  useEffect(() => {
-    const subscription = evenementsService.subscribeToChanges(() => {
-      refresh();
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [refresh]);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -58,7 +51,7 @@ export default function CalendrierPage() {
   };
 
   // Filtrer les événements du mois courant
-  const evenementsDuMois = (evenements || []).filter((evt) => {
+  const evenementsDuMois = simulatedEvents.filter((evt) => {
     const evtDate = new Date(evt.date_debut);
     return (
       evtDate.getMonth() === currentDate.getMonth() &&
@@ -71,7 +64,7 @@ export default function CalendrierPage() {
   const sevenDaysLater = new Date();
   sevenDaysLater.setDate(today.getDate() + 7);
 
-  const upcomingEvents = (evenements || [])
+  const upcomingEvents = simulatedEvents
     .filter((evt) => {
       const evtDate = new Date(evt.date_debut);
       return evtDate >= today && evtDate <= sevenDaysLater;
@@ -118,21 +111,6 @@ export default function CalendrierPage() {
     visites: evenementsDuMois.filter((e) => e.type === 'visite').length,
     appels: evenementsDuMois.filter((e) => e.type === 'appel').length,
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full mb-4"
-          />
-          <p className="text-slate-600 font-medium">Chargement du calendrier...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">

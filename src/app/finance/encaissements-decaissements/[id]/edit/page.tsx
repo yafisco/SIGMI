@@ -50,14 +50,14 @@ export default function EditTransactionPage() {
       const data = await transactionsService.getById(params.id as string);
       if (data) {
         setFormData({
-          type: data.type,
-          categorie: data.categorie,
+          type: data.type as any,
+          categorie: data.categorie as any,
           montant: data.montant,
           description: data.description,
           reference: data.reference || '',
           pole: data.pole || '',
           date_transaction: data.date_transaction.split('T')[0],
-          statut: data.statut,
+          statut: data.statut as any,
         });
       }
       setInitialLoading(false);
@@ -81,6 +81,7 @@ export default function EditTransactionPage() {
         id: params.id as string,
         ...formData,
         date_transaction: new Date(formData.date_transaction).toISOString(),
+        categorie: formData.categorie as any,
       });
       router.push(`/finance/encaissements-decaissements/${params.id}`);
     } catch (err) {

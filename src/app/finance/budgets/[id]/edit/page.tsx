@@ -42,12 +42,12 @@ export default function EditBudgetPage() {
         setFormData({
           nom: data.nom,
           description: data.description || '',
-          montant_budget: data.montant_budget,
+          montant_budget: data.montant_budget || 0,
           pole: data.pole || '',
           projet_id: data.projet_id || '',
-          annee: data.annee,
-          mois: data.mois,
-          statut: data.statut,
+          annee: data.annee || new Date().getFullYear(),
+          mois: data.mois || new Date().getMonth() + 1,
+          statut: (data.statut || 'actif') as any,
         });
       }
       setInitialLoading(false);

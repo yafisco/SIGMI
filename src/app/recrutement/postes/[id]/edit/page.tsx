@@ -50,11 +50,11 @@ export default function EditPostePage() {
           titre: data.titre,
           description: data.description || '',
           departement: data.departement || '',
-          type_contrat: data.type_contrat || 'CDI',
+          type_contrat: data.type_contrat as any,
           lieu: data.lieu || '',
           salaire_min: data.salaire_min || 0,
           salaire_max: data.salaire_max || 0,
-          statut: data.statut,
+          statut: data.statut as any,
           competences_requises: data.competences_requises || [],
           date_limite: data.date_limite || '',
         });

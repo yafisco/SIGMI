@@ -11,6 +11,9 @@ export interface PoleStats {
   won: number;
   lost: number;
   conversionRate: number;
+  projects?: number;
+  tasks?: number;
+  collaborators?: number;
 }
 
 export class PoleStatsService {

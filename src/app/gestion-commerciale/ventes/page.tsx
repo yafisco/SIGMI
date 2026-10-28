@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, Search, ArrowLeft, Package, User, DollarSign, Save, Receipt } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Search, ArrowLeft, Package, User, DollarSign, Save, Receipt, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
 
 interface CartItem {
   produit_id: string;
@@ -19,18 +22,20 @@ interface CartItem {
 
 export default function VentesPage() {
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-  const [produits, setProduits] = useState<{ id: string; designation: string; prix_unitaire: number }[]>([]);
+  const [produits, setProduits] = useState<{ id: string; designation: string; prix_unitaire: number; stock?: number }[]>([]);
   const [selectedClient, setSelectedClient] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [modePaiement, setModePaiement] = useState('especes');
+  const [reduction, setReduction] = useState(0);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [lastVente, setLastVente] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
       const [clientsData, produitsData] = await Promise.all([
         supabase.from('clients').select('id, nom').order('nom'),
-        supabase.from('produits').select('id, designation, prix_unitaire').eq('actif', true).order('designation'),
+        supabase.from('produits').select('id, designation, prix_unitaire, stock').eq('actif', true).order('designation'),
       ]);
       setClients(clientsData.data || []);
       setProduits(produitsData.data || []);
@@ -78,10 +83,17 @@ export default function VentesPage() {
   };
 
   const total = cart.reduce((sum, item) => sum + item.sous_total, 0);
+  const totalApresReduction = total - reduction;
 
   const handleSave = async () => {
     if (!selectedClient || cart.length === 0) {
-      alert('Veuillez sélectionner un client et ajouter au moins un produit');
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Veuillez sélectionner un client et ajouter au moins un produit',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
       return;
     }
 
@@ -92,8 +104,9 @@ export default function VentesPage() {
       const { data: vente, error: venteError } = await supabase.from('ventes').insert({
         numero,
         client_id: selectedClient,
-        total,
+        total: totalApresReduction,
         mode_paiement: modePaiement,
+        reduction,
       }).select().single();
 
       if (venteError) throw venteError;
@@ -108,13 +121,73 @@ export default function VentesPage() {
       const { error: lignesError } = await supabase.from('lignes_vente').insert(lignes);
       if (lignesError) throw lignesError;
 
-      alert('Vente enregistrée avec succès !');
+      setLastVente(vente);
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Vente enregistrée avec succès !',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+
       setCart([]);
       setSelectedClient('');
+      setReduction(0);
     } catch (err) {
-      alert(errorMessage(err, 'Erreur lors de l\'enregistrement de la vente'));
+      await Swal.fire({
+        title: 'Erreur',
+        text: errorMessage(err, 'Erreur lors de l\'enregistrement de la vente'),
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
     setLoading(false);
+  };
+
+  const handlePrintReceipt = async () => {
+    if (!lastVente) return;
+    
+    try {
+      const client = clients.find(c => c.id === lastVente.client_id);
+      const lignesText = cart.map(l => `${l.designation} x${l.quantite} : ${(l.quantite * l.prix_unitaire).toLocaleString('fr-FR')} FCFA`).join('\n');
+      
+      const doc = await generateGMITPDF({
+        type: 'facture',
+        numero: lastVente.numero,
+        titre: 'REÇU DE VENTE',
+        date: new Date().toLocaleDateString('fr-FR'),
+        client: client?.nom || 'Client',
+        objet: 'Reçu de vente',
+        contenu: lignesText,
+        montant: totalApresReduction,
+        data: {
+          'Mode de paiement': modePaiement,
+          'Sous-total': `${total.toLocaleString('fr-FR')} FCFA`,
+          'Réduction': `${reduction.toLocaleString('fr-FR')} FCFA`,
+          'Total': `${totalApresReduction.toLocaleString('fr-FR')} FCFA`,
+        },
+      });
+      
+      doc.save(`Recu_${lastVente.numero}.pdf`);
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le reçu a été téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de l\'impression',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
   };
 
   return (
@@ -279,6 +352,18 @@ export default function VentesPage() {
                       <span>{total.toLocaleString('fr-FR')} FCFA</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      <label className="text-sm text-slate-600">Réduction</label>
+                      <input
+                        type="number"
+                        value={reduction}
+                        onChange={(e) => setReduction(parseFloat(e.target.value) || 0)}
+                        className="w-24 px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        min="0"
+                        max={total}
+                      />
+                      <span className="text-sm text-slate-600">FCFA</span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <label className="text-sm text-slate-600">Mode de paiement</label>
                       <select
                         value={modePaiement}
@@ -294,7 +379,7 @@ export default function VentesPage() {
                     </div>
                     <div className="flex justify-between text-xl font-bold text-slate-900 pt-3 border-t border-slate-200">
                       <span>Total</span>
-                      <span>{total.toLocaleString('fr-FR')} FCFA</span>
+                      <span>{totalApresReduction.toLocaleString('fr-FR')} FCFA</span>
                     </div>
                   </div>
 
@@ -306,6 +391,17 @@ export default function VentesPage() {
                     <Save className="w-4 h-4 mr-2" />
                     {loading ? 'Enregistrement...' : 'Enregistrer la vente'}
                   </Button>
+
+                  {lastVente && (
+                    <Button
+                      onClick={handlePrintReceipt}
+                      variant="outline"
+                      className="w-full mt-3"
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      Imprimer le reçu
+                    </Button>
+                  )}
                 </>
               )}
             </div>

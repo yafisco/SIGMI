@@ -7,6 +7,9 @@ import { ArrowLeft, FileText, Edit, Clock, CheckCircle, XCircle, Send, Printer, 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 export default function DemandeAgrementDetailPage() {
   const params = useParams();
@@ -39,6 +42,39 @@ export default function DemandeAgrementDetailPage() {
         return { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'En cours' };
       default:
         return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: 'Brouillon' };
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const doc = await generateGMITPDF({
+        type: 'demande_agrement',
+        numero: demande.numero,
+        objet: demande.objet,
+        contenu: demande.contenu,
+      });
+      
+      doc.save(`Demande_Agrement_${demande.numero}.pdf`);
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le document a été téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
   };
 
@@ -96,11 +132,11 @@ export default function DemandeAgrementDetailPage() {
                   Modifier
                 </Button>
               </Link>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-2" />
                 Imprimer
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleDownloadPDF}>
                 <Download className="w-4 h-4 mr-2" />
                 PDF
               </Button>

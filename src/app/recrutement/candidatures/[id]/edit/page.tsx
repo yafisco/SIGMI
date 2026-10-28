@@ -51,7 +51,7 @@ export default function EditCandidaturePage() {
           lettre_motivation: data.lettre_motivation || '',
           experience_annees: data.experience_annees || 0,
           competences: data.competences || [],
-          statut: data.statut,
+          statut: data.statut as any,
           note: data.note || 0,
           commentaires: data.commentaires || '',
         });

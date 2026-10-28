@@ -39,7 +39,7 @@ export default function EditSourceProspectPage() {
           type: data.type,
           description: data.description || '',
           conversion_rate: data.conversion_rate || 0,
-          qualite_leads: data.qualite_leads,
+          qualite_leads: data.qualite_leads as any,
           actif: data.actif,
         });
       }

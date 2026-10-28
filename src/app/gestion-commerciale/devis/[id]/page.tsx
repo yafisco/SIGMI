@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { Devis, LigneDevis } from '@/types';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 export default function DevisDetailPage() {
   const params = useParams();
@@ -49,6 +52,53 @@ export default function DevisDetailPage() {
         return { color: 'bg-blue-100 text-blue-700', icon: Clock };
       default:
         return { color: 'bg-gray-100 text-gray-700', icon: FileText };
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!devis) return;
+    
+    try {
+      const lignesText = lignes.map(l => `${l.designation} x${l.quantite} : ${(l.quantite * l.prix_unitaire).toLocaleString('fr-FR')} FCFA`).join('\n');
+      
+      const doc = await generateGMITPDF({
+        type: 'facture',
+        numero: devis.numero,
+        titre: 'DEVIS',
+        date: new Date(devis.date).toLocaleDateString('fr-FR'),
+        client: devis.client_nom || 'Client',
+        objet: 'Devis client',
+        contenu: lignesText,
+        montant: devis.total_ttc,
+        data: {
+          'Date de validité': devis.date_validite ? new Date(devis.date_validite).toLocaleDateString('fr-FR') : 'Non spécifiée',
+          'Total HT': `${devis.total_ht.toLocaleString('fr-FR')} FCFA`,
+          'TTC (18%)': `${devis.total_ttc.toLocaleString('fr-FR')} FCFA`,
+          'Nombre de lignes': lignes.length.toString(),
+        },
+      });
+      
+      doc.save(`Devis_${devis.numero}.pdf`);
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le devis a été téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
   };
 
@@ -106,11 +156,11 @@ export default function DevisDetailPage() {
                   Modifier
                 </Button>
               </Link>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-2" />
                 Imprimer
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleDownloadPDF}>
                 <Download className="w-4 h-4 mr-2" />
                 PDF
               </Button>

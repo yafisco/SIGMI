@@ -13,6 +13,7 @@ export default function GlobalHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isPublicPage = pathname === '/' || pathname === '/login' || pathname === '/register' || pathname.startsWith('/auth');
+  const isHomePage = pathname === '/';
 
   if (!isPublicPage) return null;
 
@@ -36,7 +37,29 @@ export default function GlobalHeader() {
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-8">
+            {isHomePage && (
+              <>
+                <Link
+                  href="#features"
+                  className="text-white hover:text-[#D4AF37] transition-colors font-medium"
+                >
+                  Fonctionnalités
+                </Link>
+                <Link
+                  href="#poles"
+                  className="text-white hover:text-[#D4AF37] transition-colors font-medium"
+                >
+                  Pôles
+                </Link>
+                <Link
+                  href="#why-us"
+                  className="text-white hover:text-[#D4AF37] transition-colors font-medium"
+                >
+                  About us
+                </Link>
+              </>
+            )}
             <Link
               href="/login"
               className="relative group px-6 py-2.5 rounded-xl text-sm font-semibold text-white/90 hover:text-[#D4AF37] transition-all duration-300 border border-white/20 hover:border-[#D4AF37]/50"
@@ -57,6 +80,31 @@ export default function GlobalHeader() {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-white/10">
             <nav className="flex flex-col gap-2">
+              {isHomePage && (
+                <>
+                  <Link
+                    href="#features"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <span>Fonctionnalités</span>
+                  </Link>
+                  <Link
+                    href="#poles"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <span>Pôles</span>
+                  </Link>
+                  <Link
+                    href="#why-us"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <span>About us</span>
+                  </Link>
+                </>
+              )}
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

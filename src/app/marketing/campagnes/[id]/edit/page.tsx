@@ -49,7 +49,7 @@ export default function EditCampagnePage() {
           budget: data.budget || 0,
           date_debut: data.date_debut || '',
           date_fin: data.date_fin || '',
-          statut: data.statut,
+          statut: data.statut as any,
           leads_generes: data.leads_generes,
           taux_conversion: data.taux_conversion || 0,
           objectif: data.objectif || '',

@@ -3,10 +3,13 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Plus, Minus, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, Plus, Minus, Save, Trash2, Download } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 interface LigneDevis {
   produit_id?: string;
@@ -102,6 +105,37 @@ function CreateDevisPageContent() {
 
       const { error: lignesError } = await supabase.from('lignes_devis').insert(lignesToInsert);
       if (lignesError) throw lignesError;
+
+      // Générer et télécharger le PDF
+      const client = clients.find(c => c.id === formData.client_id);
+      const lignesText = lignes.map(l => `${l.designation} x${l.quantite} : ${(l.quantite * l.prix_unitaire).toLocaleString('fr-FR')} FCFA`).join('\n');
+      
+      const doc = await generateGMITPDF({
+        type: 'facture',
+        numero,
+        titre: 'DEVIS',
+        date: new Date(formData.date).toLocaleDateString('fr-FR'),
+        client: client?.nom || 'Client',
+        objet: 'Devis client',
+        contenu: lignesText,
+        montant: totalHT * 1.18,
+        data: {
+          'Date de validité': formData.date_validite ? new Date(formData.date_validite).toLocaleDateString('fr-FR') : 'Non spécifiée',
+          'Total HT': `${totalHT.toLocaleString('fr-FR')} FCFA`,
+          'TTC (18%)': `${(totalHT * 1.18).toLocaleString('fr-FR')} FCFA`,
+          'Nombre de lignes': lignes.length.toString(),
+        },
+      });
+      
+      doc.save(`Devis_${numero}.pdf`);
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le devis a été créé et téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
 
       router.push(getBackLink());
     } catch (err) {

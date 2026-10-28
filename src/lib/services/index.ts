@@ -15,3 +15,7 @@ export { candidaturesService } from './candidatures';
 export { sourcesProspectsService } from './sourcesProspects';
 export { postesService } from './postes';
 export { evenementsService } from './evenements';
+export { rapportsService } from './rapports';
+export { facturesService } from './factures';
+export { produitsService } from './produits';
+export { ventesService } from './ventes';

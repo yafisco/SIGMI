@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Package, Save } from 'lucide-react';
+import { ArrowLeft, Package, Save, Upload, X, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
@@ -22,10 +22,13 @@ function EditProduitPageContent() {
     pole: '',
     stock_minimum: '0',
     actif: true,
+    image_url: '',
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [fournisseurs, setFournisseurs] = useState<{ id: string; raison_sociale: string }[]>([]);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProduit() {
@@ -41,7 +44,9 @@ function EditProduitPageContent() {
           pole: data.pole || '',
           stock_minimum: data.stock_minimum.toString(),
           actif: data.actif,
+          image_url: data.image_url || '',
         });
+        setImagePreview(data.image_url || null);
       }
     }
     fetchProduit();
@@ -52,6 +57,40 @@ function EditProduitPageContent() {
     }
     fetchFournisseurs();
   }, [id]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `produits/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      setImagePreview(publicUrl);
+    } catch (error) {
+      setError('Erreur lors de l\'upload de l\'image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, image_url: '' });
+    setImagePreview(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +108,7 @@ function EditProduitPageContent() {
         pole: formData.pole || null,
         stock_minimum: parseInt(formData.stock_minimum),
         actif: formData.actif,
+        image_url: formData.image_url || null,
       }).eq('id', id);
 
       if (error) throw error;
@@ -156,6 +196,55 @@ function EditProduitPageContent() {
                     <option value="true">Actif</option>
                     <option value="false">Inactif</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-[#1D4ED8]" />
+                    Image du produit
+                  </label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-[#1D4ED8] transition-colors">
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={imagePreview} 
+                          alt="Aperçu" 
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={handleRemoveImage}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                          className="hidden"
+                          id="image-upload-edit"
+                        />
+                        <label
+                          htmlFor="image-upload-edit"
+                          className="cursor-pointer"
+                        >
+                          <div className="flex flex-col items-center">
+                            <Upload className="w-12 h-12 text-slate-400 mb-2" />
+                            <p className="text-sm text-slate-600">
+                              {uploading ? 'Upload en cours...' : 'Cliquez pour uploader une image'}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-1">PNG, JPG jusqu'à 5MB</p>
+                          </div>
+                        </label>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

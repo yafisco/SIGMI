@@ -29,7 +29,7 @@ function CreateFacturePageContent() {
 
   const getBackLink = () => {
     if (from === 'tresorerie') return '/tresorerie';
-    if (workspace === 'tresorerie') return '/tresorerie';
+    if ((workspace as any) === 'tresorerie') return '/tresorerie';
     return '/tresorerie/factures';
   };
 

@@ -47,6 +47,23 @@ export type ProjectPriority = 'basse' | 'moyenne' | 'haute' | 'critique';
 export type DocumentType = 'contrat' | 'facture' | 'rapport' | 'plan' | 'autre';
 export type DocumentStatus = 'brouillon' | 'validé' | 'archivé';
 
+// Types Evenement
+export type EvenementType = 'réunion' | 'appel' | 'visite' | 'email' | 'autre';
+export interface Evenement {
+  id: string;
+  titre: string;
+  description?: string;
+  type: EvenementType;
+  date_debut: string;
+  date_fin?: string;
+  lieu?: string;
+  client_id?: string;
+  prospect_id?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // === COLLABORATEUR ===
 export interface Collaborateur {
   id: string;
