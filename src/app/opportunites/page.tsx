@@ -33,22 +33,10 @@ function OpportunitesPageContent() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Masquer le filtre par pôle pour les non-administrateurs
-  const canFilterByPole = user?.isAdmin || false;
+  const canFilterByPole = user?.canSeeAllPoles || false;
 
-  // Rediriger les non-admin vers leur espace de travail
-  useEffect(() => {
-    if (from === 'commercial') {
-      router.push('/commercial');
-    } else if (from === 'tresorerie') {
-      router.push('/tresorerie');
-    } else if (workspace !== 'dashboard' && user && !user.isAdmin) {
-      if (workspace === 'commercial') {
-        router.push('/commercial');
-      } else if (workspace === 'tresorerie') {
-        router.push('/tresorerie');
-      }
-    }
-  }, [workspace, user, router, from]);
+  // La page Opportunités est accessible à tous les rôles autorisés
+  // Pas de redirection automatique
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({

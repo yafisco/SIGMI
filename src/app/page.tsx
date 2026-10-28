@@ -112,7 +112,7 @@ function PoleStatsSection() {
     : allStats;
 
   // Déterminer si les cartes sont cliquables (seulement pour les admins)
-  const canClickPoles = user?.isAdmin || false;
+  const canClickPoles = user?.canSeeAllPoles || false;
 
   const formatAmount = (value: number) => {
     if (value >= 1000000) {
@@ -504,7 +504,7 @@ export default function Home() {
       </AnimatedSection>
 
       {/* Benefits Section */}
-      <AnimatedSection id="benefits" className="py-24 bg-white" delay={0.3}>
+      <AnimatedSection id="why-us" className="py-24 bg-white" delay={0.3}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div

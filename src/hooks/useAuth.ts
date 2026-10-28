@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Pole } from '@/types';
+import { AppRole, Pole, Profile } from '@/types';
 import { errorMessage } from '@/lib/utils/errorHandler';
 
 export interface User {
@@ -10,9 +10,14 @@ export interface User {
   email: string;
   nom: string;
   prenom: string;
-  role: string;
+  role: AppRole;
+  pole: Pole | null;
+  // Compatibilité avec les pages qui filtrent sur une liste de pôles
   poles: Pole[];
+  // Gestion des comptes et des rôles (/admin/utilisateurs)
   isAdmin: boolean;
+  // Vue transverse sur tous les pôles (direction générale)
+  canSeeAllPoles: boolean;
 }
 
 export function useAuth() {
@@ -34,28 +39,29 @@ export function useAuth() {
           return;
         }
 
-        // Récupérer les données du collaborateur
-        const { data: collab, error: collabError } = await supabase
-          .from('collaborateurs')
+        // Le compte est lié à une personne : table profiles (id = auth.users.id)
+        const { data, error: profileError } = await supabase
+          .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (collabError || !collab) {
+        const profile = data as Profile | null;
+        if (profileError || !profile || !profile.actif) {
           setUser(null);
           return;
         }
 
-        const isAdmin = collab.role === 'direction' || collab.role === 'administrateur système';
-
         setUser({
-          id: collab.id,
-          email: collab.email,
-          nom: collab.nom,
-          prenom: collab.prenom,
-          role: collab.role,
-          poles: collab.poles || [],
-          isAdmin,
+          id: profile.id,
+          email: profile.email,
+          nom: profile.nom,
+          prenom: profile.prenom,
+          role: profile.role,
+          pole: profile.pole,
+          poles: profile.pole ? [profile.pole] : [],
+          isAdmin: profile.role === 'admin',
+          canSeeAllPoles: profile.role === 'direction_generale',
         });
       } catch (err) {
         console.error('Erreur chargement utilisateur:', err);

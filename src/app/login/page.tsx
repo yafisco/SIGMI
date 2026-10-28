@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Building2, Eye, EyeOff, Loader2, ArrowRight, Users, FolderKanban, FileText, CheckCircle2, Shield, Zap, Clock, BarChart3, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { workspacePath } from '@/lib/workspace';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -74,52 +75,25 @@ function LoginPageContent() {
         }
 
         if (data.user) {
-
-          // Récupérer les informations utilisateur supplémentaires par ID
-          const { data: userData, error: userError } = await supabase
-            .from('collaborateurs')
-            .select('*')
+          // Le compte est lié à une personne : son profil donne le rôle et le pôle
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, pole, actif')
             .eq('id', data.user.id)
-            .maybeSingle(); // maybeSingle au lieu de single pour éviter l'erreur si pas trouvé
+            .maybeSingle();
 
-
-          if (userError) {
-            console.error('Erreur lors de la récupération des données utilisateur:', userError);
-            // Si l'utilisateur n'a pas de profil collaborateur, on le redirige vers le dashboard général
-            router.push('/dashboard');
+          if (!profile || !profile.actif) {
+            await supabase.auth.signOut();
+            setErrors({
+              general: profile
+                ? 'Compte désactivé. Contactez un administrateur.'
+                : "Aucun profil n'est associé à ce compte. Contactez un administrateur.",
+            });
+            setIsLoading(false);
             return;
           }
 
-          // Rediriger selon la fonction de l'utilisateur
-          if (userData) {
-            const poste = userData.poste?.toLowerCase() || '';
-            const role = userData.role?.toLowerCase() || '';
-
-            // Comptable → Trésorerie
-            if (poste.includes('comptable') || role.includes('comptable')) {
-              router.push('/tresorerie');
-            }
-            // Commercial → Dashboard Commercial
-            else if (poste.includes('commercial') || role.includes('commercial')) {
-              router.push('/commercial');
-            }
-            // Direction Générale → Dashboard Global
-            else if (poste.includes('direction') || role.includes('direction')) {
-              router.push('/dashboard');
-            }
-            // Autres → Dashboard du pôle
-            else if (userData.poles && userData.poles.length > 0) {
-              const firstPole = userData.poles[0];
-              router.push(`/poles/${encodeURIComponent(firstPole)}`);
-            }
-            // Fallback → Dashboard global
-            else {
-              router.push('/dashboard');
-            }
-          } else {
-            // Si l'utilisateur n'a pas de profil collaborateur, rediriger vers le dashboard général
-            router.push('/dashboard');
-          }
+          router.push(workspacePath(profile));
         }
       } catch (error) {
         console.error('Erreur générale lors de la connexion:', error);
@@ -259,7 +233,7 @@ function LoginPageContent() {
                 />
                 <span className="text-xs sm:text-sm text-slate-600">Se souvenir de moi</span>
               </label>
-              <Link href="#" className="text-xs sm:text-sm text-[#2563EB] hover:text-[#1D4ED8] transition-colors font-medium">
+              <Link href="/forgot-password" className="text-xs sm:text-sm text-[#2563EB] hover:text-[#1D4ED8] transition-colors font-medium">
                 Mot de passe oublié ?
               </Link>
             </div>
@@ -280,28 +254,10 @@ function LoginPageContent() {
               )}
             </Button>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-300"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-slate-50 text-slate-500">ou</span>
-              </div>
-            </div>
-
-            {/* No Account Link */}
-            <div className="text-center bg-gradient-to-r from-blue-50 to-amber-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-              <p className="text-slate-900 font-semibold mb-1 sm:mb-2 text-sm sm:text-base">Pas encore de compte ?</p>
-              <p className="text-slate-600 text-xs sm:text-sm mb-2 sm:mb-3">Rejoignez SIGMI et centralisez vos activités</p>
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center w-full bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#2563EB] hover:scale-105 text-white font-medium px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-200 shadow-lg text-xs sm:text-sm"
-              >
-                Créer un compte gratuitement
-                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
-              </Link>
-            </div>
+            {/* Les comptes sont créés par un administrateur (plus d'inscription publique) */}
+            <p className="text-center text-xs sm:text-sm text-slate-600 bg-gradient-to-r from-blue-50 to-amber-50 border border-blue-200 rounded-lg p-4">
+              Pas encore de compte ? Demandez son ouverture à l&apos;administrateur SIGMI.
+            </p>
           </form>
 
           {/* Benefits */}

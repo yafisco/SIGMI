@@ -30,20 +30,8 @@ function ClientsPageContent() {
   const [filterPole, setFilterPole] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Rediriger les non-admin vers leur espace de travail
-  useEffect(() => {
-    if (from === 'commercial') {
-      router.push('/commercial');
-    } else if (from === 'tresorerie') {
-      router.push('/tresorerie');
-    } else if (workspace !== 'dashboard') {
-      if (workspace === 'commercial') {
-        router.push('/commercial');
-      } else if (workspace === 'tresorerie') {
-        router.push('/tresorerie');
-      }
-    }
-  }, [workspace, router, from]);
+  // La page Clients est accessible à tous les rôles
+  // Pas de redirection automatique
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({

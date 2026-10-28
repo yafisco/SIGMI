@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import GlobalHeader from "@/components/GlobalHeader";
 import GroupMIFooter from "@/components/GroupMIFooter";
+import AppSidebar from "@/components/AppSidebar";
 import { Providers } from "@/components/Providers";
 import 'sweetalert2/dist/sweetalert2.min.css';
 
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Providers>
           <GlobalHeader />
-          <main className="flex-1">{children}</main>
+          <div className="flex flex-1">
+            <AppSidebar />
+            <main className="flex-1 min-w-0">{children}</main>
+          </div>
           <GroupMIFooter />
         </Providers>
       </body>

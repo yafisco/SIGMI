@@ -43,3 +43,6 @@ next-env.d.ts
 
 # supabase CLI (cache local)
 supabase/.temp/
+
+# comptes de test générés par scripts/test-roles.mjs
+scripts/.test-users.json
