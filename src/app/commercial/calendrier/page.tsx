@@ -24,13 +24,7 @@ const typeColors: Record<string, string> = {
 };
 
 // Données simulées pour le calendrier (à remplacer par Supabase une fois la table créée)
-const simulatedEvents = [
-  { id: '1', titre: 'Réunion client GMI', type: 'réunion', date_debut: new Date().toISOString(), lieu: 'Bureau' },
-  { id: '2', titre: 'Appel prospect TechCorp', type: 'appel', date_debut: new Date(Date.now() + 86400000).toISOString(), lieu: 'Téléphone' },
-  { id: '3', titre: 'Visite site Dakar', type: 'visite', date_debut: new Date(Date.now() + 172800000).toISOString(), lieu: 'Dakar' },
-  { id: '4', titre: 'Présentation devis', type: 'réunion', date_debut: new Date(Date.now() + 259200000).toISOString(), lieu: 'Visio' },
-  { id: '5', titre: 'Email de suivi', type: 'email', date_debut: new Date(Date.now() + 345600000).toISOString(), lieu: '' },
-];
+const simulatedEvents: any[] = [];
 
 export default function CalendrierPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
