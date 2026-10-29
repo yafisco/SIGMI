@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const { allStats: poleStats, loading: poleLoading } = usePoleStats();
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all');
 
   // Charger le prénom de l'utilisateur
   useEffect(() => {
@@ -170,10 +171,17 @@ export default function DashboardPage() {
   }, []);
 
   const formatAmount = (value: number) => {
+    if (!value || value === 0) return '0 FCFA';
     if (value >= 1000000) {
       return `${(value / 1000000).toFixed(1)}M FCFA`;
     }
     return `${(value / 1000).toFixed(0)}K FCFA`;
+  };
+
+  const filterStatsByTime = (baseStats: any) => {
+    // Pour l'instant, retourne les stats complètes
+    // TODO: Implémenter le filtrage temporel réel avec les dates
+    return baseStats;
   };
 
   // Dashboard spécifique par rôle
@@ -645,6 +653,35 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Filtres temporels */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex items-center gap-3 mb-6 flex-wrap"
+        >
+          <span className="text-sm font-medium text-slate-600">Période :</span>
+          {[
+            { value: 'all', label: 'Tout' },
+            { value: 'today', label: 'Aujourd\'hui' },
+            { value: 'week', label: 'Cette semaine' },
+            { value: 'month', label: 'Ce mois' },
+            { value: 'year', label: 'Cette année' },
+          ].map((filter) => (
+            <button
+              key={filter.value}
+              onClick={() => setTimeFilter(filter.value as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                timeFilter === filter.value
+                  ? 'bg-[#1D4ED8] text-white shadow-lg'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </motion.div>
+
         {/* Contenu spécifique au rôle */}
         {renderRoleSpecificContent()}
 
@@ -884,10 +921,10 @@ export default function DashboardPage() {
                           </motion.div>
                           <div>
                             <p className="font-bold text-slate-900 text-sm">{stat.pole}</p>
-                            <p className="text-xs text-slate-600">{stat.totalOpportunities} opps</p>
+                            <p className="text-xs text-slate-600">{stat.totalOpportunities || 0} opps</p>
                           </div>
                         </div>
-                        <span className="text-lg font-bold text-slate-900">{formatAmount(stat.totalValue)} FCFA</span>
+                        <span className="text-lg font-bold text-slate-900">{formatAmount(stat.totalValue || 0)}</span>
                       </motion.div>
                     );
 
