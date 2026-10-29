@@ -5,17 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 
 export default function GlobalHeader() {
   const pathname = usePathname();
-  const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const isPublicPage = pathname === '/' || pathname === '/login' || pathname === '/register' || pathname.startsWith('/auth');
   const isHomePage = pathname === '/';
-
-  if (!isPublicPage) return null;
 
   return (
     <header className="relative bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#0F172A] bg-[length:200%_auto] animate-gradient text-white shadow-2xl border-b border-[#D4AF37]/30 sticky top-0 z-50 backdrop-blur-xl bg-opacity-95">

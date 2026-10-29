@@ -5,6 +5,7 @@ import GlobalHeader from "@/components/GlobalHeader";
 import GroupMIFooter from "@/components/GroupMIFooter";
 import AppSidebar from "@/components/AppSidebar";
 import { Providers } from "@/components/Providers";
+import ConditionalLayout from "@/components/ConditionalLayout";
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 const spaceGrotesk = Space_Grotesk({
@@ -32,12 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <Providers>
-          <GlobalHeader />
-          <div className="flex flex-1">
-            <AppSidebar />
-            <main className="flex-1 min-w-0">{children}</main>
-          </div>
-          <GroupMIFooter />
+          <ConditionalLayout>{children}</ConditionalLayout>
         </Providers>
       </body>
     </html>
