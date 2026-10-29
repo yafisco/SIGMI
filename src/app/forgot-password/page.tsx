@@ -25,12 +25,25 @@ export default function ForgotPasswordPage() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw error;
+      }
 
       setMessage('Si cette adresse email est associée à un compte, vous recevrez un email avec les instructions pour réinitialiser votre mot de passe.');
       setEmail('');
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'envoi de l\'email');
+      console.error('Erreur complète:', err);
+      const errorMessage = err.message || 'Erreur lors de l\'envoi de l\'email';
+      
+      // Message d'erreur plus informatif
+      if (errorMessage.includes('Email') || errorMessage.includes('SMTP')) {
+        setError('Erreur de configuration email. Vérifiez les paramètres SMTP dans Supabase Dashboard.');
+      } else if (errorMessage.includes('rate limit')) {
+        setError('Trop de tentatives. Réessayez dans quelques minutes.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
