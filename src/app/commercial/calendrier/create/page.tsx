@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { evenementsService } from '@/lib/services/evenements';
 
 const typeOptions: Array<{ value: string; label: string; icon: any }> = [
   { value: 'réunion', label: 'Réunion', icon: Video },
@@ -32,19 +33,37 @@ export default function CreateEvenementPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Temporairement : Simulation de création (sera remplacé par Supabase quand la table sera créée)
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      await evenementsService.create({
+        titre: form.titre,
+        description: form.description,
+        type: form.type as any,
+        date_debut: form.date_debut,
+        date_fin: form.date_fin || undefined,
+        lieu: form.lieu || undefined,
+      });
 
-    await Swal.fire({
-      title: 'Succès !',
-      text: 'L\'événement a été créé avec succès (données simulées - à connecter à Supabase une fois la table créée).',
-      icon: 'success',
-      confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
-      customClass: SWEETALERT_CONFIG.customClass,
-    });
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'L\'événement a été créé avec succès.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
 
-    router.push('/commercial/calendrier');
-    setLoading(false);
+      router.push('/commercial/calendrier');
+    } catch (error) {
+      console.error('Erreur lors de la création de l\'événement:', error);
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Impossible de créer l\'événement. Veuillez réessayer.',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -118,7 +137,7 @@ export default function CreateEvenementPage() {
                 value={form.lieu}
                 onChange={(e) => setForm({ ...form, lieu: e.target.value })}
                 className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
-                placeholder="Lieu de l'évendement"
+                placeholder="Lieu de l'événement"
               />
             </div>
 
@@ -128,7 +147,7 @@ export default function CreateEvenementPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={4}
-                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3EB] focus:border-[#2563EB]"
+                className="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                 placeholder="Détails de l'événement..."
               />
             </div>

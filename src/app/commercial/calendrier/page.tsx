@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, Video, MapPin, Phone, Mail } from 'lucide-react';
+import { Calendar as CalendarIcon, Plus, ChevronLeft, ChevronRight, Clock, Video, MapPin, Phone, Mail, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import { StatCard } from '@/components/AnimatedCard';
+import { evenementsService, Evenement } from '@/lib/services/evenements';
 
 const typeIcons: Record<string, any> = {
   réunion: Video,
@@ -23,11 +24,11 @@ const typeColors: Record<string, string> = {
   autre: 'bg-slate-100 text-slate-700',
 };
 
-// Données simulées pour le calendrier (à remplacer par Supabase une fois la table créée)
-const simulatedEvents: any[] = [];
-
 export default function CalendrierPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [events, setEvents] = useState<Evenement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -44,8 +45,42 @@ export default function CalendrierPage() {
     ));
   };
 
+  // Charger les événements depuis Supabase
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setLoading(true);
+        const data = await evenementsService.getAll();
+        setEvents(data);
+        setError(null);
+      } catch (err) {
+        console.error('Erreur lors du chargement des événements:', err);
+        setError('Impossible de charger les événements');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadEvents();
+
+    // S'abonner aux changements Realtime
+    const unsubscribe = evenementsService.subscribeToChanges((payload) => {
+      if (payload.eventType === 'INSERT') {
+        setEvents(prev => [...prev, payload.new as Evenement]);
+      } else if (payload.eventType === 'UPDATE') {
+        setEvents(prev => prev.map(e => e.id === payload.new.id ? payload.new as Evenement : e));
+      } else if (payload.eventType === 'DELETE') {
+        setEvents(prev => prev.filter(e => e.id !== payload.old.id));
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   // Filtrer les événements du mois courant
-  const evenementsDuMois = simulatedEvents.filter((evt) => {
+  const evenementsDuMois = events.filter((evt) => {
     const evtDate = new Date(evt.date_debut);
     return (
       evtDate.getMonth() === currentDate.getMonth() &&
@@ -58,7 +93,7 @@ export default function CalendrierPage() {
   const sevenDaysLater = new Date();
   sevenDaysLater.setDate(today.getDate() + 7);
 
-  const upcomingEvents = simulatedEvents
+  const upcomingEvents = events
     .filter((evt) => {
       const evtDate = new Date(evt.date_debut);
       return evtDate >= today && evtDate <= sevenDaysLater;
@@ -105,6 +140,28 @@ export default function CalendrierPage() {
     visites: evenementsDuMois.filter((e) => e.type === 'visite').length,
     appels: evenementsDuMois.filter((e) => e.type === 'appel').length,
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+          <p className="text-slate-600">Chargement du calendrier...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Réessayer</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
