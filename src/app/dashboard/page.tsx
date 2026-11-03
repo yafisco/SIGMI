@@ -877,71 +877,69 @@ export default function DashboardPage() {
             </div>
           </motion.div>
 
-          {/* Statistiques par pôle */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8, ease: 'easeOut' }}
-            className="relative"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-white rounded-2xl transform -rotate-2" />
-            <div className="relative bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-purple-200 transition-all duration-500 overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100/50 to-transparent rounded-full blur-2xl" />
-              <div className="flex items-center justify-between mb-6 relative">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-1">Performance par pôle</h3>
-                  <p className="text-slate-600 text-sm">Vue détaillée</p>
+          {/* Statistiques par pôle - Uniquement pour DG et Admin */}
+          {(user?.role === 'direction_generale' || user?.role === 'admin') && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8, ease: 'easeOut' }}
+              className="relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-white rounded-2xl transform -rotate-2" />
+              <div className="relative bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-purple-200 transition-all duration-500 overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100/50 to-transparent rounded-full blur-2xl" />
+                <div className="flex items-center justify-between mb-6 relative">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-1">Performance par pôle</h3>
+                    <p className="text-slate-600 text-sm">Vue détaillée</p>
+                  </div>
+                  <BarChart3 className="w-6 h-6 text-slate-400" />
                 </div>
-                <BarChart3 className="w-6 h-6 text-slate-400" />
-              </div>
-              
-              <div className="space-y-3 relative">
-                {poleLoading ? (
-                  <p className="text-sm text-slate-500 text-center py-4">Chargement...</p>
-                ) : poleStats && poleStats.length > 0 ? (
-                  poleStats.map((stat, index) => {
-                    const poleOption = { value: stat.pole, label: stat.pole };
-                    const canClickPole = user?.canSeeAllPoles || false;
-                    const CardContent = (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.4, delay: 0.9 + index * 0.1 }}
-                        whileHover={canClickPole ? { x: 5 } : {}}
-                        className={`flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 transition-all ${canClickPole ? 'cursor-pointer' : ''}`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <motion.div
-                            whileHover={{ rotate: 360, scale: 1.1 }}
-                            transition={{ duration: 0.6 }}
-                            className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-lg"
-                          >
-                            <BarChart3 className="w-5 h-5 text-purple-600" />
-                          </motion.div>
-                          <div>
-                            <p className="font-bold text-slate-900 text-sm">{stat.pole}</p>
-                            <p className="text-xs text-slate-600">{stat.totalOpportunities || 0} opps</p>
-                          </div>
-                        </div>
-                        <span className="text-lg font-bold text-slate-900">{formatAmount(stat.totalValue || 0)}</span>
-                      </motion.div>
-                    );
 
-                    return canClickPole ? (
-                      <Link key={stat.pole} href={`/poles/${encodeURIComponent(stat.pole)}`}>
-                        {CardContent}
-                      </Link>
-                    ) : (
-                      <div key={stat.pole}>{CardContent}</div>
-                    );
-                  })
-                ) : (
-                  <p className="text-sm text-slate-500 text-center py-4">Aucune donnée de pôle</p>
-                )}
+                <div className="space-y-3 relative">
+                  {poleLoading ? (
+                    <p className="text-sm text-slate-500 text-center py-4">Chargement...</p>
+                  ) : poleStats && poleStats.length > 0 ? (
+                    poleStats.map((stat, index) => {
+                      const CardContent = (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.4, delay: 0.9 + index * 0.1 }}
+                          whileHover={{ x: 5 }}
+                          className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50 transition-all cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <motion.div
+                              whileHover={{ rotate: 360, scale: 1.1 }}
+                              transition={{ duration: 0.6 }}
+                              className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-lg"
+                            >
+                              <BarChart3 className="w-5 h-5 text-purple-600" />
+                            </motion.div>
+                            <div>
+                              <p className="font-bold text-slate-900 text-sm">{stat.pole}</p>
+                              <p className="text-xs text-slate-600">{stat.totalOpportunities || 0} opps</p>
+                            </div>
+                          </div>
+                          <span className="text-lg font-bold text-slate-900">{formatAmount(stat.totalValue || 0)}</span>
+                        </motion.div>
+                      );
+
+                      return (
+                        <Link key={stat.pole} href={`/poles/${encodeURIComponent(stat.pole)}`}>
+                          {CardContent}
+                        </Link>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-slate-500 text-center py-4">Aucune donnée de pôle</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </div>
 
         {/* Alertes */}
