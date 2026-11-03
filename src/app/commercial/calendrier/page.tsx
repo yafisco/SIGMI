@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import { StatCard } from '@/components/AnimatedCard';
 import { evenementsService, Evenement } from '@/lib/services/evenements';
+import Link from 'next/link';
 
 const typeIcons: Record<string, any> = {
   réunion: Video,
@@ -292,10 +293,12 @@ export default function CalendrierPage() {
               )}
             </div>
 
-            <Button className="w-full mt-6 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvel événement
-            </Button>
+            <Link href="/commercial/calendrier/create">
+              <Button className="w-full mt-6 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvel événement
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
