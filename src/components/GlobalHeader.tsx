@@ -3,13 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, User } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function GlobalHeader() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isHomePage = pathname === '/';
+  const isAuthenticated = !!user;
 
   return (
     <header className="relative bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#0F172A] bg-[length:200%_auto] animate-gradient text-white shadow-2xl border-b border-[#D4AF37]/30 sticky top-0 z-50 backdrop-blur-xl bg-opacity-95">
@@ -54,13 +57,24 @@ export default function GlobalHeader() {
                 </Link>
               </>
             )}
-            <Link
-              href="/login"
-              className="relative group px-6 py-2.5 rounded-xl text-sm font-semibold text-white/90 hover:text-[#D4AF37] transition-all duration-300 border border-white/20 hover:border-[#D4AF37]/50"
-            >
-              <span className="relative z-10">Connexion</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37]/10 to-[#D4AF37]/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Link>
+            {!isAuthenticated ? (
+              <Link
+                href="/login"
+                className="relative group px-6 py-2.5 rounded-xl text-sm font-semibold text-white/90 hover:text-[#D4AF37] transition-all duration-300 border border-white/20 hover:border-[#D4AF37]/50"
+              >
+                <span className="relative z-10">Connexion</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37]/10 to-[#D4AF37]/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+            ) : (
+              <button
+                onClick={signOut}
+                className="relative group px-6 py-2.5 rounded-xl text-sm font-semibold text-white/90 hover:text-[#D4AF37] transition-all duration-300 border border-white/20 hover:border-[#D4AF37]/50 flex items-center gap-2"
+              >
+                <User className="w-4 h-4" />
+                <span className="relative z-10">Déconnexion</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37]/0 via-[#D4AF37]/10 to-[#D4AF37]/0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
+            )}
           </div>
 
           <button
@@ -99,14 +113,27 @@ export default function GlobalHeader() {
                   </Link>
                 </>
               )}
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <LogOut className="w-5 h-5" />
-                <span>Connexion</span>
-              </Link>
+              {!isAuthenticated ? (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <User className="w-5 h-5" />
+                  <span>Connexion</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    signOut();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all w-full text-left"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span>Déconnexion</span>
+                </button>
+              )}
             </nav>
           </div>
         )}
