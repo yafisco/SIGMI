@@ -9,10 +9,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function GlobalHeader() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isHomePage = pathname === '/';
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !loading;
 
   return (
     <header className="relative bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#0F172A] bg-[length:200%_auto] animate-gradient text-white shadow-2xl border-b border-[#D4AF37]/30 sticky top-0 z-50 backdrop-blur-xl bg-opacity-95">
