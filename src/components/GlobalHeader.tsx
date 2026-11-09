@@ -23,11 +23,11 @@ export default function GlobalHeader() {
           <Link href="/" className="flex items-center gap-4 hover:scale-105 transition-transform duration-300">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] to-[#FFE4B5] rounded-full blur-lg opacity-50 animate-pulse" />
-              <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-2 border border-white/20">
+              <div className="relative bg-white rounded-full p-2 shadow-lg">
                 <img
                   src="/logo-group-mi.png"
                   alt="SIGMI Logo"
-                  className="relative w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-2xl"
+                  className="relative w-12 h-12 sm:w-16 sm:h-16 object-contain"
                 />
               </div>
             </div>

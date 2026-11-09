@@ -311,7 +311,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
-                className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight whitespace-nowrap text-balance"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight"
               >
                 Centralisez l&apos;activité de GROUP MI
                 <motion.span
