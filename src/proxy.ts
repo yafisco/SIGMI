@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { AppRole } from '@/types'
 
-const PUBLIC_PATHS = ['/', '/login', '/register', '/auth/callback']
+const PUBLIC_PATHS = ['/', '/login', '/register', '/forgot-password', '/reset-password', '/auth/callback']
 
 const ROUTE_ROLES: Record<string, AppRole[]> = {
   '/dashboard': ['direction_generale', 'back_office', 'commercial', 'finance_comptabilite', 'responsable_pole'],
