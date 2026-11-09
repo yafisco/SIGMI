@@ -6,8 +6,8 @@ DO $$
 DECLARE
   table_name text;
 BEGIN
-  -- Tables de base
-  FOR table_name IN SELECT unnest(ARRAY['clients', 'contacts', 'opportunities', 'projects', 'documents', 'tasks', 'collaborators'])
+  -- Tables de base (noms en français)
+  FOR table_name IN SELECT unnest(ARRAY['clients', 'contacts', 'opportunities', 'projets', 'documents', 'tasks', 'collaborateurs'])
   LOOP
     BEGIN
       EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
