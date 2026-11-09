@@ -1,41 +1,79 @@
 -- Activer Realtime pour toutes les tables du système
 -- Cette migration permet la synchronisation en temps réel pour toute l'application
+-- Les commandes utilisent une fonction PL/pgSQL pour ignorer les tables déjà activées
 
--- Tables de base
-ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
-ALTER PUBLICATION supabase_realtime ADD TABLE clients;
-ALTER PUBLICATION supabase_realtime ADD TABLE contacts;
-ALTER PUBLICATION supabase_realtime ADD TABLE opportunities;
-ALTER PUBLICATION supabase_realtime ADD TABLE projects;
-ALTER PUBLICATION supabase_realtime ADD TABLE documents;
-ALTER PUBLICATION supabase_realtime ADD TABLE tasks;
-ALTER PUBLICATION supabase_realtime ADD TABLE collaborators;
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  -- Tables de base
+  FOR table_name IN SELECT unnest(ARRAY['clients', 'contacts', 'opportunities', 'projects', 'documents', 'tasks', 'collaborators'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      -- Table déjà dans la publication, ignorer
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
 
--- Commercial
-ALTER PUBLICATION supabase_realtime ADD TABLE interactions;
-ALTER PUBLICATION supabase_realtime ADD TABLE demandes_agrement;
-ALTER PUBLICATION supabase_realtime ADD TABLE modeles_emails;
+  -- Commercial
+  FOR table_name IN SELECT unnest(ARRAY['interactions', 'demandes_agrement', 'modeles_emails'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
 
--- Finance
-ALTER PUBLICATION supabase_realtime ADD TABLE budgets;
-ALTER PUBLICATION supabase_realtime ADD TABLE encaissements_decaissements;
-ALTER PUBLICATION supabase_realtime ADD TABLE rapports;
-ALTER PUBLICATION supabase_realtime ADD TABLE factures;
+  -- Finance
+  FOR table_name IN SELECT unnest(ARRAY['budgets', 'encaissements_decaissements', 'rapports', 'factures'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
 
--- Gestion commerciale
-ALTER PUBLICATION supabase_realtime ADD TABLE produits;
-ALTER PUBLICATION supabase_realtime ADD TABLE stocks;
-ALTER PUBLICATION supabase_realtime ADD TABLE fournisseurs;
-ALTER PUBLICATION supabase_realtime ADD TABLE ventes;
-ALTER PUBLICATION supabase_realtime ADD TABLE devis;
+  -- Gestion commerciale
+  FOR table_name IN SELECT unnest(ARRAY['produits', 'stocks', 'fournisseurs', 'ventes', 'devis'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
 
--- Marketing
-ALTER PUBLICATION supabase_realtime ADD TABLE campagnes_marketing;
-ALTER PUBLICATION supabase_realtime ADD TABLE sources_prospects;
+  -- Marketing
+  FOR table_name IN SELECT unnest(ARRAY['campagnes_marketing', 'sources_prospects'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
 
--- Recrutement
-ALTER PUBLICATION supabase_realtime ADD TABLE postes;
-ALTER PUBLICATION supabase_realtime ADD TABLE candidatures;
+  -- Recrutement
+  FOR table_name IN SELECT unnest(ARRAY['postes', 'candidatures'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
 
--- Calendrier
-ALTER PUBLICATION supabase_realtime ADD TABLE evenements;
+  -- Calendrier
+  FOR table_name IN SELECT unnest(ARRAY['evenements'])
+  LOOP
+    BEGIN
+      EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
+    EXCEPTION WHEN duplicate_object THEN
+      RAISE NOTICE 'Table % est déjà dans la publication', table_name;
+    END;
+  END LOOP;
+END $$;
