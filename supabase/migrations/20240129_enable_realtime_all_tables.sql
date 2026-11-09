@@ -25,7 +25,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE factures;
 -- Gestion commerciale
 ALTER PUBLICATION supabase_realtime ADD TABLE produits;
 ALTER PUBLICATION supabase_realtime ADD TABLE stocks;
-ALTER PUBLICATION supab_realtime ADD TABLE fournisseurs;
+ALTER PUBLICATION supabase_realtime ADD TABLE fournisseurs;
 ALTER PUBLICATION supabase_realtime ADD TABLE ventes;
 ALTER PUBLICATION supabase_realtime ADD TABLE devis;
 
@@ -35,7 +35,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE sources_prospects;
 
 -- Recrutement
 ALTER PUBLICATION supabase_realtime ADD TABLE postes;
-ALTER PUBLICATION supab_realtime ADD TABLE candidatures;
+ALTER PUBLICATION supabase_realtime ADD TABLE candidatures;
 
 -- Calendrier
 ALTER PUBLICATION supabase_realtime ADD TABLE evenements;
