@@ -22,12 +22,12 @@ export default function GlobalHeader() {
         <div className="flex items-center justify-between h-20">
           <Link href="/" className="flex items-center gap-4 hover:scale-105 transition-transform duration-300">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] to-[#FFE4B5] rounded-full blur-lg opacity-50 animate-pulse" />
-              <div className="relative bg-white rounded-full p-2 shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] to-[#FFE4B5] rounded-full blur-md opacity-40 animate-pulse" />
+              <div className="relative bg-gradient-to-br from-[#D4AF37]/20 to-[#FFE4B5]/20 backdrop-blur-sm rounded-full p-2 shadow-lg border border-[#D4AF37]/30">
                 <img
                   src="/logo-group-mi.png"
                   alt="SIGMI Logo"
-                  className="relative w-12 h-12 sm:w-16 sm:h-16 object-contain"
+                  className="relative w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-full"
                 />
               </div>
             </div>

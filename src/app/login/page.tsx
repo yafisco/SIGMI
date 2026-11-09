@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Building2, Eye, EyeOff, Loader2, ArrowRight, Users, FolderKanban, FileText, CheckCircle2, Shield, Zap, Clock, BarChart3, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { workspacePath } from '@/lib/workspace';
+import { AnimatedCounter } from '@/components/AnimatedCounter';
 
 function LoginPageContent() {
   const router = useRouter();
@@ -17,6 +18,11 @@ function LoginPageContent() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [stats, setStats] = useState({
+    collaborators: 0,
+    projects: 0,
+    documents: 0,
+  });
   // Message dérivé de l'URL (pas d'état ni d'effet nécessaire)
   const successMessage =
     searchParams.get('confirmed') === 'true'
@@ -24,6 +30,53 @@ function LoginPageContent() {
       : searchParams.get('registered') === 'true'
         ? 'Votre compte a été créé avec succès ! Vous pouvez maintenant vous connecter.'
         : '';
+
+  // Charger les stats depuis la base
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [
+          { count: collabsCount },
+          { count: projectsCount },
+          { count: docsCount },
+        ] = await Promise.all([
+          supabase.from('collaborateurs').select('*', { count: 'exact', head: true }),
+          supabase.from('projets').select('*', { count: 'exact', head: true }),
+          supabase.from('documents').select('*', { count: 'exact', head: true }),
+        ]);
+
+        setStats({
+          collaborators: collabsCount || 0,
+          projects: projectsCount || 0,
+          documents: docsCount || 0,
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement des stats:', error);
+      }
+    }
+
+    loadStats();
+
+    // Abonnements Realtime pour mises à jour automatiques
+    const channels = [
+      supabase
+        .channel('collaborators_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'collaborateurs' }, loadStats)
+        .subscribe(),
+      supabase
+        .channel('projets_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projets' }, loadStats)
+        .subscribe(),
+      supabase
+        .channel('documents_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, loadStats)
+        .subscribe(),
+    ];
+
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel));
+    };
+  }, []);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -300,17 +353,23 @@ function LoginPageContent() {
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
                 <Users className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">150+</div>
+                <div className="text-2xl font-bold text-white">
+                  <AnimatedCounter value={stats.collaborators} suffix="+" />
+                </div>
                 <div className="text-blue-100 text-xs">Collaborateurs</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
                 <FolderKanban className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">45</div>
+                <div className="text-2xl font-bold text-white">
+                  <AnimatedCounter value={stats.projects} />
+                </div>
                 <div className="text-blue-100 text-xs">Projets actifs</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
                 <FileText className="w-8 h-8 text-[#D4AF37] mx-auto mb-2" />
-                <div className="text-2xl font-bold text-white">2.5K</div>
+                <div className="text-2xl font-bold text-white">
+                  <AnimatedCounter value={stats.documents} suffix="+" />
+                </div>
                 <div className="text-blue-100 text-xs">Documents</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">

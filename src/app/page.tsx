@@ -270,6 +270,26 @@ export default function Home() {
     }
 
     loadStats();
+
+    // Abonnements Realtime pour mises à jour automatiques
+    const channels = [
+      supabase
+        .channel('collaborateurs_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'collaborateurs' }, loadStats)
+        .subscribe(),
+      supabase
+        .channel('projets_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projets' }, loadStats)
+        .subscribe(),
+      supabase
+        .channel('documents_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, loadStats)
+        .subscribe(),
+    ];
+
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel));
+    };
   }, []);
 
   // Ne rien afficher pendant le chargement ou si l'utilisateur est connecté
