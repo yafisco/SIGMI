@@ -6,7 +6,7 @@ DO $$
 DECLARE
   table_name text;
 BEGIN
-  -- Tables de base (noms en français)
+  -- Tables de base
   FOR table_name IN SELECT unnest(ARRAY['clients', 'contacts', 'opportunities', 'projets', 'documents', 'tasks', 'collaborateurs'])
   LOOP
     BEGIN
@@ -18,7 +18,7 @@ BEGIN
   END LOOP;
 
   -- Commercial
-  FOR table_name IN SELECT unnest(ARRAY['interactions', 'demandes_agrement', 'modeles_emails'])
+  FOR table_name IN SELECT unnest(ARRAY['interactions', 'email_templates'])
   LOOP
     BEGIN
       EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
@@ -28,7 +28,7 @@ BEGIN
   END LOOP;
 
   -- Finance
-  FOR table_name IN SELECT unnest(ARRAY['budgets', 'encaissements_decaissements', 'rapports', 'factures'])
+  FOR table_name IN SELECT unnest(ARRAY['budgets', 'transactions', 'rapports', 'factures'])
   LOOP
     BEGIN
       EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
@@ -38,7 +38,7 @@ BEGIN
   END LOOP;
 
   -- Gestion commerciale
-  FOR table_name IN SELECT unnest(ARRAY['produits', 'stocks', 'fournisseurs', 'ventes', 'devis'])
+  FOR table_name IN SELECT unnest(ARRAY['produits', 'mouvements_stock', 'fournisseurs', 'ventes', 'devis'])
   LOOP
     BEGIN
       EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', table_name);
