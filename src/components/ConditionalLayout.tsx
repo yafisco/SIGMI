@@ -11,7 +11,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
 
   return (
     <>
-      <GlobalHeader />
+      {isPublicPage && <GlobalHeader />}
       <div className="flex flex-1">
         {!isPublicPage && <AppSidebar />}
         <main className={`${isPublicPage ? 'flex-1' : 'flex-1 min-w-0'}`}>{children}</main>
