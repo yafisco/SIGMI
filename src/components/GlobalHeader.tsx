@@ -23,11 +23,13 @@ export default function GlobalHeader() {
           <Link href="/" className="flex items-center gap-4 hover:scale-105 transition-transform duration-300">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-[#D4AF37] to-[#FFE4B5] rounded-full blur-lg opacity-50 animate-pulse" />
-              <img
-                src="/logo-group-mi.png"
-                alt="SIGMI Logo"
-                className="relative w-16 h-16 object-contain drop-shadow-2xl"
-              />
+              <div className="relative bg-white/10 backdrop-blur-sm rounded-full p-2 border border-white/20">
+                <img
+                  src="/logo-group-mi.png"
+                  alt="SIGMI Logo"
+                  className="relative w-12 h-12 sm:w-16 sm:h-16 object-contain drop-shadow-2xl"
+                />
+              </div>
             </div>
             <div className="hidden sm:block">
               <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#FFE4B5] to-[#D4AF37] bg-[length:200%_auto] animate-gradient tracking-wider">SIGMI</h1>
@@ -53,7 +55,7 @@ export default function GlobalHeader() {
                   href="#why-us"
                   className="text-white hover:text-[#D4AF37] transition-colors font-medium"
                 >
-                  About us
+                  À propos
                 </Link>
               </>
             )}
@@ -109,7 +111,7 @@ export default function GlobalHeader() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
                   >
-                    <span>About us</span>
+                    <span>À propos</span>
                   </Link>
                 </>
               )}

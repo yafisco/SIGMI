@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +30,8 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import { usePoleStats } from '@/hooks/usePoleStats';
 import { POLE_OPTIONS } from '@/lib/constants';
 import { usePoleFilter } from '@/hooks/usePoleFilter';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 
 const features = [
   {
@@ -226,6 +230,53 @@ function PoleStatsSection() {
 }
 
 export default function Home() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const [stats, setStats] = useState({
+    collaborators: 0,
+    projects: 0,
+    documents: 0,
+  });
+
+  // Redirection si connecté
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+  // Charger les stats depuis la base
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [
+          { count: collabsCount },
+          { count: projectsCount },
+          { count: docsCount },
+        ] = await Promise.all([
+          supabase.from('collaborateurs').select('*', { count: 'exact', head: true }),
+          supabase.from('projets').select('*', { count: 'exact', head: true }),
+          supabase.from('documents').select('*', { count: 'exact', head: true }),
+        ]);
+
+        setStats({
+          collaborators: collabsCount || 0,
+          projects: projectsCount || 0,
+          documents: docsCount || 0,
+        });
+      } catch (error) {
+        console.error('Erreur lors du chargement des stats:', error);
+      }
+    }
+
+    loadStats();
+  }, []);
+
+  // Ne rien afficher pendant le chargement ou si l'utilisateur est connecté
+  if (loading || user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 overflow-hidden">
       {/* Hero Section */}
@@ -248,47 +299,19 @@ export default function Home() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-3xl opacity-10" />
         </motion.div>
         
-        {/* Floating particles */}
-        {[...Array(20)].map((_, i) => {
-          const left = ((i * 37) % 100);
-          const top = ((i * 53) % 100);
-          const duration = 3 + (i % 3);
-          const delay = (i % 5) * 0.4;
-          
-          return (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-white/20 rounded-full"
-              style={{
-                left: `${left}%`,
-                top: `${top}%`,
-              }}
-              animate={{
-                y: [0, -100, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration,
-                repeat: Infinity,
-                delay,
-              }}
-            />
-          );
-        })}
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-32 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 lg:py-20 relative">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ease: 'easeOut' }}
-              className="space-y-6 md:space-y-8"
+              className="space-y-4 md:space-y-6"
             >
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.3, ease: 'easeOut' }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight whitespace-nowrap text-balance"
               >
                 Centralisez l&apos;activité de GROUP MI
                 <motion.span
@@ -321,7 +344,6 @@ export default function Home() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.7, ease: 'easeOut' }}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4"
               >
                 <Link href="/login">
                   <motion.div
@@ -330,25 +352,13 @@ export default function Home() {
                   >
                     <Button
                       size="lg"
-                      className="bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient hover:scale-105 text-[#1D4ED8] text-lg px-8 h-14 rounded-xl shadow-2xl shadow-[#D4AF37]/50 border-2 border-[#D4AF37] transition-all duration-300 font-semibold"
+                      className="bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient hover:scale-105 text-slate-900 text-lg px-8 h-14 rounded-xl shadow-2xl shadow-[#D4AF37]/50 border-2 border-[#D4AF37] transition-all duration-300 font-semibold focus-visible:ring-2 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F172A]"
                     >
-                      Démarrer maintenant
+                      Accéder à SIGMI
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
                   </motion.div>
                 </Link>
-                <div
-                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="cursor-pointer"
-                >
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="text-white border-2 border-white/50 bg-white/5 hover:bg-white hover:text-[#1D4ED8] hover:scale-105 text-lg px-8 h-14 rounded-xl transition-all duration-300 font-semibold shadow-lg backdrop-blur-sm"
-                  >
-                    En savoir plus
-                  </Button>
-                </div>
               </motion.div>
             </motion.div>
 
@@ -372,25 +382,26 @@ export default function Home() {
               <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
                 <div className="grid grid-cols-2 gap-6">
                   {[
-                    { icon: Users, value: 150, suffix: '+', label: 'Collaborateurs', color: 'blue' },
-                    { icon: FolderKanban, value: 45, label: 'Projets actifs', color: 'amber' },
-                    { icon: FileText, value: 2500, suffix: '+', label: 'Documents', color: 'purple' },
-                    { icon: BarChart3, value: 6, label: 'Pôles', color: 'green' },
+                    { icon: Users, value: stats.collaborators, suffix: '+', label: 'Collaborateurs', color: 'blue', href: '/collaborateurs' },
+                    { icon: FolderKanban, value: stats.projects, label: 'Projets actifs', color: 'amber', href: '/projets' },
+                    { icon: FileText, value: stats.documents, suffix: '+', label: 'Documents', color: 'purple', href: '/documents' },
+                    { icon: BarChart3, value: 6, label: 'Pôles', color: 'green', href: '#poles' },
                   ].map((stat, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
-                      whileHover={{ scale: 1.05 }}
-                      className={`text-center p-4 sm:p-6 bg-gradient-to-br ${stat.color === 'blue' ? 'from-blue-50 to-blue-100' : stat.color === 'amber' ? 'from-amber-50 to-amber-100' : stat.color === 'purple' ? 'from-purple-50 to-purple-100' : 'from-green-50 to-green-100'} rounded-2xl cursor-pointer transition-all duration-300`}
-                    >
-                      <stat.icon className={`w-6 h-6 sm:w-8 sm:h-8 text-${stat.color}-600 mx-auto mb-2 sm:mb-3`} />
-                      <div className="text-2xl sm:text-3xl font-bold text-slate-900">
-                        <AnimatedCounter value={stat.value} suffix={stat.suffix || ''} />
-                      </div>
-                      <div className="text-xs sm:text-sm text-slate-600 mt-1">{stat.label}</div>
-                    </motion.div>
+                    <Link key={index} href={stat.href}>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
+                        whileHover={{ scale: 1.05 }}
+                        className={`text-center p-4 sm:p-6 bg-gradient-to-br ${stat.color === 'blue' ? 'from-blue-50 to-blue-100' : stat.color === 'amber' ? 'from-amber-50 to-amber-100' : stat.color === 'purple' ? 'from-purple-50 to-purple-100' : 'from-green-50 to-green-100'} rounded-2xl cursor-pointer transition-all duration-300`}
+                      >
+                        <stat.icon className={`w-6 h-6 sm:w-8 sm:h-8 text-${stat.color}-600 mx-auto mb-2 sm:mb-3`} />
+                        <div className="text-2xl sm:text-3xl font-bold text-slate-900">
+                          <AnimatedCounter value={stat.value} suffix={stat.suffix || ''} />
+                        </div>
+                        <div className="text-xs sm:text-sm text-slate-600 mt-1">{stat.label}</div>
+                      </motion.div>
+                    </Link>
                   ))}
                 </div>
               </div>
