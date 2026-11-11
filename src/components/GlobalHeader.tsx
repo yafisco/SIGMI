@@ -33,7 +33,7 @@ export default function GlobalHeader() {
               </div>
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#FFE4B5] to-[#D4AF37] bg-[length:200%_auto] animate-gradient tracking-wider">SIGMI</h1>
+              <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#FFE4B5] to-[#D4AF37] bg-[length:200%_auto] animate-gradient tracking-wider font-space-grotesk">SIGMI</h1>
             </div>
           </Link>
 

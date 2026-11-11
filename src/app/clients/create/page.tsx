@@ -19,7 +19,10 @@ function CreateClientPageContent() {
   const { workspace } = useWorkspace();
   const searchParams = useSearchParams();
   const from = searchParams.get('from') || '';
+  const statutParam = searchParams.get('statut') || '';
   const createClient = useCreateClient();
+
+  const isProspect = statutParam === 'prospect';
 
   const getBackLink = () => {
     if (from === 'commercial') return '/commercial';
@@ -48,7 +51,7 @@ function CreateClientPageContent() {
       pays: 'Sénégal',
       chiffre_affaires_annuel: undefined,
       nombre_employes: undefined,
-      statut: 'prospect',
+      statut: isProspect ? 'prospect' : 'client',
       assigned_to: '',
     },
   });
@@ -80,8 +83,8 @@ function CreateClientPageContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
       <PageHeader
-        title="Nouveau client"
-        description="Ajoutez un nouveau client à votre portefeuille"
+        title={isProspect ? "Nouveau prospect" : "Nouveau client"}
+        description={isProspect ? "Ajoutez un nouveau prospect à votre base" : "Ajoutez un nouveau client à votre portefeuille"}
         backHref={getBackLink()}
       />
 
