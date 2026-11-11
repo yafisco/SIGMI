@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Building2, MapPin, Mail, Phone, Save, Globe, TrendingUp, Users, User, Briefcase } from 'lucide-react';
@@ -22,7 +22,11 @@ function CreateClientPageContent() {
   const statutParam = searchParams.get('statut') || '';
   const createClient = useCreateClient();
 
-  const isProspect = statutParam === 'prospect';
+  const [isProspect, setIsProspect] = useState(statutParam === 'prospect');
+
+  useEffect(() => {
+    setIsProspect(statutParam === 'prospect');
+  }, [statutParam]);
 
   const getBackLink = () => {
     if (from === 'commercial') return '/commercial';
