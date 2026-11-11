@@ -165,7 +165,7 @@ export default function ProspectionPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-8 flex gap-4"
         >
-          <Link href="/clients/create?statut=prospect&from=commercial">
+          <Link href="/commercial/prospection/create">
             <Button className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau prospect
