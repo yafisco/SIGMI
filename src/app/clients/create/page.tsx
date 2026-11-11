@@ -29,6 +29,7 @@ function CreateClientPageContent() {
   }, [statutParam]);
 
   const getBackLink = () => {
+    if (isProspect) return '/commercial/prospection';
     if (from === 'commercial') return '/commercial';
     if (from === 'finance') return '/finance';
     if (workspace === 'commercial') return '/commercial';
