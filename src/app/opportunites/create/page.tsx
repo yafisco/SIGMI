@@ -11,6 +11,8 @@ import { POLE_OPTIONS } from '@/lib/constants';
 import { errorMessage } from '@/lib/utils/errorHandler';
 import { useData } from '@/hooks/useData';
 import type { OpportunityStage } from '@/types';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 function CreateOpportunityPageContent() {
   const router = useRouter();
@@ -65,10 +67,26 @@ function CreateOpportunityPageContent() {
         expected_close_date: formData.expected_close_date || undefined,
         description: formData.description,
       });
-      router.push(getBackLink());
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'L\'opportunité a été créée avec succès.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+
+      router.push('/opportunites');
     } catch (err) {
       setError(errorMessage(err, 'Erreur lors de la création de l\'opportunité'));
       setLoading(false);
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de la création de l\'opportunité.',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
   };
 
