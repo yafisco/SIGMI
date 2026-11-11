@@ -13,6 +13,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { PageHeader } from '@/components/PageHeader';
 import { useWorkspace } from '@/hooks/useWorkspace';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 function CreateClientPageContent() {
   const router = useRouter();
@@ -79,9 +81,25 @@ function CreateClientPageContent() {
         statut: data.statut,
         assigned_to: data.assigned_to || undefined,
       });
-      router.push(getBackLink());
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: isProspect ? 'Le prospect a été créé avec succès.' : 'Le client a été créé avec succès.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+
+      router.push('/clients');
     } catch (err) {
       console.error('Erreur lors de la création du client:', err);
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de la création du client.',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
   };
 
