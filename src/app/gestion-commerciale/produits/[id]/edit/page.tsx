@@ -7,6 +7,7 @@ import { ArrowLeft, Package, Save, Upload, X, Image as ImageIcon } from 'lucide-
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { storageService } from '@/lib/services';
 
 function EditProduitPageContent() {
   const router = useRouter();
@@ -64,24 +65,12 @@ function EditProduitPageContent() {
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `produits/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath);
-
-      setFormData({ ...formData, image_url: publicUrl });
-      setImagePreview(publicUrl);
-    } catch (error) {
-      setError('Erreur lors de l\'upload de l\'image');
+      const uploadResult = await storageService.uploadFile(file, 'produits/');
+      setFormData({ ...formData, image_url: uploadResult.url });
+      setImagePreview(uploadResult.url);
+    } catch (error: any) {
+      console.error('Erreur upload:', error);
+      setError(`Erreur lors de l'upload: ${error?.message || 'Erreur inconnue'}`);
     } finally {
       setUploading(false);
     }
