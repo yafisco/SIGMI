@@ -9,6 +9,7 @@ import { interactionsService } from '@/lib/services';
 import { InteractionType } from '@/types';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { useAuth } from '@/hooks/useAuth';
 
 const typeOptions: Array<{ value: InteractionType; label: string; icon: any }> = [
   { value: 'email', label: 'Email', icon: Mail },
@@ -20,6 +21,7 @@ const typeOptions: Array<{ value: InteractionType; label: string; icon: any }> =
 
 export default function CreateInteractionPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -38,6 +40,7 @@ export default function CreateInteractionPage() {
         description: form.description,
         type: form.type,
         interaction_date: form.interaction_date,
+        created_by: user?.id || '',
       });
 
       await Swal.fire({
