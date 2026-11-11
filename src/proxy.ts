@@ -121,8 +121,19 @@ export async function proxy(req: NextRequest) {
   const allowedRoles = getAllowedRoles(pathname)
 
   if (allowedRoles && !allowedRoles.includes(role)) {
+    // Si l'utilisateur n'a pas accès au dashboard, rediriger vers son workspace
     const url = req.nextUrl.clone()
-    url.pathname = '/dashboard'
+    if (role === 'commercial') {
+      url.pathname = '/commercial'
+    } else if (role === 'finance_comptabilite') {
+      url.pathname = '/finance'
+    } else if (role === 'direction_generale' || role === 'admin') {
+      url.pathname = '/dashboard'
+    } else if (role === 'responsable_pole') {
+      url.pathname = '/dashboard'
+    } else {
+      url.pathname = '/dashboard'
+    }
     url.searchParams.set('error', 'forbidden')
     const response = NextResponse.redirect(url)
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
