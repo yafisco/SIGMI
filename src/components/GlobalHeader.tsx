@@ -28,6 +28,7 @@ export default function GlobalHeader() {
                   src="/logo-group-mi.png"
                   alt="SIGMI Logo"
                   className="relative w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-full"
+                  suppressHydrationWarning
                 />
               </div>
             </div>

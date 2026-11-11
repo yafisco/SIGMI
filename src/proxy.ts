@@ -62,6 +62,8 @@ export async function proxy(req: NextRequest) {
       }
     )
     await supabase.auth.getUser()
+    // Autoriser le cache pour les pages publiques
+    res.headers.set('Cache-Control', 'public, max-age=3600, s-maxage=3600')
     return res
   }
 
@@ -90,7 +92,12 @@ export async function proxy(req: NextRequest) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
+    const response = NextResponse.redirect(url)
+    // Empêcher le cache du navigateur pour les redirections non authentifiées
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   }
 
   const { data: profile } = await supabase
@@ -103,7 +110,11 @@ export async function proxy(req: NextRequest) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('error', 'inactive')
-    return NextResponse.redirect(url)
+    const response = NextResponse.redirect(url)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   }
 
   const role = profile.role as AppRole
@@ -113,8 +124,17 @@ export async function proxy(req: NextRequest) {
     const url = req.nextUrl.clone()
     url.pathname = '/dashboard'
     url.searchParams.set('error', 'forbidden')
-    return NextResponse.redirect(url)
+    const response = NextResponse.redirect(url)
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    return response
   }
+
+  // Empêcher le cache du navigateur pour toutes les pages privées
+  res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  res.headers.set('Pragma', 'no-cache')
+  res.headers.set('Expires', '0')
 
   return res
 }
