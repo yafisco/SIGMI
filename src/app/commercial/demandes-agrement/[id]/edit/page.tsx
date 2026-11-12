@@ -66,12 +66,17 @@ export default function EditDemandeAgrementPage() {
     }
 
     try {
+      // Combiner référence et libellé si une référence est saisie
+      const libelleFinal = formData.reference
+        ? `${formData.reference} - ${formData.libelle}`
+        : formData.libelle;
+
       const { error } = await supabase
         .from('demandes_agrement')
         .update({
           client_id: formData.client_id,
           pole: formData.pole,
-          libelle: formData.libelle,
+          libelle: libelleFinal,
           decision: formData.contenu,
           statut: formData.statut,
         })

@@ -77,8 +77,13 @@ export default function CreateDemandeAgrementPage() {
     }
 
     try {
+      // Combiner référence et libellé si une référence est saisie
+      const libelleFinal = formData.reference
+        ? `${formData.reference} - ${formData.libelle}`
+        : formData.libelle;
+
       const { error } = await supabase.from('demandes_agrement').insert({
-        libelle: formData.libelle,
+        libelle: libelleFinal,
         client_id: formData.client_id,
         pole: formData.pole,
         decision: formData.contenu,

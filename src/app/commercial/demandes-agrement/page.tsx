@@ -20,6 +20,7 @@ interface DemandeAgrement {
   statut: 'soumise' | 'en_examen' | 'approuvee' | 'refusee';
   pole: string;
   decision?: string;
+  reference?: string;
 }
 
 export default function DemandesAgrementPage() {
@@ -94,15 +95,20 @@ export default function DemandesAgrementPage() {
 
   const handleDownloadPDF = async (demande: DemandeAgrement) => {
     try {
+      // Extraire la référence si elle existe dans le libellé (format: "000426_GMI - Description")
+      const libelleParts = demande.libelle.split(' - ');
+      const reference = libelleParts.length > 1 ? libelleParts[0] : '';
+      const objet = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demande.libelle;
+
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero: demande.libelle,
-        objet: demande.libelle,
+        numero: reference,
+        objet: objet,
         contenu: demande.decision || '',
       });
-      
+
       doc.save(`Demande_Agrement_${demande.libelle}.pdf`);
-      
+
       await Swal.fire({
         title: 'Succès !',
         text: 'Le document a été téléchargé',
