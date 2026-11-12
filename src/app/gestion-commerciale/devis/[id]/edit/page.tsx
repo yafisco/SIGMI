@@ -39,7 +39,7 @@ export default function EditDevisPage() {
       const [devisData, lignesData, clientsData, produitsData] = await Promise.all([
         supabase.from('devis').select('*').eq('id', params.id).single(),
         supabase.from('lignes_devis').select('*').eq('devis_id', params.id),
-        supabase.from('clients').select('id, nom').order('nom'),
+        supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom'),
         supabase.from('produits').select('id, designation, prix_unitaire').eq('actif', true).order('designation'),
       ]);
 

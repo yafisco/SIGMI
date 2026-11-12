@@ -29,7 +29,7 @@ export default function EditDemandeAgrementPage() {
     async function fetchData() {
       const [demandeData, clientsData] = await Promise.all([
         supabase.from('demandes_agrement').select('*').eq('id', params.id).single(),
-        supabase.from('clients').select('id, nom').order('nom'),
+        supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom'),
       ]);
 
       if (demandeData.data) {

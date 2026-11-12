@@ -43,7 +43,7 @@ function CreateDevisPageContent() {
   useEffect(() => {
     async function fetchData() {
       const [clientsData, produitsData] = await Promise.all([
-        supabase.from('clients').select('id, nom').order('nom'),
+        supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom'),
         supabase.from('produits').select('id, designation, prix_unitaire').eq('actif', true).order('designation'),
       ]);
       setClients(clientsData.data || []);

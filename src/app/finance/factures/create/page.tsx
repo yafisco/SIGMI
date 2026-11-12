@@ -35,7 +35,7 @@ function CreateFacturePageContent() {
 
   useEffect(() => {
     async function fetchClients() {
-      const { data } = await supabase.from('clients').select('id, nom').order('nom');
+      const { data } = await supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom');
       setClients(data || []);
     }
     fetchClients();

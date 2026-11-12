@@ -27,7 +27,7 @@ export default function CreateDemandeAgrementPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const clientsData = await supabase.from('clients').select('id, nom').order('nom');
+      const clientsData = await supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom');
       setClients(clientsData.data || []);
 
       const { count } = await supabase.from('demandes_agrement').select('*', { count: 'exact', head: true });
