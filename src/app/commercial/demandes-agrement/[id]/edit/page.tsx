@@ -16,8 +16,7 @@ export default function EditDemandeAgrementPage() {
     client_id: '',
     pole: '',
     libelle: '',
-    montant: '',
-    decision: '',
+    contenu: '',
     statut: 'soumise',
   });
   const [loading, setLoading] = useState(false);
@@ -37,8 +36,7 @@ export default function EditDemandeAgrementPage() {
           client_id: demandeData.data.client_id,
           pole: demandeData.data.pole,
           libelle: demandeData.data.libelle,
-          montant: demandeData.data.montant?.toString() || '',
-          decision: demandeData.data.decision || '',
+          contenu: demandeData.data.decision || '',
           statut: demandeData.data.statut,
         });
       }
@@ -67,8 +65,7 @@ export default function EditDemandeAgrementPage() {
           client_id: formData.client_id,
           pole: formData.pole,
           libelle: formData.libelle,
-          montant: formData.montant ? parseFloat(formData.montant) : null,
-          decision: formData.decision,
+          decision: formData.contenu,
           statut: formData.statut,
         })
         .eq('id', params.id);
@@ -82,12 +79,12 @@ export default function EditDemandeAgrementPage() {
   };
 
   const poles = [
-    'Ingénierie informatique',
-    'Génie civil et BTP',
-    'Agrobusiness',
-    'Trading international',
-    'Transition énergétique',
-    'Centre d\'incubation',
+    'ingénierie informatique',
+    'génie civil et BTP',
+    'agrobusiness',
+    'trading international',
+    'transition énergétique',
+    'centre d\'incubation et d\'impulsion des entreprises',
   ];
 
   if (initialLoading) {
@@ -185,19 +182,10 @@ export default function EditDemandeAgrementPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Montant (FCFA)</label>
-                  <input
-                    type="number"
-                    value={formData.montant}
-                    onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Décision</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Contenu</label>
                   <textarea
-                    value={formData.decision}
-                    onChange={(e) => setFormData({ ...formData, decision: e.target.value })}
+                    value={formData.contenu}
+                    onChange={(e) => setFormData({ ...formData, contenu: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                     rows={5}
                   />
@@ -211,11 +199,8 @@ export default function EditDemandeAgrementPage() {
                 <div className="mb-8">
                   <p className="text-slate-600 font-semibold">Objet : {formData.libelle || '[Objet de la demande]'}</p>
                 </div>
-                <div className="mb-4">
-                  <p className="text-slate-600">Montant : {formData.montant ? new Intl.NumberFormat('fr-FR').format(parseFloat(formData.montant)) + ' FCFA' : '-'}</p>
-                </div>
                 <div className="min-h-[300px] text-slate-700 whitespace-pre-line">
-                  {formData.decision || '[Décision concernant la demande]'}
+                  {formData.contenu || '[Contenu de la demande]'}
                 </div>
                 <div className="mt-12 flex justify-end">
                   <div className="text-center">

@@ -17,8 +17,7 @@ export default function CreateDemandeAgrementPage() {
     client_id: '',
     pole: '',
     libelle: '',
-    montant: '',
-    decision: '',
+    contenu: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -42,7 +41,7 @@ export default function CreateDemandeAgrementPage() {
         type: 'demande_agrement',
         numero: formData.libelle,
         objet: formData.libelle,
-        contenu: formData.decision || '',
+        contenu: formData.contenu || '',
       });
       
       doc.save(`Demande_Agrement_${formData.libelle}.pdf`);
@@ -81,8 +80,7 @@ export default function CreateDemandeAgrementPage() {
         libelle: formData.libelle,
         client_id: formData.client_id,
         pole: formData.pole,
-        montant: formData.montant ? parseFloat(formData.montant) : null,
-        decision: formData.decision,
+        decision: formData.contenu,
         statut: 'soumise',
       });
 
@@ -95,12 +93,12 @@ export default function CreateDemandeAgrementPage() {
   };
 
   const poles = [
-    'Ingénierie informatique',
-    'Génie civil et BTP',
-    'Agrobusiness',
-    'Trading international',
-    'Transition énergétique',
-    'Centre d\'incubation',
+    'ingénierie informatique',
+    'génie civil et BTP',
+    'agrobusiness',
+    'trading international',
+    'transition énergétique',
+    'centre d\'incubation et d\'impulsion des entreprises',
   ];
 
   return (
@@ -176,23 +174,13 @@ export default function CreateDemandeAgrementPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Montant (FCFA)</label>
-                  <input
-                    type="number"
-                    value={formData.montant}
-                    onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    placeholder="50000000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Décision</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Contenu</label>
                   <textarea
-                    value={formData.decision}
-                    onChange={(e) => setFormData({ ...formData, decision: e.target.value })}
+                    value={formData.contenu}
+                    onChange={(e) => setFormData({ ...formData, contenu: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                     rows={5}
-                    placeholder="Décision concernant la demande..."
+                    placeholder="Contenu de la demande..."
                   />
                 </div>
               </div>
@@ -204,11 +192,8 @@ export default function CreateDemandeAgrementPage() {
                 <div className="mb-8">
                   <p className="text-slate-600 font-semibold">Objet : {formData.libelle || '[Objet de la demande]'}</p>
                 </div>
-                <div className="mb-4">
-                  <p className="text-slate-600">Montant : {formData.montant ? new Intl.NumberFormat('fr-FR').format(parseFloat(formData.montant)) + ' FCFA' : '-'}</p>
-                </div>
                 <div className="min-h-[300px] text-slate-700 whitespace-pre-line">
-                  {formData.decision || '[Décision concernant la demande]'}
+                  {formData.contenu || '[Contenu de la demande]'}
                 </div>
                 <div className="mt-12 flex justify-end">
                   <div className="text-center">
