@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Save, Printer, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Save } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { POLE_OPTIONS } from '@/lib/constants';
 
 export default function EditDemandeAgrementPage() {
   const params = useParams();
@@ -14,16 +15,15 @@ export default function EditDemandeAgrementPage() {
   const [formData, setFormData] = useState({
     client_id: '',
     pole: '',
-    objet: '',
-    contenu: '',
-    notes: '',
-    statut: 'brouillon',
+    libelle: '',
+    montant: '',
+    decision: '',
+    statut: 'soumise',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [numero, setNumero] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -36,12 +36,11 @@ export default function EditDemandeAgrementPage() {
         setFormData({
           client_id: demandeData.data.client_id,
           pole: demandeData.data.pole,
-          objet: demandeData.data.objet,
-          contenu: demandeData.data.contenu || '',
-          notes: demandeData.data.notes || '',
+          libelle: demandeData.data.libelle,
+          montant: demandeData.data.montant?.toString() || '',
+          decision: demandeData.data.decision || '',
           statut: demandeData.data.statut,
         });
-        setNumero(demandeData.data.numero);
       }
 
       setClients(clientsData.data || []);
@@ -55,7 +54,7 @@ export default function EditDemandeAgrementPage() {
     setLoading(true);
     setError('');
 
-    if (!formData.client_id || !formData.pole || !formData.objet) {
+    if (!formData.client_id || !formData.pole || !formData.libelle) {
       setError('Veuillez remplir tous les champs obligatoires');
       setLoading(false);
       return;
@@ -67,9 +66,9 @@ export default function EditDemandeAgrementPage() {
         .update({
           client_id: formData.client_id,
           pole: formData.pole,
-          objet: formData.objet,
-          contenu: formData.contenu,
-          notes: formData.notes,
+          libelle: formData.libelle,
+          montant: formData.montant ? parseFloat(formData.montant) : null,
+          decision: formData.decision,
           statut: formData.statut,
         })
         .eq('id', params.id);
@@ -132,30 +131,19 @@ export default function EditDemandeAgrementPage() {
               </div>
               
               <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>
-                    <input
-                      type="text"
-                      value={numero}
-                      readOnly
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl bg-slate-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
-                    <select
-                      value={formData.client_id}
-                      onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                      required
-                    >
-                      <option value="">Sélectionnez un client</option>
-                      {clients.map((c) => (
-                        <option key={c.id} value={c.id}>{c.nom}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
+                  <select
+                    value={formData.client_id}
+                    onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                    required
+                  >
+                    <option value="">Sélectionnez un client</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.nom}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
@@ -167,8 +155,8 @@ export default function EditDemandeAgrementPage() {
                       required
                     >
                       <option value="">Sélectionnez un pôle</option>
-                      {poles.map((pole) => (
-                        <option key={pole} value={pole}>{pole}</option>
+                      {POLE_OPTIONS.map((pole) => (
+                        <option key={pole.value} value={pole.value}>{pole.label}</option>
                       ))}
                     </select>
                   </div>
@@ -179,62 +167,40 @@ export default function EditDemandeAgrementPage() {
                       onChange={(e) => setFormData({ ...formData, statut: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                     >
-                      <option value="brouillon">Brouillon</option>
-                      <option value="envoyee">Envoyée</option>
-                      <option value="en_cours">En cours</option>
-                      <option value="acceptee">Acceptée</option>
+                      <option value="soumise">Soumise</option>
+                      <option value="en_examen">En examen</option>
+                      <option value="approuvee">Approuvée</option>
                       <option value="refusee">Refusée</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Objet de la demande *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Libellé *</label>
                   <input
                     type="text"
-                    value={formData.objet}
-                    onChange={(e) => setFormData({ ...formData, objet: e.target.value })}
+                    value={formData.libelle}
+                    onChange={(e) => setFormData({ ...formData, libelle: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Contenu de la demande</label>
-                  <textarea
-                    value={formData.contenu}
-                    onChange={(e) => setFormData({ ...formData, contenu: e.target.value })}
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Montant (FCFA)</label>
+                  <input
+                    type="number"
+                    value={formData.montant}
+                    onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    rows={10}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Notes internes</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Décision</label>
                   <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    value={formData.decision}
+                    onChange={(e) => setFormData({ ...formData, decision: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    rows={3}
+                    rows={5}
                   />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Aperçu du document</h3>
-              <div className="bg-white border-2 border-slate-200 rounded-xl p-8 font-serif">
-                <div className="text-right mb-8">
-                  <p className="text-slate-600">Réf. : {numero}</p>
-                </div>
-                <div className="mb-8">
-                  <p className="text-slate-600 font-semibold">Objet : {formData.objet}</p>
-                </div>
-                <div className="min-h-[300px] text-slate-700 whitespace-pre-line">
-                  {formData.contenu || '[Contenu de la demande]'}
-                </div>
-                <div className="mt-12 flex justify-end">
-                  <div className="text-center">
-                    <p className="text-slate-600">Fait à Thiès le {new Date().toLocaleDateString('fr-FR')}</p>
-                    <p className="text-slate-900 font-semibold mt-2">Le Directeur Général</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -246,16 +212,6 @@ export default function EditDemandeAgrementPage() {
             )}
 
             <div className="flex items-center justify-end gap-4 pt-4">
-              <div className="flex gap-2 mr-auto">
-                <Button type="button" variant="outline">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Imprimer
-                </Button>
-                <Button type="button" variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  PDF
-                </Button>
-              </div>
               <Link href={`/commercial/demandes-agrement/${params.id}`}>
                 <Button variant="outline" disabled={loading}>Annuler</Button>
               </Link>

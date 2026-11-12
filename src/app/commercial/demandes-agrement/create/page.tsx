@@ -16,23 +16,18 @@ export default function CreateDemandeAgrementPage() {
   const [formData, setFormData] = useState({
     client_id: '',
     pole: '',
-    objet: '',
-    contenu: '',
-    notes: '',
+    libelle: '',
+    montant: '',
+    decision: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-  const [numero, setNumero] = useState('');
 
   useEffect(() => {
     async function fetchData() {
       const clientsData = await supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom');
       setClients(clientsData.data || []);
-
-      const { count } = await supabase.from('demandes_agrement').select('*', { count: 'exact', head: true });
-      const newNumero = `000${(count || 0) + 1}_GMI`;
-      setNumero(newNumero);
     }
     fetchData();
   }, []);
@@ -45,12 +40,12 @@ export default function CreateDemandeAgrementPage() {
     try {
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero,
-        objet: formData.objet,
-        contenu: formData.contenu,
+        numero: formData.libelle,
+        objet: formData.libelle,
+        contenu: formData.decision || '',
       });
       
-      doc.save(`Demande_Agrement_${numero}.pdf`);
+      doc.save(`Demande_Agrement_${formData.libelle}.pdf`);
       
       await Swal.fire({
         title: 'Succès !',
@@ -75,7 +70,7 @@ export default function CreateDemandeAgrementPage() {
     setLoading(true);
     setError('');
 
-    if (!formData.client_id || !formData.pole || !formData.objet) {
+    if (!formData.client_id || !formData.pole || !formData.libelle) {
       setError('Veuillez remplir tous les champs obligatoires');
       setLoading(false);
       return;
@@ -83,14 +78,12 @@ export default function CreateDemandeAgrementPage() {
 
     try {
       const { error } = await supabase.from('demandes_agrement').insert({
-        numero,
+        libelle: formData.libelle,
         client_id: formData.client_id,
         pole: formData.pole,
-        objet: formData.objet,
-        contenu: formData.contenu,
-        notes: formData.notes,
-        statut: 'brouillon',
-        date_demande: new Date().toISOString(),
+        montant: formData.montant ? parseFloat(formData.montant) : null,
+        decision: formData.decision,
+        statut: 'soumise',
       });
 
       if (error) throw error;
@@ -143,30 +136,19 @@ export default function CreateDemandeAgrementPage() {
               </div>
               
               <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>
-                    <input
-                      type="text"
-                      value={numero}
-                      readOnly
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl bg-slate-50"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
-                    <select
-                      value={formData.client_id}
-                      onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                      required
-                    >
-                      <option value="">Sélectionnez un client</option>
-                      {clients.map((c) => (
-                        <option key={c.id} value={c.id}>{c.nom}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
+                  <select
+                    value={formData.client_id}
+                    onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                    required
+                  >
+                    <option value="">Sélectionnez un client</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.nom}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Pôle concerné *</label>
@@ -183,59 +165,40 @@ export default function CreateDemandeAgrementPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Objet de la demande *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Libellé de la demande *</label>
                   <input
                     type="text"
-                    value={formData.objet}
-                    onChange={(e) => setFormData({ ...formData, objet: e.target.value })}
+                    value={formData.libelle}
+                    onChange={(e) => setFormData({ ...formData, libelle: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    placeholder="Ex: De Madina Infotech au Group MI : une vision plus grande, une ambition renouvelée"
+                    placeholder="Ex: Demande d'agrément Madina Infotech"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Contenu de la demande</label>
-                  <textarea
-                    value={formData.contenu}
-                    onChange={(e) => setFormData({ ...formData, contenu: e.target.value })}
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Montant (FCFA)</label>
+                  <input
+                    type="number"
+                    value={formData.montant}
+                    onChange={(e) => setFormData({ ...formData, montant: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    rows={10}
-                    placeholder="Rédigez le contenu de votre demande d'agrément ici..."
+                    placeholder="50000000"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Notes internes</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Décision</label>
                   <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    value={formData.decision}
+                    onChange={(e) => setFormData({ ...formData, decision: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    rows={3}
-                    placeholder="Notes internes pour l'équipe..."
+                    rows={5}
+                    placeholder="Décision concernant la demande..."
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Aperçu du document</h3>
-              <div className="bg-white border-2 border-slate-200 rounded-xl p-8 font-serif">
-                <div className="text-right mb-8">
-                  <p className="text-slate-600">Réf. : {numero}</p>
-                </div>
-                <div className="mb-8">
-                  <p className="text-slate-600 font-semibold">Objet : {formData.objet || '[Objet de la demande]'}</p>
-                </div>
-                <div className="min-h-[300px] text-slate-700 whitespace-pre-line">
-                  {formData.contenu || '[Contenu de la demande]'}
-                </div>
-                <div className="mt-12 flex justify-end">
-                  <div className="text-center">
-                    <p className="text-slate-600">Fait à Thiès le {new Date().toLocaleDateString('fr-FR')}</p>
-                    <p className="text-slate-900 font-semibold mt-2">Le Directeur Général</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl">
