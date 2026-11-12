@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { emailTemplatesService } from '@/lib/services';
+import { emailService } from '@/lib/services/emailService';
 import { EmailTemplate } from '@/types';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
@@ -57,9 +58,13 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
 
     setSending(true);
     try {
-      // Simulation de l'envoi d'email
-      // Dans une vraie implémentation, cela appellerait un service d'envoi d'email
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Envoi réel de l'email via Supabase Edge Function
+      await emailService.sendEmail({
+        to: clientEmail,
+        subject: selectedTemplate.sujet,
+        html: preview,
+        text: preview.replace(/<[^>]*>/g, ''), // Version texte sans HTML
+      });
 
       await Swal.fire({
         title: 'Email envoyé !',

@@ -8,6 +8,7 @@ export { contactsService } from './contacts';
 export { interactionsService } from './interactions';
 export { storageService } from './storage';
 export { emailTemplatesService } from './emailTemplates';
+export { emailService } from './emailService';
 export { budgetsService } from './budgets';
 export { transactionsService } from './transactions';
 export { campagnesMarketingService } from './campagnesMarketing';
