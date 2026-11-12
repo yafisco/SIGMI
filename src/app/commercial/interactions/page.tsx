@@ -15,6 +15,7 @@ import { SWEETALERT_CONFIG } from '@/lib/constants';
 import { useData } from '@/hooks/useData';
 import Swal from 'sweetalert2';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { SendEmailModal } from '@/components/SendEmailModal';
 
 const typeLabels: Record<string, string> = {
   email: 'Email',
@@ -55,6 +56,8 @@ export default function InteractionsPage() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<InteractionType | 'all'>('all');
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
@@ -233,14 +236,30 @@ export default function InteractionsPage() {
                         {interaction.created_by_nom || '-'}
                       </div>
                     </div>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={() => handleDelete(interaction.id, interaction.title)}
-                      className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </motion.button>
+                    <div className="flex gap-1">
+                      {interaction.type === 'email' && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => {
+                            setSelectedInteraction(interaction);
+                            setIsEmailModalOpen(true);
+                          }}
+                          className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all"
+                          title="Envoyer un email"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleDelete(interaction.id, interaction.title)}
+                        className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </motion.button>
+                    </div>
                   </div>
 
                   <div className="space-y-2 relative">
@@ -283,6 +302,17 @@ export default function InteractionsPage() {
           </motion.div>
         )}
       </div>
+
+      <SendEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => {
+          setIsEmailModalOpen(false);
+          setSelectedInteraction(null);
+        }}
+        clientName={selectedInteraction?.title || ''}
+        clientEmail={selectedInteraction?.description || ''}
+        interactionId={selectedInteraction?.id}
+      />
     </div>
   );
 }
