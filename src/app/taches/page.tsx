@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Search, Filter, Plus, Calendar, Clock, AlertCircle, CheckCircle, Trash2, Zap, Target, Edit, MoreVertical } from 'lucide-react';
 import { Task } from '@/types';
@@ -23,11 +23,17 @@ export default function TachesPage() {
   const { data: tasks, loading, error, refresh } = useData({
     fetchFn: () => tasksService.getAll(shouldFilter ? userPole || undefined : undefined),
   });
+  const [localTasks, setLocalTasks] = useState<Task[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterPole, setFilterPole] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Synchroniser localTasks avec tasks
+  useEffect(() => {
+    setLocalTasks(tasks || []);
+  }, [tasks]);
 
   // Masquer le filtre par pôle pour les non-administrateurs
   const canFilterByPole = user?.canSeeAllPoles || false;
@@ -48,7 +54,7 @@ export default function TachesPage() {
     if (result.isConfirmed) {
       try {
         await tasksService.delete(id);
-        refresh();
+        setLocalTasks(localTasks.filter(t => t.id !== id));
         await Swal.fire({
           title: 'Supprimé !',
           text: 'La tâche a été supprimée avec succès.',
@@ -71,7 +77,7 @@ export default function TachesPage() {
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
       await tasksService.update({ id, status: newStatus as any });
-      refresh();
+      setLocalTasks(localTasks.map(t => t.id === id ? { ...t, status: newStatus as any } : t));
       await Swal.fire({
         title: 'Statut mis à jour !',
         text: `La tâche est maintenant ${TASK_STATUS_LABELS[newStatus as keyof typeof TASK_STATUS_LABELS] || newStatus}.`,
@@ -90,7 +96,7 @@ export default function TachesPage() {
     }
   };
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = localTasks.filter((task) => {
     const matchesSearch =
       (task.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (task.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,11 +110,11 @@ export default function TachesPage() {
   });
 
   const stats = {
-    total: (tasks || []).length,
-    todo: (tasks || []).filter((t) => t.status === 'todo').length,
-    in_progress: (tasks || []).filter((t) => t.status === 'in_progress').length,
-    done: (tasks || []).filter((t) => t.status === 'done').length,
-    overdue: (tasks || []).filter((t) => {
+    total: localTasks.length,
+    todo: localTasks.filter((t) => t.status === 'todo').length,
+    in_progress: localTasks.filter((t) => t.status === 'in_progress').length,
+    done: localTasks.filter((t) => t.status === 'done').length,
+    overdue: localTasks.filter((t) => {
       if (!t.due_date || t.status === 'done') return false;
       return new Date(t.due_date) < new Date();
     }).length,
