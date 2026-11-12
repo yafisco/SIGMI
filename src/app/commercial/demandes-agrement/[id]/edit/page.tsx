@@ -14,6 +14,7 @@ export default function EditDemandeAgrementPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     reference: '',
+    destinataire: '',
     client_id: '',
     pole: '',
     libelle: '',
@@ -40,6 +41,7 @@ export default function EditDemandeAgrementPage() {
 
         setFormData({
           reference,
+          destinataire: '',
           client_id: demandeData.data.client_id,
           pole: demandeData.data.pole,
           libelle,
@@ -168,6 +170,16 @@ export default function EditDemandeAgrementPage() {
                         <option key={pole.value} value={pole.value}>{pole.label}</option>
                       ))}
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Destinataire</label>
+                    <input
+                      type="text"
+                      value={formData.destinataire}
+                      onChange={(e) => setFormData({ ...formData, destinataire: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                      placeholder="Ex: Monsieur le Directeur Général"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>

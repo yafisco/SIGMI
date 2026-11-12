@@ -20,6 +20,7 @@ interface DemandeAgrement {
   pole: string;
   decision?: string;
   reference?: string;
+  destinataire?: string;
   clients?: {
     nom: string;
   };
@@ -107,6 +108,7 @@ export default function DemandesAgrementPage() {
         numero: reference || '', // Réf. contient uniquement la référence
         objet: objet, // Objet contient uniquement la description
         contenu: demande.decision || '',
+        destinataire: demande.destinataire || '', // Destinataire pour remplacer "A........."
       });
 
       doc.save(`Demande_Agrement_${demande.libelle}.pdf`);

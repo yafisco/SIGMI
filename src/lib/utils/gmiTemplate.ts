@@ -11,6 +11,7 @@ export interface GMITemplateData {
   contenu?: string;
   montant?: number;
   data?: any;
+  destinataire?: string;
 }
 
 async function getLogoBase64(): Promise<string> {
@@ -52,11 +53,11 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   
   let yPos = 75;
   
-  // Pour demande d'agrément : "A........." en haut à droite
+  // Pour demande d'agrément : destinataire en haut à droite
   if (data.type === 'demande_agrement') {
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
-    doc.text('A.........', 170, yPos);
+    doc.text(data.destinataire || 'A.........', 170, yPos);
     yPos += 15;
   }
 

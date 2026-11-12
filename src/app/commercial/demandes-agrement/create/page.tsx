@@ -15,6 +15,7 @@ export default function CreateDemandeAgrementPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     reference: '',
+    destinataire: '',
     client_id: '',
     pole: '',
     libelle: '',
@@ -43,6 +44,7 @@ export default function CreateDemandeAgrementPage() {
         numero: formData.reference || '', // Réf. contient uniquement la référence saisie
         objet: formData.libelle, // Objet contient uniquement le libellé
         contenu: formData.contenu || '',
+        destinataire: formData.destinataire || '', // Destinataire pour remplacer "A........."
       });
       
       doc.save(`Demande_Agrement_${formData.libelle}.pdf`);
@@ -155,6 +157,16 @@ export default function CreateDemandeAgrementPage() {
               </div>
               
               <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Destinataire</label>
+                  <input
+                    type="text"
+                    value={formData.destinataire}
+                    onChange={(e) => setFormData({ ...formData, destinataire: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                    placeholder="Ex: Monsieur le Directeur Général"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>
                   <input
