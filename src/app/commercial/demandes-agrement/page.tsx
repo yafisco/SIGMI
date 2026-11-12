@@ -15,12 +15,14 @@ interface DemandeAgrement {
   id: string;
   libelle: string;
   client_id: string;
-  client_nom?: string;
   created_at: string;
   statut: 'soumise' | 'en_examen' | 'approuvee' | 'refusee';
   pole: string;
   decision?: string;
   reference?: string;
+  clients?: {
+    nom: string;
+  };
 }
 
 export default function DemandesAgrementPage() {
@@ -39,7 +41,7 @@ export default function DemandesAgrementPage() {
 
   const filteredDemandes = demandes.filter(d =>
     d.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (d.client_nom && d.client_nom.toLowerCase().includes(searchTerm.toLowerCase()))
+    (d.clients?.nom && d.clients.nom.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getStatutBadge = (statut: string) => {
@@ -95,15 +97,15 @@ export default function DemandesAgrementPage() {
 
   const handleDownloadPDF = async (demande: DemandeAgrement) => {
     try {
-      // Extraire la référence si elle existe dans le libellé (format: "000426_GMI - Description")
+      // Extraire la référence et l'objet du libellé (format: "000426_GMI - Description")
       const libelleParts = demande.libelle.split(' - ');
       const reference = libelleParts.length > 1 ? libelleParts[0] : '';
       const objet = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demande.libelle;
 
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero: reference,
-        objet: objet,
+        numero: reference || '', // Réf. contient uniquement la référence
+        objet: objet, // Objet contient uniquement la description
         contenu: demande.decision || '',
       });
 
@@ -219,7 +221,7 @@ export default function DemandesAgrementPage() {
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
                         <td className="px-6 py-4 text-sm text-slate-900 font-medium">{demande.libelle}</td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{demande.client_nom || '-'}</td>
+                        <td className="px-6 py-4 text-sm text-slate-900">{demande.clients?.nom || '-'}</td>
                         <td className="px-6 py-4 text-sm text-slate-600">{demande.pole}</td>
                         <td className="px-6 py-4 text-sm text-slate-600">{new Date(demande.created_at).toLocaleDateString('fr-FR')}</td>
                         <td className="px-6 py-4 text-center">

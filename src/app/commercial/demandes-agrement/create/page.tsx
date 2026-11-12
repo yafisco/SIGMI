@@ -40,8 +40,8 @@ export default function CreateDemandeAgrementPage() {
     try {
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero: formData.reference || formData.libelle,
-        objet: formData.libelle,
+        numero: formData.reference || '', // Réf. contient uniquement la référence saisie
+        objet: formData.libelle, // Objet contient uniquement le libellé
         contenu: formData.contenu || '',
       });
       
