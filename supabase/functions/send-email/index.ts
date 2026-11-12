@@ -13,21 +13,47 @@ serve(async (req) => {
       )
     }
 
-    // TODO: Intégrer avec un service d'envoi d'email réel
-    // Options:
-    // 1. Supabase Email (disponible dans certains plans)
-    // 2. SendGrid (nécessite une clé API)
-    // 3. Mailgun (nécessite une clé API)
-    // 4. Resend (alternative moderne)
+    // Récupérer la clé API Resend depuis les variables d'environnement
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
-    // Pour l'instant, simulation de l'envoi
-    console.log('Email envoyé:', { to, subject })
+    if (!RESEND_API_KEY) {
+      console.error('RESEND_API_KEY non configurée')
+      return new Response(
+        JSON.stringify({ error: 'Service d\'email non configuré' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // Simulation d'un délai d'envoi
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Envoyer l'email via Resend
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'GROUP MI - Service Commercial <service.commercial@madinainfotech.com>',
+        to: to,
+        subject: subject,
+        html: html,
+        text: text || html.replace(/<[^>]*>/g, ''),
+      }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Erreur Resend:', data)
+      return new Response(
+        JSON.stringify({ error: 'Erreur lors de l\'envoi de l\'email', details: data }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Email envoyé avec succès:', { to, subject })
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Email envoyé avec succès' }),
+      JSON.stringify({ success: true, message: 'Email envoyé avec succès', data }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     )
   } catch (error) {
