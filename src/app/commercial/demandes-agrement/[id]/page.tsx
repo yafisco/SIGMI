@@ -32,16 +32,16 @@ export default function DemandeAgrementDetailPage() {
 
   const getStatutBadge = (statut: string) => {
     switch (statut) {
-      case 'acceptee':
-        return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Acceptée' };
+      case 'approuvee':
+        return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Approuvée' };
       case 'refusee':
         return { color: 'bg-red-100 text-red-700', icon: XCircle, label: 'Refusée' };
-      case 'envoyee':
-        return { color: 'bg-blue-100 text-blue-700', icon: Send, label: 'Envoyée' };
-      case 'en_cours':
-        return { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'En cours' };
+      case 'soumise':
+        return { color: 'bg-blue-100 text-blue-700', icon: Send, label: 'Soumise' };
+      case 'en_examen':
+        return { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'En examen' };
       default:
-        return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: 'Brouillon' };
+        return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: statut };
     }
   };
 
@@ -51,15 +51,21 @@ export default function DemandeAgrementDetailPage() {
 
   const handleDownloadPDF = async () => {
     try {
+      // Extraire la référence et l'objet du libellé (format: "000426_GMI - Description")
+      const libelleParts = demande.libelle.split(' - ');
+      const reference = libelleParts.length > 1 ? libelleParts[0] : '';
+      const objet = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demande.libelle;
+
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero: demande.numero,
-        objet: demande.objet,
-        contenu: demande.contenu,
+        numero: reference || '',
+        objet: objet,
+        contenu: demande.decision || '',
+        destinataire: demande.destinataire || '',
       });
-      
-      doc.save(`Demande_Agrement_${demande.numero}.pdf`);
-      
+
+      doc.save(`Demande_Agrement_${demande.libelle}.pdf`);
+
       await Swal.fire({
         title: 'Succès !',
         text: 'Le document a été téléchargé',
@@ -122,8 +128,8 @@ export default function DemandeAgrementDetailPage() {
         >
           <div className="p-6 border-b border-slate-200 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">{demande.numero}</h1>
-              <p className="text-slate-600 mt-1">Demande d'agrément pour {demande.client_nom || 'Client inconnu'}</p>
+              <h1 className="text-2xl font-bold text-slate-900">{demande.libelle}</h1>
+              <p className="text-slate-600 mt-1">Demande d'agrément pour {demande.clients?.nom || 'Client inconnu'}</p>
             </div>
             <div className="flex gap-2">
               <Link href={`/commercial/demandes-agrement/${demande.id}/edit`}>
@@ -140,12 +146,6 @@ export default function DemandeAgrementDetailPage() {
                 <Download className="w-4 h-4 mr-2" />
                 PDF
               </Button>
-              {demande.statut === 'brouillon' && (
-                <Button variant="outline">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Envoyer
-                </Button>
-              )}
             </div>
           </div>
 
@@ -153,15 +153,15 @@ export default function DemandeAgrementDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-slate-50 rounded-xl p-4">
                 <p className="text-sm text-slate-600 mb-1">Client</p>
-                <p className="font-semibold text-slate-900">{demande.client_nom || '-'}</p>
+                <p className="font-semibold text-slate-900">{demande.clients?.nom || '-'}</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
                 <p className="text-sm text-slate-600 mb-1">Pôle</p>
                 <p className="font-semibold text-slate-900">{demande.pole}</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-sm text-slate-600 mb-1">Date demande</p>
-                <p className="font-semibold text-slate-900">{new Date(demande.date_demande).toLocaleDateString('fr-FR')}</p>
+                <p className="text-sm text-slate-600 mb-1">Date création</p>
+                <p className="font-semibold text-slate-900">{new Date(demande.created_at).toLocaleDateString('fr-FR')}</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
                 <p className="text-sm text-slate-600 mb-1">Statut</p>
@@ -175,30 +175,23 @@ export default function DemandeAgrementDetailPage() {
             <div className="mb-8">
               <h3 className="text-lg font-bold text-slate-900 mb-4">Document de demande</h3>
               <div className="bg-white border-2 border-slate-200 rounded-xl p-8 font-serif max-w-3xl mx-auto">
-                <div className="text-right mb-8">
-                  <p className="text-slate-600">Réf. : {demande.numero}</p>
+                <div className="mb-4">
+                  <p className="text-slate-600">Réf. : {demande.libelle.split(' - ')[0] || '-'}</p>
                 </div>
                 <div className="mb-8">
-                  <p className="text-slate-600 font-semibold">Objet : {demande.objet}</p>
+                  <p className="text-slate-600 font-semibold">Objet : {demande.libelle.split(' - ').slice(1).join(' - ') || demande.libelle}</p>
                 </div>
                 <div className="min-h-[300px] text-slate-700 whitespace-pre-line">
-                  {demande.contenu || '[Contenu de la demande]'}
+                  {demande.decision || '[Contenu de la demande]'}
                 </div>
                 <div className="mt-12 flex justify-end">
                   <div className="text-center">
-                    <p className="text-slate-600">Fait à Thiès le {new Date(demande.date_demande).toLocaleDateString('fr-FR')}</p>
+                    <p className="text-slate-600">Fait à Thiès le {new Date(demande.created_at).toLocaleDateString('fr-FR')}</p>
                     <p className="text-slate-900 font-semibold mt-2">Le Directeur Général</p>
                   </div>
                 </div>
               </div>
             </div>
-
-            {demande.notes && (
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Notes internes</h3>
-                <p className="text-slate-600">{demande.notes}</p>
-              </div>
-            )}
           </div>
         </motion.div>
       </div>
