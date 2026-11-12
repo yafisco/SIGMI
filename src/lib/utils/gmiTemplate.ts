@@ -28,40 +28,22 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   const doc = new jsPDF();
   
   try {
-    // Logo image en base64 - taille réduite pour correspondre au format
+    // Logo image en base64 - taille ajustée
     const logoBase64 = await getLogoBase64();
-    doc.addImage(logoBase64, 'PNG', 15, 15, 35, 35);
+    doc.addImage(logoBase64, 'PNG', 15, 15, 40, 40);
   } catch (error) {
     // Fallback si l'image ne charge pas
     doc.setFontSize(24);
     doc.setTextColor(29, 78, 216);
     doc.text('MI', 15, 35);
   }
-  
-  // En-tête à côté du logo
-  doc.setFontSize(16);
-  doc.setTextColor(29, 78, 216);
-  doc.text('GROUP MI', 55, 22);
 
-  doc.setFontSize(8);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Diversifier, Innover, Impacter', 55, 28);
-
-  // Pôles en liste
-  doc.setFontSize(7);
-  doc.setTextColor(50, 50, 50);
-  const poles = [
-    'Ingénierie Informatique',
-    'Génie Civil & BTP',
-    'Transition Energétique',
-    'Trading International',
-  ];
-
-  let poleY = 35;
-  poles.forEach((pole) => {
-    doc.text(pole, 55, poleY);
-    poleY += 4;
-  });
+  // Texte des pôles à droite du logo - format compact
+  doc.setFontSize(10);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Ingénierie Informatique, Génie Civil & BTP,', 60, 25);
+  doc.text('Transition Energétique, Trading International,', 60, 35);
   
   // Ligne de séparation
   doc.setDrawColor(212, 175, 55);
