@@ -168,6 +168,18 @@ export default function DashboardPage() {
       }
     }
     fetchDashboardData();
+
+    // Realtime subscription pour mettre à jour les stats automatiquement
+    const clientsChannel = supabase
+      .channel('dashboard-clients')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(clientsChannel);
+    };
   }, []);
 
   const formatAmount = (value: number) => {
