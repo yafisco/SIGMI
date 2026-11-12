@@ -138,18 +138,22 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
     doc.setFontSize(7);
     doc.setTextColor(100, 100, 100);
 
-    // Informations de contact en bas de page
-    let footerY = 275;
+    // Informations de contact en bas de page avec plus d'espacement
+    let footerY = 265;
     doc.text('Holding GROUP MI', 15, footerY);
-    footerY += 4;
+    footerY += 5;
     doc.text('Dixième RIAOM, Derrière la Manufacture, Thiès, Sénégal', 15, footerY);
+    footerY += 5;
+    doc.text('RC : SN DKR 2026-B-16607', 15, footerY);
     footerY += 4;
-    doc.text('RC : SN DKR 2026-B-16607  |  NINEA : 013042817 2V2', 15, footerY);
+    doc.text('NINEA : 013042817 2V2', 15, footerY);
+    footerY += 5;
+    doc.text('Tel : 77 450 20 32', 15, footerY);
     footerY += 4;
-    doc.text('Tel : 77 450 20 32  |  Email : info@madinainfotech.com', 15, footerY);
+    doc.text('Email : info@madinainfotech.com', 15, footerY);
 
     // Numéro de page
-    doc.text(`Page ${i} / ${pageCount}`, 105, 290, { align: 'center' });
+    doc.text(`Page ${i} / ${pageCount}`, 105, 295, { align: 'center' });
   }
   
   return doc;
