@@ -235,7 +235,7 @@ function CreateOpportunityPageContent() {
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
                     >
                       <option value="">Sélectionner un client</option>
-                      {clients.map((client) => (
+                      {clients.filter((client) => client.statut === 'client').map((client) => (
                         <option key={client.id} value={client.id}>
                           {client.nom}
                         </option>
