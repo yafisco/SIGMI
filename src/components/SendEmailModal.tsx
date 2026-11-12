@@ -24,6 +24,7 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [preview, setPreview] = useState('');
+  const [toEmail, setToEmail] = useState(clientEmail);
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -47,11 +48,15 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
       let content = selectedTemplate.corps;
       // Remplacement des variables de base
       content = content.replace(/\{nom_client\}/g, clientName);
-      content = content.replace(/\{client_email\}/g, clientEmail);
+      content = content.replace(/\{client_email\}/g, toEmail);
       content = content.replace(/\{date\}/g, new Date().toLocaleDateString('fr-FR'));
       setPreview(content);
     }
-  }, [selectedTemplate, clientName, clientEmail]);
+  }, [selectedTemplate, clientName, toEmail]);
+
+  useEffect(() => {
+    setToEmail(clientEmail);
+  }, [clientEmail, isOpen]);
 
   const handleSend = async () => {
     if (!selectedTemplate) return;
@@ -60,7 +65,7 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
     try {
       // Envoi réel de l'email via Supabase Edge Function
       await emailService.sendEmail({
-        to: clientEmail,
+        to: toEmail,
         subject: selectedTemplate.sujet,
         html: preview,
         text: preview.replace(/<[^>]*>/g, ''), // Version texte sans HTML
@@ -68,7 +73,7 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
 
       await Swal.fire({
         title: 'Email envoyé !',
-        text: `L'email a été envoyé à ${clientEmail}`,
+        text: `L'email a été envoyé à ${toEmail}`,
         icon: 'success',
         confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
@@ -174,11 +179,8 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
                       <label className="block text-sm font-medium text-slate-700 mb-1">Destinataire</label>
                       <input
                         type="email"
-                        value={clientEmail}
-                        onChange={(e) => {
-                          // Mettre à jour l'email du destinataire si nécessaire
-                          // Pour l'instant, l'email vient de l'interaction
-                        }}
+                        value={toEmail}
+                        onChange={(e) => setToEmail(e.target.value)}
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                         placeholder="email@exemple.com"
                       />
