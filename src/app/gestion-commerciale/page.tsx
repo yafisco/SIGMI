@@ -187,8 +187,6 @@ export default function GestionCommercialePage() {
             <li>✅ Espace de Vente - Complet (Historique + Détails + Édition)</li>
             <li>✅ Devis - Complet (CRUD + Détails + Édition)</li>
             <li>✅ Factures - Existant (à améliorer)</li>
-            <li>⏳ Bons de Livraison - À venir</li>
-            <li>⏳ Achats Fournisseurs - À venir</li>
           </ul>
         </motion.div>
       </div>
