@@ -100,10 +100,10 @@ function ClientsPageContent() {
   });
 
   const stats = {
-    total: (clients || []).length,
+    total: (clients || []).filter((c) => c.statut === 'client').length,
     prospects: (clients || []).filter((c) => c.statut === 'prospect').length,
     clientsActifs: (clients || []).filter((c) => c.statut === 'client').length,
-    ca_total: (clients || []).reduce((sum, c) => sum + (c.chiffre_affaires_annuel || 0), 0),
+    ca_total: (clients || []).filter((c) => c.statut === 'client').reduce((sum, c) => sum + (c.chiffre_affaires_annuel || 0), 0),
   };
 
   const formatCA = (value: number) => {
