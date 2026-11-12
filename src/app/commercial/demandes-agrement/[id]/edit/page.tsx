@@ -205,6 +205,27 @@ export default function EditDemandeAgrementPage() {
               </div>
             </div>
 
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">Aperçu du document</h3>
+              <div className="bg-white border-2 border-slate-200 rounded-xl p-8 font-serif">
+                <div className="mb-8">
+                  <p className="text-slate-600 font-semibold">Objet : {formData.libelle || '[Objet de la demande]'}</p>
+                </div>
+                <div className="mb-4">
+                  <p className="text-slate-600">Montant : {formData.montant ? new Intl.NumberFormat('fr-FR').format(parseFloat(formData.montant)) + ' FCFA' : '-'}</p>
+                </div>
+                <div className="min-h-[300px] text-slate-700 whitespace-pre-line">
+                  {formData.decision || '[Décision concernant la demande]'}
+                </div>
+                <div className="mt-12 flex justify-end">
+                  <div className="text-center">
+                    <p className="text-slate-600">Fait à Thiès le {new Date().toLocaleDateString('fr-FR')}</p>
+                    <p className="text-slate-900 font-semibold mt-2">Le Directeur Général</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl">
                 {error}
