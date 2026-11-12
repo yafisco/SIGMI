@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Plus, Search, Filter, ArrowLeft, Edit, Eye, Clock, CheckCircle, XCircle, Send } from 'lucide-react';
+import { FileText, Plus, Search, Filter, ArrowLeft, Edit, Eye, Clock, CheckCircle, XCircle, Send, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
 
 interface DemandeAgrement {
   id: string;
@@ -50,6 +53,71 @@ export default function DemandesAgrementPage() {
         return { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'En examen' };
       default:
         return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: statut };
+    }
+  };
+
+  const handleDelete = async (id: string, libelle: string) => {
+    const result = await Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: `Vous êtes sur le point de supprimer la demande "${libelle}". Cette action est irréversible !`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await supabase.from('demandes_agrement').delete().eq('id', id);
+        setDemandes(demandes.filter(d => d.id !== id));
+        await Swal.fire({
+          title: 'Supprimé !',
+          text: 'La demande a été supprimée avec succès.',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (err) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Erreur lors de la suppression de la demande.',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    }
+  };
+
+  const handleDownloadPDF = async (demande: DemandeAgrement) => {
+    try {
+      const doc = await generateGMITPDF({
+        type: 'demande_agrement',
+        numero: demande.libelle,
+        objet: demande.libelle,
+        contenu: demande.decision || '',
+      });
+      
+      doc.save(`Demande_Agrement_${demande.libelle}.pdf`);
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le document a été téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
   };
 
@@ -166,6 +234,22 @@ export default function DemandesAgrementPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownloadPDF(demande)}
+                              title="Télécharger PDF"
+                            >
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(demande.id, demande.libelle)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </td>
                       </motion.tr>
