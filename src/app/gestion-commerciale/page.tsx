@@ -186,7 +186,6 @@ export default function GestionCommercialePage() {
             <li>✅ Gestion des Stocks - Complet (CRUD + Détails)</li>
             <li>✅ Espace de Vente - Complet (Historique + Détails + Édition)</li>
             <li>✅ Devis - Complet (CRUD + Détails + Édition)</li>
-            <li>✅ Factures - Existant (à améliorer)</li>
           </ul>
         </motion.div>
       </div>
