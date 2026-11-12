@@ -112,41 +112,6 @@ export default function GestionCommercialePage() {
         </motion.div>
 
         {/* Flux cible */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-8 bg-white rounded-2xl p-6 border border-slate-200 shadow-lg"
-        >
-          <h3 className="text-lg font-bold text-slate-900 mb-4">Flux cible du module</h3>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
-              <Package className="w-4 h-4 text-blue-600" />
-              <span className="text-slate-700">Produit</span>
-            </div>
-            <span className="text-slate-400">→</span>
-            <div className="flex items-center gap-2 bg-cyan-50 px-4 py-2 rounded-lg">
-              <FileText className="w-4 h-4 text-cyan-600" />
-              <span className="text-slate-700">Devis</span>
-            </div>
-            <span className="text-slate-400">→</span>
-            <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-lg">
-              <ShoppingCart className="w-4 h-4 text-amber-600" />
-              <span className="text-slate-700">Vente</span>
-            </div>
-            <span className="text-slate-400">→</span>
-            <div className="flex items-center gap-2 bg-rose-50 px-4 py-2 rounded-lg">
-              <Receipt className="w-4 h-4 text-rose-600" />
-              <span className="text-slate-700">Facture</span>
-            </div>
-            <span className="text-slate-400">→</span>
-            <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg">
-              <TrendingUp className="w-4 h-4 text-purple-600" />
-              <span className="text-slate-700">Stock</span>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Modules Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {modules.map((module, index) => {
@@ -172,22 +137,6 @@ export default function GestionCommercialePage() {
           })}
         </div>
 
-        {/* Note sur l'implémentation */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-          className="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-6"
-        >
-          <h3 className="text-lg font-bold text-amber-900 mb-2">Statut de l'implémentation</h3>
-          <ul className="text-sm text-amber-800 space-y-1">
-            <li>✅ Catalogue Produits - Complet (CRUD)</li>
-            <li>✅ Fournisseurs - Complet (CRUD)</li>
-            <li>✅ Gestion des Stocks - Complet (CRUD + Détails)</li>
-            <li>✅ Espace de Vente - Complet (Historique + Détails + Édition)</li>
-            <li>✅ Devis - Complet (CRUD + Détails + Édition)</li>
-          </ul>
-        </motion.div>
       </div>
     </div>
   );
