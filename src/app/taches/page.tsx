@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Search, Filter, Plus, Calendar, Clock, AlertCircle, CheckCircle, Trash2, Zap, Target } from 'lucide-react';
+import { CheckCircle2, Search, Filter, Plus, Calendar, Clock, AlertCircle, CheckCircle, Trash2, Zap, Target, Edit, MoreVertical } from 'lucide-react';
 import { Task } from '@/types';
 import Link from 'next/link';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
@@ -65,6 +65,28 @@ export default function TachesPage() {
           customClass: SWEETALERT_CONFIG.customClass,
         });
       }
+    }
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      await tasksService.update({ id, status: newStatus as any });
+      refresh();
+      await Swal.fire({
+        title: 'Statut mis à jour !',
+        text: `La tâche est maintenant ${TASK_STATUS_LABELS[newStatus as keyof typeof TASK_STATUS_LABELS] || newStatus}.`,
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (err) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: errorMessage(err, 'Erreur lors de la mise à jour du statut'),
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
     }
   };
 
@@ -248,14 +270,49 @@ export default function TachesPage() {
                       </div>
                     )}
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => handleDelete(task.id, task.title)}
-                    className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </motion.button>
+                  <div className="flex items-center gap-1">
+                    <Link href={`/taches/${task.id}/edit`}>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </motion.button>
+                    </Link>
+                    {task.status !== 'done' && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleStatusChange(task.id, 'done')}
+                        className="text-green-500 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-all"
+                        title="Marquer comme terminé"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                    {task.status === 'todo' && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handleStatusChange(task.id, 'in_progress')}
+                        className="text-amber-500 hover:text-amber-700 p-2 rounded-lg hover:bg-amber-50 transition-all"
+                        title="Marquer comme en cours"
+                      >
+                        <Zap className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(task.id, task.title)}
+                      className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 relative">

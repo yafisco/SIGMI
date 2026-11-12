@@ -28,6 +28,7 @@ import {
   Users,
   ShieldCheck,
   Building2,
+  CheckSquare,
 } from 'lucide-react';
 import type { AppRole } from '@/types';
 
@@ -75,6 +76,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/clients', label: 'Clients', icon: Users2, roles: ROLES_METIER },
       { href: '/commercial/interactions', label: 'Interactions', icon: MessageSquare, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/commercial/calendrier', label: 'Calendrier', icon: Calendar, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
+      { href: '/taches', label: 'Tâches', icon: CheckSquare, roles: ROLES_METIER },
       { href: '/opportunites', label: 'Opportunités', icon: Briefcase, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/commercial/demandes-agrement', label: 'Demandes d\'agrément', icon: FileCheck, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/commercial/modeles-emails', label: 'Modèles d\'e-mails', icon: Mail, roles: ['direction_generale', 'commercial'] },
