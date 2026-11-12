@@ -17,6 +17,8 @@ import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Swal from 'sweetalert2';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { supabase } from '@/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
 
 function ClientsPageContent() {
   const router = useRouter();
@@ -25,10 +27,25 @@ function ClientsPageContent() {
   const from = searchParams.get('from') || '';
   const { data: clients, isLoading: loading, error } = useClients();
   const deleteClient = useDeleteClient();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatut, setFilterStatut] = useState<string>('all');
   const [filterPole, setFilterPole] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Realtime pour synchroniser les stats
+  useEffect(() => {
+    const channel = supabase
+      .channel('clients_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['clients'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // La page Clients est accessible à tous les rôles
   // Pas de redirection automatique
@@ -76,7 +93,10 @@ function ClientsPageContent() {
 
     const matchesStatut = filterStatut === 'all' || client.statut === filterStatut;
 
-    return matchesSearch && matchesStatut;
+    // Afficher uniquement les clients (pas les prospects)
+    const isClient = client.statut === 'client';
+
+    return matchesSearch && matchesStatut && isClient;
   });
 
   const stats = {
