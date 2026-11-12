@@ -59,29 +59,21 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
     doc.text('A.........', 170, yPos);
     yPos += 15;
   }
-  
-  // Référence et Objet sur la même ligne pour demande d'agrément
-  if (data.type === 'demande_agrement' && data.numero) {
+
+  // Référence
+  if (data.numero) {
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Réf.: ${data.numero}_GMI Objet: ${data.objet || ''}`, 15, yPos);
+    doc.text(`Réf.: ${data.numero}`, 15, yPos);
+    yPos += 12;
+  }
+
+  // Objet
+  if (data.objet) {
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Objet: ${data.objet}`, 15, yPos);
     yPos += 15;
-  } else {
-    // Référence seule pour autres types
-    if (data.numero) {
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Réf.: ${data.numero}`, 15, yPos);
-      yPos += 12;
-    }
-    
-    // Objet
-    if (data.objet) {
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Objet: ${data.objet}`, 15, yPos);
-      yPos += 15;
-    }
   }
   
   // Contenu principal
@@ -156,9 +148,8 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
     footerY += 4;
     doc.text('Tel : 77 450 20 32  |  Email : info@madinainfotech.com', 15, footerY);
 
-    // Numéro de page et signature
+    // Numéro de page
     doc.text(`Page ${i} / ${pageCount}`, 105, 290, { align: 'center' });
-    doc.text('Document généré par SIGMI - Groupe MI', 105, 295, { align: 'center' });
   }
   
   return doc;

@@ -13,6 +13,7 @@ export default function EditDemandeAgrementPage() {
   const params = useParams();
   const router = useRouter();
   const [formData, setFormData] = useState({
+    reference: '',
     client_id: '',
     pole: '',
     libelle: '',
@@ -32,10 +33,16 @@ export default function EditDemandeAgrementPage() {
       ]);
 
       if (demandeData.data) {
+        // Extraire la référence si elle existe dans le libellé (format: "000426_GMI - Description")
+        const libelleParts = demandeData.data.libelle.split(' - ');
+        const reference = libelleParts.length > 1 ? libelleParts[0] : '';
+        const libelle = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demandeData.data.libelle;
+
         setFormData({
+          reference,
           client_id: demandeData.data.client_id,
           pole: demandeData.data.pole,
-          libelle: demandeData.data.libelle,
+          libelle,
           contenu: demandeData.data.decision || '',
           statut: demandeData.data.statut,
         });
@@ -156,6 +163,16 @@ export default function EditDemandeAgrementPage() {
                         <option key={pole.value} value={pole.value}>{pole.label}</option>
                       ))}
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>
+                    <input
+                      type="text"
+                      value={formData.reference}
+                      onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                      placeholder="Ex: 000426_GMI"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Statut</label>

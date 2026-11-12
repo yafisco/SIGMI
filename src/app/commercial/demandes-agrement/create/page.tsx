@@ -14,6 +14,7 @@ import { SWEETALERT_CONFIG } from '@/lib/constants';
 export default function CreateDemandeAgrementPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    reference: '',
     client_id: '',
     pole: '',
     libelle: '',
@@ -39,7 +40,7 @@ export default function CreateDemandeAgrementPage() {
     try {
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero: formData.libelle,
+        numero: formData.reference || formData.libelle,
         objet: formData.libelle,
         contenu: formData.contenu || '',
       });
@@ -149,6 +150,16 @@ export default function CreateDemandeAgrementPage() {
               </div>
               
               <div className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>
+                  <input
+                    type="text"
+                    value={formData.reference}
+                    onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                    placeholder="Ex: 000426_GMI"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
                   <select
