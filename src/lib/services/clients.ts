@@ -2,11 +2,12 @@ import { supabase } from '@/lib/supabase';
 import { Client, CreateClientInput, UpdateClientInput, ClientStatut } from '@/types';
 
 export const clientsService = {
-  // Récupérer tous les clients avec détails
+  // Récupérer tous les clients avec détails (uniquement les clients, pas les prospects)
   async getAll(): Promise<Client[]> {
     const { data, error } = await supabase
       .from('v_clients_detail')
       .select('*')
+      .eq('statut', 'client')
       .order('nom', { ascending: true });
 
     if (error) throw error;
