@@ -118,7 +118,7 @@ export default function DashboardPage() {
           supabase.from('projets').select('*', { count: 'exact', head: true }),
           supabase.from('collaborateurs').select('*', { count: 'exact', head: true }),
           supabase.from('tasks').select('*', { count: 'exact', head: true }),
-          supabase.from('clients').select('*', { count: 'exact', head: true }),
+          supabase.from('clients').select('*', { count: 'exact', head: true }).eq('statut', 'client'),
           supabase.from('documents').select('*', { count: 'exact', head: true }),
         ]);
 
