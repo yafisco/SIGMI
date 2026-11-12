@@ -215,6 +215,9 @@ export default function CreateDemandeAgrementPage() {
             <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
               <h3 className="text-lg font-bold text-slate-900 mb-4">Aperçu du document</h3>
               <div className="bg-white border-2 border-slate-200 rounded-xl p-8 font-serif">
+                <div className="mb-4">
+                  <p className="text-slate-600 font-semibold">Réf. : {formData.reference || '[Référence]'}</p>
+                </div>
                 <div className="mb-8">
                   <p className="text-slate-600 font-semibold">Objet : {formData.libelle || '[Objet de la demande]'}</p>
                 </div>
