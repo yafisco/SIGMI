@@ -1,7 +1,18 @@
 // @ts-nocheck
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
+}
+
 serve(async (req) => {
+  // Gestion des requêtes OPTIONS pour CORS
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
     const { to, subject, html, text } = await req.json()
 
@@ -9,7 +20,7 @@ serve(async (req) => {
     if (!to || !subject || !html) {
       return new Response(
         JSON.stringify({ error: 'Champs to, subject et html sont requis' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -20,13 +31,11 @@ serve(async (req) => {
       console.error('RESEND_API_KEY non configurée')
       return new Response(
         JSON.stringify({ error: 'Service d\'email non configuré' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // Envoyer l'email via Resend
-    // Note: onboarding@resend.dev est l'adresse par défaut qui fonctionne sans configuration DNS
-    // Quand le site sera hébergé et le domaine configuré, changez pour : service.commercial@madinainfotech.com
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -48,7 +57,7 @@ serve(async (req) => {
       console.error('Erreur Resend:', data)
       return new Response(
         JSON.stringify({ error: 'Erreur lors de l\'envoi de l\'email', details: data }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -56,13 +65,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, message: 'Email envoyé avec succès', data }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Erreur lors de l\'envoi de l\'email:', error)
     return new Response(
       JSON.stringify({ error: 'Erreur lors de l\'envoi de l\'email' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
