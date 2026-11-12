@@ -175,8 +175,12 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
                       <input
                         type="email"
                         value={clientEmail}
-                        readOnly
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-600"
+                        onChange={(e) => {
+                          // Mettre à jour l'email du destinataire si nécessaire
+                          // Pour l'instant, l'email vient de l'interaction
+                        }}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
+                        placeholder="email@exemple.com"
                       />
                     </div>
                     <div>
@@ -184,15 +188,25 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
                       <input
                         type="text"
                         value={selectedTemplate.sujet}
-                        readOnly
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-600"
+                        onChange={(e) => {
+                          // Permettre de modifier le sujet si nécessaire
+                          const updatedTemplate = { ...selectedTemplate, sujet: e.target.value };
+                          setSelectedTemplate(updatedTemplate);
+                        }}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Contenu</label>
-                      <div className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-600 min-h-[200px] whitespace-pre-wrap">
-                        {preview}
-                      </div>
+                      <textarea
+                        value={preview}
+                        onChange={(e) => {
+                          // Permettre de modifier le contenu
+                          // Note: cela ne modifie pas le template original, seulement l'envoi
+                          setPreview(e.target.value);
+                        }}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] min-h-[200px] whitespace-pre-wrap"
+                      />
                     </div>
                   </div>
                 ) : (
