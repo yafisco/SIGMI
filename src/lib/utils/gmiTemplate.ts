@@ -42,11 +42,11 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   doc.setFontSize(16);
   doc.setTextColor(29, 78, 216);
   doc.text('GROUP MI', 55, 22);
-  
+
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
   doc.text('Diversifier, Innover, Impacter', 55, 28);
-  
+
   // Pôles en liste
   doc.setFontSize(7);
   doc.setTextColor(50, 50, 50);
@@ -56,30 +56,12 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
     'Transition Energétique',
     'Trading International',
   ];
-  
+
   let poleY = 35;
   poles.forEach((pole) => {
     doc.text(pole, 55, poleY);
     poleY += 4;
   });
-  
-  // Informations de contact à droite
-  doc.setFontSize(7);
-  doc.setTextColor(50, 50, 50);
-  const contactX = 120;
-  let contactY = 20;
-  
-  doc.text('Holding GROUP MI', contactX, contactY);
-  contactY += 5;
-  doc.text('Dixième RIAOM, Derrière la Manufacture, Thiès, Sénégal', contactX, contactY);
-  contactY += 5;
-  doc.text('RC : SN DKR 2026-B-16607', contactX, contactY);
-  contactY += 4;
-  doc.text('NINEA : 013042817 2V2', contactX, contactY);
-  contactY += 5;
-  doc.text('Tel : 77 450 20 32', contactX, contactY);
-  contactY += 4;
-  doc.text('Email : info@madinainfotech.com', contactX, contactY);
   
   // Ligne de séparation
   doc.setDrawColor(212, 175, 55);
@@ -165,7 +147,7 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
   doc.text(`Fait à Thiès le ${new Date().toLocaleDateString('fr-FR')}`, 15, yPos);
-  
+
   // Signature alignée à droite
   yPos += 20;
   doc.setFontSize(11);
@@ -174,15 +156,27 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
   doc.line(135, yPos + 2, 175, yPos + 2);
-  
-  // Pied de page
+
+  // Pied de page avec informations de contact
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Page ${i} / ${pageCount}`, 105, 285, { align: 'center' });
-    doc.text('Document généré par SIGMI - Groupe MI', 105, 290, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setTextColor(100, 100, 100);
+
+    // Informations de contact en bas de page
+    let footerY = 275;
+    doc.text('Holding GROUP MI', 15, footerY);
+    footerY += 4;
+    doc.text('Dixième RIAOM, Derrière la Manufacture, Thiès, Sénégal', 15, footerY);
+    footerY += 4;
+    doc.text('RC : SN DKR 2026-B-16607  |  NINEA : 013042817 2V2', 15, footerY);
+    footerY += 4;
+    doc.text('Tel : 77 450 20 32  |  Email : info@madinainfotech.com', 15, footerY);
+
+    // Numéro de page et signature
+    doc.text(`Page ${i} / ${pageCount}`, 105, 290, { align: 'center' });
+    doc.text('Document généré par SIGMI - Groupe MI', 105, 295, { align: 'center' });
   }
   
   return doc;
