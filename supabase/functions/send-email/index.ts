@@ -25,6 +25,8 @@ serve(async (req) => {
     }
 
     // Envoyer l'email via Resend
+    // Note: onboarding@resend.dev est l'adresse par défaut qui fonctionne sans configuration DNS
+    // Quand le site sera hébergé et le domaine configuré, changez pour : service.commercial@madinainfotech.com
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -32,7 +34,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'GROUP MI - Service Commercial <service.commercial@madinainfotech.com>',
+        from: 'GROUP MI - Service Commercial <onboarding@resend.dev>',
         to: to,
         subject: subject,
         html: html,
