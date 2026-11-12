@@ -208,7 +208,7 @@ export default function ProspectionPage() {
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
-                    <Link href={`/clients/${prospect.id}/edit`} className="flex-1">
+                    <Link href={`/commercial/prospection/${prospect.id}/edit`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full">
                         <Edit className="w-4 h-4 mr-2" />
                         Modifier
