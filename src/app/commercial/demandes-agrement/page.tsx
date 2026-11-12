@@ -10,15 +10,13 @@ import { supabase } from '@/lib/supabase';
 
 interface DemandeAgrement {
   id: string;
-  numero: string;
+  libelle: string;
   client_id: string;
   client_nom?: string;
-  date_demande: string;
-  statut: 'brouillon' | 'envoyee' | 'en_cours' | 'acceptee' | 'refusee';
+  created_at: string;
+  statut: 'soumise' | 'en_examen' | 'approuvee' | 'refusee';
   pole: string;
-  responsable: string;
-  date_reponse?: string;
-  notes?: string;
+  decision?: string;
 }
 
 export default function DemandesAgrementPage() {
@@ -28,7 +26,7 @@ export default function DemandesAgrementPage() {
 
   useEffect(() => {
     async function fetchDemandes() {
-      const { data } = await supabase.from('demandes_agrement').select('*, clients(*)').order('date_demande', { ascending: false });
+      const { data } = await supabase.from('demandes_agrement').select('*, clients!inner(*)').order('created_at', { ascending: false });
       setDemandes(data || []);
       setLoading(false);
     }
@@ -36,22 +34,22 @@ export default function DemandesAgrementPage() {
   }, []);
 
   const filteredDemandes = demandes.filter(d =>
-    d.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (d.client_nom && d.client_nom.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getStatutBadge = (statut: string) => {
     switch (statut) {
-      case 'acceptee':
-        return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Acceptée' };
+      case 'approuvee':
+        return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Approuvée' };
       case 'refusee':
         return { color: 'bg-red-100 text-red-700', icon: XCircle, label: 'Refusée' };
-      case 'envoyee':
-        return { color: 'bg-blue-100 text-blue-700', icon: Send, label: 'Envoyée' };
-      case 'en_cours':
-        return { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'En cours' };
+      case 'soumise':
+        return { color: 'bg-blue-100 text-blue-700', icon: Send, label: 'Soumise' };
+      case 'en_examen':
+        return { color: 'bg-amber-100 text-amber-700', icon: Clock, label: 'En examen' };
       default:
-        return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: 'Brouillon' };
+        return { color: 'bg-gray-100 text-gray-700', icon: FileText, label: statut };
     }
   };
 
@@ -126,11 +124,10 @@ export default function DemandesAgrementPage() {
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">N° Demande</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Libellé</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
                     <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Pôle</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date demande</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date réponse</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date création</th>
                     <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Statut</th>
                     <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Actions</th>
                   </tr>
@@ -147,13 +144,10 @@ export default function DemandesAgrementPage() {
                         transition={{ duration: 0.4, delay: 0.3 + index * 0.05 }}
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
-                        <td className="px-6 py-4 text-sm text-slate-900 font-medium">{demande.numero}</td>
+                        <td className="px-6 py-4 text-sm text-slate-900 font-medium">{demande.libelle}</td>
                         <td className="px-6 py-4 text-sm text-slate-900">{demande.client_nom || '-'}</td>
                         <td className="px-6 py-4 text-sm text-slate-600">{demande.pole}</td>
-                        <td className="px-6 py-4 text-sm text-slate-600">{new Date(demande.date_demande).toLocaleDateString('fr-FR')}</td>
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {demande.date_reponse ? new Date(demande.date_reponse).toLocaleDateString('fr-FR') : '-'}
-                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{new Date(demande.created_at).toLocaleDateString('fr-FR')}</td>
                         <td className="px-6 py-4 text-center">
                           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${badge.color}`}>
                             <Icon className="w-3 h-3" />

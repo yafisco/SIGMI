@@ -85,9 +85,24 @@ export default function CreateDemandeAgrementPage() {
       });
 
       if (error) throw error;
+      
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'La demande d\'agrément a été créée avec succès.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+      
       router.push('/commercial/demandes-agrement');
     } catch (err) {
-      setError(errorMessage(err, 'Erreur lors de la création de la demande'));
+      await Swal.fire({
+        title: 'Erreur',
+        text: errorMessage(err, 'Erreur lors de la création de la demande'),
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
       setLoading(false);
     }
   };
