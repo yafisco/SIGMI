@@ -14,7 +14,7 @@ export interface GMITemplateData {
 }
 
 async function getLogoBase64(): Promise<string> {
-  const response = await fetch('/logo-group-mi.png');
+  const response = await fetch('/logo-document.png');
   const blob = await response.blob();
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
