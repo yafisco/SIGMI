@@ -20,6 +20,8 @@ interface Prospect {
   ville: string;
   pays: string;
   secteur_activite?: string;
+  interlocuteur?: string;
+  fonction?: string;
   created_at: string;
 }
 
@@ -125,8 +127,15 @@ export default function ProspectionPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      const content = filteredProspects.map(p => 
-        `${p.structure || p.nom || '-'} | ${p.email || '-'} | ${p.telephone || '-'} | ${p.ville || '-'} | ${p.pays || '-'} | ${p.secteur_activite || '-'}`
+      const content = filteredProspects.map((p, index) => 
+        `${index + 1}. ${p.structure || p.nom || '-'}\n` +
+        `   Email: ${p.email || '-'}\n` +
+        `   Téléphone: ${p.telephone || '-'}\n` +
+        `   Ville: ${p.ville || '-'}\n` +
+        `   Pays: ${p.pays || '-'}\n` +
+        `   Secteur: ${p.secteur_activite || '-'}\n` +
+        `   Interlocuteur: ${p.interlocuteur || '-'}\n` +
+        `   Fonction: ${p.fonction || '-'}\n`
       ).join('\n');
 
       const doc = await generateGMITPDF({
@@ -137,7 +146,6 @@ export default function ProspectionPage() {
         client: 'GROUP MI',
         objet: 'Suivi des prospects',
         contenu: content,
-        montant: filteredProspects.length,
         data: {
           'Total prospects': filteredProspects.length.toString(),
           'Date export': new Date().toLocaleDateString('fr-FR'),
