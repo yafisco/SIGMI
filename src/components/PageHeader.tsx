@@ -12,6 +12,7 @@ interface PageHeaderProps {
   actionHref?: string;
   actionLabel?: string;
   actionIcon?: React.ReactNode;
+  extraAction?: React.ReactNode;
 }
 
 export function PageHeader({
@@ -21,6 +22,7 @@ export function PageHeader({
   actionHref,
   actionLabel = 'Nouveau',
   actionIcon = <Plus className="w-4 h-4" />,
+  extraAction,
 }: PageHeaderProps) {
   return (
     <motion.div
@@ -50,19 +52,22 @@ export function PageHeader({
               )}
             </div>
           </div>
-          {actionHref && (
-            <Link href={actionHref}>
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button className="bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient hover:scale-105 text-[#1D4ED8] shadow-lg shadow-[#D4AF37]/30 border-2 border-[#D4AF37] transition-all duration-300 font-semibold">
-                  {actionIcon}
-                  <span className="ml-2">{actionLabel}</span>
-                </Button>
-              </motion.div>
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {extraAction && extraAction}
+            {actionHref && (
+              <Link href={actionHref}>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button className="bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient hover:scale-105 text-[#1D4ED8] shadow-lg shadow-[#D4AF37]/30 border-2 border-[#D4AF37] transition-all duration-300 font-semibold">
+                    {actionIcon}
+                    <span className="ml-2">{actionLabel}</span>
+                  </Button>
+                </motion.div>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>

@@ -177,13 +177,19 @@ export default function ProspectionPage() {
         description="Liste des prospects"
         actionHref="/commercial/prospection/create"
         actionLabel="Nouveau prospect"
+        extraAction={
+          <Button onClick={handleDownloadPDF} variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Télécharger PDF
+          </Button>
+        }
       />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-6 flex items-center justify-between"
+        className="mb-6"
       >
         <Link href="/commercial">
           <button className="flex items-center gap-2 text-slate-600 hover:text-[#1D4ED8] transition-colors">
@@ -191,10 +197,6 @@ export default function ProspectionPage() {
             Retour à Commercial
           </button>
         </Link>
-        <Button onClick={handleDownloadPDF} variant="outline">
-          <Download className="w-4 h-4 mr-2" />
-          Télécharger PDF
-        </Button>
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
