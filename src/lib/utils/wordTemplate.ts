@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } from 'docx';
 
 export interface WordTemplateData {
   type: 'demande_agrement';
@@ -8,7 +8,28 @@ export interface WordTemplateData {
   destinataire: string;
 }
 
+async function getLogoImage(): Promise<ImageRun | null> {
+  try {
+    const logoResponse = await fetch('/logo-document.png');
+    const logoBlob = await logoResponse.blob();
+    const logoArrayBuffer = await logoBlob.arrayBuffer();
+    // @ts-ignore
+    return new ImageRun({
+      data: logoArrayBuffer,
+      transformation: {
+        width: 100,
+        height: 100,
+      },
+    });
+  } catch (error) {
+    console.log('Logo non disponible');
+    return null;
+  }
+}
+
 export async function generateWordDocument(data: WordTemplateData): Promise<Blob> {
+  const logoImage = await getLogoImage();
+
   const doc = new Document({
     sections: [
       {
@@ -30,7 +51,7 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                     },
                     children: [
                       new Paragraph({
-                        children: [
+                        children: logoImage ? [logoImage] : [
                           new TextRun({
                             text: 'GROUP MI',
                             bold: true,
