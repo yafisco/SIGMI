@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -128,31 +129,17 @@ export default function ProspectionPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      const doc = new jsPDF();
-      
-      // En-tête
-      doc.setFontSize(20);
-      doc.setTextColor(29, 78, 216);
-      doc.text('GROUP MI', 15, 25);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Ingénierie Informatique, Génie Civil & BTP,', 15, 35);
-      doc.text('Transition Energétique, Trading International,', 15, 42);
-      
-      doc.setDrawColor(212, 175, 55);
-      doc.setLineWidth(0.5);
-      doc.line(15, 50, 195, 50);
-      
-      // Titre
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text('LISTE DES PROSPECTS', 15, 65);
-      
-      doc.setFontSize(10);
-      doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 15, 75);
-      doc.text(`Total: ${filteredProspects.length} prospect(s)`, 15, 82);
-      
+      const doc = await generateGMITPDF({
+        type: 'facture',
+        titre: 'LISTE DES PROSPECTS',
+        date: new Date().toLocaleDateString('fr-FR'),
+        client: 'GROUP MI',
+        data: {
+          'Total prospects': filteredProspects.length.toString(),
+          'Date export': new Date().toLocaleDateString('fr-FR'),
+        },
+      });
+
       // Tableau
       const tableData = filteredProspects.map((p, index) => [
         index + 1,
@@ -167,7 +154,7 @@ export default function ProspectionPage() {
       ]);
       
       autoTable(doc, {
-        startY: 90,
+        startY: 100,
         head: [['#', 'Entreprise', 'Email', 'Téléphone', 'Ville', 'Pays', 'Secteur', 'Interlocuteur', 'Fonction']],
         body: tableData,
         theme: 'grid',
