@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, DollarSign, Calendar, Building2, Save, TrendingUp, Target, Briefcase, Tag, Users, Search } from 'lucide-react';
 import Link from 'next/link';
-import { opportunitiesService, clientsService } from '@/lib/services';
+import { opportunitiesService } from '@/lib/services';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { POLE_OPTIONS } from '@/lib/constants';
 import { errorMessage } from '@/lib/utils/errorHandler';
@@ -27,7 +27,6 @@ function CreateOpportunityPageContent() {
     intitule_besoin: '',
     source_opportunite: '',
     name: '',
-    client_id: '',
     amount: '',
     probability: '',
     stage: 'nouveau' as OpportunityStage,
@@ -36,7 +35,6 @@ function CreateOpportunityPageContent() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { data: clients, loading: loadingClients } = useData({ fetchFn: () => clientsService.getAll() });
 
   const getBackLink = () => {
     if (from === 'commercial') return '/commercial';
@@ -60,7 +58,6 @@ function CreateOpportunityPageContent() {
         pole_groupe_mi: formData.pole_groupe_mi,
         intitule_besoin: formData.intitule_besoin,
         source_opportunite: formData.source_opportunite,
-        client_id: formData.client_id || undefined,
         amount: formData.amount ? parseFloat(formData.amount) : 0,
         probability: formData.probability ? parseInt(formData.probability, 10) : undefined,
         stage: formData.stage,
@@ -217,31 +214,6 @@ function CreateOpportunityPageContent() {
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
                     placeholder="Ex: Appel d'offres, Réseau, Partenaire"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-[#1D4ED8]" />
-                    Client
-                  </label>
-                  {loadingClients ? (
-                    <div className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl bg-slate-50 text-slate-500">
-                      Chargement des clients...
-                    </div>
-                  ) : (
-                    <select
-                      value={formData.client_id}
-                      onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
-                    >
-                      <option value="">Sélectionner un client</option>
-                      {clients.filter((client) => client.statut === 'client').map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.nom}
-                        </option>
-                      ))}
-                    </select>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

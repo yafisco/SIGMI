@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Save, Printer, Download } from 'lucide-react';
+import { ArrowLeft, FileText, Save, FileDown } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
 import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import { generateWordDocument } from '@/lib/utils/wordTemplate';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 
@@ -17,7 +18,6 @@ export default function CreateDemandeAgrementPage() {
     reference: '',
     destinataire: '',
     client_id: '',
-    pole: '',
     libelle: '',
     contenu: '',
   });
@@ -37,21 +37,28 @@ export default function CreateDemandeAgrementPage() {
     window.print();
   };
 
-  const handleDownloadPDF = async () => {
+  const handleDownloadWord = async () => {
     try {
-      const doc = await generateGMITPDF({
+      const blob = await generateWordDocument({
         type: 'demande_agrement',
-        numero: formData.reference || '', // Réf. contient uniquement la référence saisie
-        objet: formData.libelle, // Objet contient uniquement le libellé
+        numero: formData.reference || '',
+        objet: formData.libelle,
         contenu: formData.contenu || '',
-        destinataire: formData.destinataire || '', // Destinataire pour remplacer "A........."
+        destinataire: formData.destinataire || '',
       });
-      
-      doc.save(`Demande_Agrement_${formData.libelle}.pdf`);
-      
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Demande_Agrement_${formData.libelle}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
       await Swal.fire({
         title: 'Succès !',
-        text: 'Le document a été téléchargé',
+        text: 'Le document Word a été téléchargé',
         icon: 'success',
         confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
@@ -72,7 +79,7 @@ export default function CreateDemandeAgrementPage() {
     setLoading(true);
     setError('');
 
-    if (!formData.client_id || !formData.pole || !formData.libelle) {
+    if (!formData.client_id || !formData.libelle) {
       setError('Veuillez remplir tous les champs obligatoires');
       setLoading(false);
       return;
@@ -87,7 +94,6 @@ export default function CreateDemandeAgrementPage() {
       const { error } = await supabase.from('demandes_agrement').insert({
         libelle: libelleFinal,
         client_id: formData.client_id,
-        pole: formData.pole,
         decision: formData.contenu,
         statut: 'soumise',
       });
@@ -114,15 +120,6 @@ export default function CreateDemandeAgrementPage() {
       setLoading(false);
     }
   };
-
-  const poles = [
-    'ingénierie informatique',
-    'génie civil et BTP',
-    'agrobusiness',
-    'trading international',
-    'transition énergétique',
-    'centre d\'incubation et d\'impulsion des entreprises',
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-amber-50">
@@ -192,20 +189,6 @@ export default function CreateDemandeAgrementPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Pôle concerné *</label>
-                  <select
-                    value={formData.pole}
-                    onChange={(e) => setFormData({ ...formData, pole: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                    required
-                  >
-                    <option value="">Sélectionnez un pôle</option>
-                    {poles.map((pole) => (
-                      <option key={pole} value={pole}>{pole}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Libellé de la demande *</label>
                   <input
                     type="text"
@@ -258,13 +241,9 @@ export default function CreateDemandeAgrementPage() {
 
             <div className="flex items-center justify-end gap-4 pt-4">
               <div className="flex gap-2 mr-auto">
-                <Button type="button" variant="outline" onClick={handlePrint}>
-                  <Printer className="w-4 h-4 mr-2" />
-                  Imprimer
-                </Button>
-                <Button type="button" variant="outline" onClick={handleDownloadPDF}>
-                  <Download className="w-4 h-4 mr-2" />
-                  PDF
+                <Button type="button" variant="outline" onClick={handleDownloadWord}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Word
                 </Button>
               </div>
               <Link href="/commercial/demandes-agrement">

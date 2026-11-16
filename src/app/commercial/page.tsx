@@ -34,22 +34,22 @@ export default function CommercialPage() {
           .select('prenom, nom, email')
           .eq('id', user.id)
           .maybeSingle();
-        
+
         if (data) {
-          // Utiliser le prénom si disponible
-          if (data.prenom && data.prenom.trim()) {
-            setUserName(data.prenom);
+          // Construire le nom complet avec majuscules sur nom et prénom
+          const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+          const formattedPrenom = data.prenom ? capitalize(data.prenom) : '';
+          const formattedNom = data.nom ? capitalize(data.nom) : '';
+          const fullName = formattedPrenom && formattedNom ? `${formattedPrenom} ${formattedNom}` : formattedPrenom || formattedNom;
+
+          if (fullName) {
+            setUserName(fullName);
           } else if (data.email) {
-            // Extraire le prénom depuis l'email (avant le @)
             const emailName = data.email.split('@')[0];
-            // Mettre la première lettre en majuscule
             const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
             setUserName(formattedName);
-          } else if (data.nom) {
-            setUserName(data.nom);
           }
         } else {
-          // Si pas de collaborateur trouvé, utiliser l'email de l'utilisateur auth
           if (user.email) {
             const emailName = user.email.split('@')[0];
             const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
@@ -133,10 +133,10 @@ export default function CommercialPage() {
             <span className="text-[#D4AF37] font-semibold text-sm uppercase tracking-wider">Bienvenue</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            Bonjour, {userName || 'Commercial'} 👋
+            Bonjour, {userName || 'Assistante Marketing et Communication'} 👋
           </h1>
           <p className="text-white/80 text-lg md:text-xl">
-            Espace Commercial - Prêt à développer les affaires de GROUP MI ?
+            Espace Marketing et Communication - Prêt à développer les affaires de GROUP MI ?
           </p>
         </div>
       </div>

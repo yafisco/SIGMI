@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Phone, FileText, Award, BarChart3, ArrowLeft, Plus, Trash2, Edit, Building2, Mail, MapPin, Search } from 'lucide-react';
+import { Users, Phone, FileText, Award, BarChart3, ArrowLeft, Plus, Trash2, Edit, Building2, Mail, MapPin, Search, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
@@ -77,6 +77,42 @@ export default function ProspectionPage() {
         await Swal.fire({
           title: 'Erreur',
           text: 'Erreur lors de la suppression du prospect.',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    }
+  };
+
+  const handleTransferToClient = async (id: string, name: string) => {
+    const result = await Swal.fire({
+      title: 'Transformer en client ?',
+      text: `Voulez-vous transformer le prospect "${name}" en client ?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      confirmButtonText: 'Oui, transformer',
+      cancelButtonText: 'Annuler',
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await supabase.from('clients').update({ statut: 'client' }).eq('id', id);
+        setProspects(prospects.filter(p => p.id !== id));
+        await Swal.fire({
+          title: 'Transformé !',
+          text: 'Le prospect a été transformé en client avec succès.',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (err) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Erreur lors de la transformation du prospect.',
           icon: 'error',
           confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
           customClass: SWEETALERT_CONFIG.customClass,
@@ -208,6 +244,15 @@ export default function ProspectionPage() {
                   </div>
 
                   <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleTransferToClient(prospect.id, prospect.structure || prospect.nom)}
+                      className="flex-1 bg-gradient-to-r from-[#10B981] to-[#059669] text-white px-3 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                    >
+                      <UserCheck className="w-4 h-4 mr-2 inline" />
+                      Transformer en client
+                    </motion.button>
                     <Link href={`/commercial/prospection/${prospect.id}/edit`} className="flex-1">
                       <Button variant="outline" size="sm" className="w-full">
                         <Edit className="w-4 h-4 mr-2" />

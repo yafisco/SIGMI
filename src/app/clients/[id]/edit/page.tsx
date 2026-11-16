@@ -297,7 +297,7 @@ export default function EditClientPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Chiffre d&apos;affaires annuel (FCFA)</label>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Chiffre d&apos;affaires réalisé avec le client (FCFA)</label>
                       <input
                         {...register('chiffre_affaires_annuel', { valueAsNumber: true })}
                         type="number"

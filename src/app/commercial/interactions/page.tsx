@@ -151,40 +151,79 @@ export default function InteractionsPage() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistiques */}
+        {/* Statistiques - Boutons cliquables */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Total interactions"
-            value={stats.total}
-            icon={MessageSquare}
-            color="text-blue-600"
-            bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
-            delay={0}
-          />
-          <StatCard
-            title="Emails"
-            value={stats.emails}
-            icon={Mail}
-            color="text-purple-600"
-            bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
-            delay={0.1}
-          />
-          <StatCard
-            title="Appels"
-            value={stats.appels}
-            icon={Phone}
-            color="text-green-600"
-            bgColor="bg-gradient-to-br from-green-100 to-green-200"
-            delay={0.2}
-          />
-          <StatCard
-            title="Réunions"
-            value={stats.reunions}
-            icon={Calendar}
-            color="text-amber-600"
-            bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
-            delay={0.3}
-          />
+          <motion.button
+            onClick={() => setFilterType('all')}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0 }}
+            className={`bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'all' ? 'ring-2 ring-blue-500' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-blue-700 font-medium">Total</p>
+                <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+              </div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            onClick={() => setFilterType('email')}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className={`bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'email' ? 'ring-2 ring-purple-500' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-purple-700 font-medium">Emails</p>
+                <p className="text-2xl font-bold text-purple-900">{stats.emails}</p>
+              </div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            onClick={() => setFilterType('appel')}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className={`bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'appel' ? 'ring-2 ring-green-500' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                <Phone className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-green-700 font-medium">Appels</p>
+                <p className="text-2xl font-bold text-green-900">{stats.appels}</p>
+              </div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            onClick={() => setFilterType('réunion')}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className={`bg-gradient-to-br from-amber-100 to-amber-200 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'réunion' ? 'ring-2 ring-amber-500' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-amber-600 rounded-xl flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-amber-700 font-medium">Réunions</p>
+                <p className="text-2xl font-bold text-amber-900">{stats.reunions}</p>
+              </div>
+            </div>
+          </motion.button>
         </div>
 
         {/* Filtres et recherche */}
