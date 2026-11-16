@@ -386,6 +386,12 @@ export interface Interaction {
   created_by_nom?: string;
   related_type: InteractionRelatedType;
   related_id?: string;
+  client_nom?: string;
+  client_email?: string;
+  client_telephone?: string;
+  client_ville?: string;
+  client_pays?: string;
+  client_secteur?: string;
   created_at: string;
   updated_at: string;
 }
@@ -398,6 +404,12 @@ export interface CreateInteractionInput {
   created_by: string;
   related_type: InteractionRelatedType;
   related_id?: string;
+  client_nom?: string;
+  client_email?: string;
+  client_telephone?: string;
+  client_ville?: string;
+  client_pays?: string;
+  client_secteur?: string;
 }
 
 export interface UpdateInteractionInput extends Partial<CreateInteractionInput> {
