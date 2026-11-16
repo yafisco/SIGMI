@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Phone, FileText, Award, BarChart3, ArrowLeft, Plus, Trash2, Edit, Building2, Mail, MapPin, Search, UserCheck } from 'lucide-react';
+import { Users, Phone, FileText, Award, BarChart3, ArrowLeft, Plus, Trash2, Edit, Building2, Mail, MapPin, Search, UserCheck, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
 
 interface Prospect {
   id: string;
@@ -18,6 +19,7 @@ interface Prospect {
   telephone: string;
   ville: string;
   pays: string;
+  secteur_activite?: string;
   created_at: string;
 }
 
@@ -121,6 +123,47 @@ export default function ProspectionPage() {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      const content = filteredProspects.map(p => 
+        `${p.structure || p.nom || '-'} | ${p.email || '-'} | ${p.telephone || '-'} | ${p.ville || '-'} | ${p.pays || '-'} | ${p.secteur_activite || '-'}`
+      ).join('\n');
+
+      const doc = await generateGMITPDF({
+        type: 'facture',
+        numero: `PROSPECTS-${new Date().toISOString().split('T')[0]}`,
+        titre: 'LISTE DES PROSPECTS',
+        date: new Date().toLocaleDateString('fr-FR'),
+        client: 'GROUP MI',
+        objet: 'Suivi des prospects',
+        contenu: content,
+        montant: filteredProspects.length,
+        data: {
+          'Total prospects': filteredProspects.length.toString(),
+          'Date export': new Date().toLocaleDateString('fr-FR'),
+        },
+      });
+
+      doc.save(`Liste_Prospects_${new Date().toISOString().split('T')[0]}.pdf`);
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'La liste des prospects a été téléchargée.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement.',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
   const filteredProspects = prospects.filter(prospect =>
     (prospect.structure || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (prospect.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,21 +179,25 @@ export default function ProspectionPage() {
         actionLabel="Nouveau prospect"
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-6"
-        >
-          <Link href="/commercial">
-            <button className="flex items-center gap-2 text-slate-600 hover:text-[#1D4ED8] transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-              Retour à Commercial
-            </button>
-          </Link>
-        </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-6 flex items-center justify-between"
+      >
+        <Link href="/commercial">
+          <button className="flex items-center gap-2 text-slate-600 hover:text-[#1D4ED8] transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+            Retour à Commercial
+          </button>
+        </Link>
+        <Button onClick={handleDownloadPDF} variant="outline">
+          <Download className="w-4 h-4 mr-2" />
+          Télécharger PDF
+        </Button>
+      </motion.div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Recherche */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, MessageSquare, Calendar, User, Phone, Mail, Trash2, Clock } from 'lucide-react';
+import { Search, Plus, MessageSquare, Calendar, User, Phone, Mail, Trash2, Clock, Building2, MapPin, Briefcase } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { interactionsService } from '@/lib/services';
@@ -314,6 +314,37 @@ export default function InteractionsPage() {
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Calendar className="w-4 h-4" />
                         {new Date(interaction.interaction_date).toLocaleDateString('fr-FR')}
+                      </div>
+                    )}
+                    {/* Informations détaillées du destinataire */}
+                    {interaction.client_nom && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Building2 className="w-4 h-4" />
+                        {interaction.client_nom}
+                      </div>
+                    )}
+                    {interaction.client_email && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Mail className="w-4 h-4" />
+                        {interaction.client_email}
+                      </div>
+                    )}
+                    {interaction.client_telephone && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Phone className="w-4 h-4" />
+                        {interaction.client_telephone}
+                      </div>
+                    )}
+                    {interaction.client_ville && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <MapPin className="w-4 h-4" />
+                        {interaction.client_ville}, {interaction.client_pays || ''}
+                      </div>
+                    )}
+                    {interaction.client_secteur && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Briefcase className="w-4 h-4" />
+                        {interaction.client_secteur}
                       </div>
                     )}
                   </div>

@@ -36,24 +36,19 @@ export default function CommercialPage() {
           .maybeSingle();
 
         if (data) {
-          // Construire le nom complet avec majuscules sur nom et prénom
-          const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-          const formattedPrenom = data.prenom ? capitalize(data.prenom) : '';
-          const formattedNom = data.nom ? capitalize(data.nom) : '';
-          const fullName = formattedPrenom && formattedNom ? `${formattedPrenom} ${formattedNom}` : formattedPrenom || formattedNom;
-
-          if (fullName) {
-            setUserName(fullName);
-          } else if (data.email) {
-            const emailName = data.email.split('@')[0];
-            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
-            setUserName(formattedName);
-          }
+          // Construire les initiales avec majuscules
+          const getInitials = (prenom: string, nom: string) => {
+            const first = prenom ? prenom.charAt(0).toUpperCase() : '';
+            const last = nom ? nom.charAt(0).toUpperCase() : '';
+            return first + last;
+          };
+          const initials = getInitials(data.prenom || '', data.nom || '');
+          setUserName(initials);
         } else {
           if (user.email) {
             const emailName = user.email.split('@')[0];
-            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
-            setUserName(formattedName);
+            const initials = emailName.charAt(0).toUpperCase() + (emailName.charAt(1) || '').toUpperCase();
+            setUserName(initials);
           }
         }
       }
@@ -133,10 +128,10 @@ export default function CommercialPage() {
             <span className="text-[#D4AF37] font-semibold text-sm uppercase tracking-wider">Bienvenue</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            Bonjour, {userName || 'Assistante Marketing et Communication'} 👋
+            Bonjour, {userName || 'Assistante Commerciale et Marketing'} 👋
           </h1>
           <p className="text-white/80 text-lg md:text-xl">
-            Espace Marketing et Communication - Prêt à développer les affaires de GROUP MI ?
+            Espace Commercial et Marketing - Prêt à développer les affaires de GROUP MI ?
           </p>
         </div>
       </div>
