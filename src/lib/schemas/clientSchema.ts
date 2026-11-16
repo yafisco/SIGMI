@@ -15,7 +15,6 @@ export const clientSchema = z.object({
   adresse: z.string().optional(),
   ville: z.string().optional(),
   pays: z.string().min(1, 'Le pays est requis'),
-  chiffre_affaires_annuel: z.number().optional(),
   nombre_employes: z.number().optional(),
   statut: z.enum(['prospect', 'client', 'inactif', 'bloqué'] as const),
   assigned_to: z.string().uuid().optional().or(z.literal('')),

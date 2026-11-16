@@ -41,7 +41,6 @@ export default function EditProspectPage() {
       adresse: prospect.adresse || '',
       ville: prospect.ville || '',
       pays: prospect.pays || 'Sénégal',
-      chiffre_affaires_annuel: prospect.chiffre_affaires_annuel,
       nombre_employes: prospect.nombre_employes,
       statut: 'prospect',
       assigned_to: prospect.assigned_to || '',
@@ -62,7 +61,6 @@ export default function EditProspectPage() {
         adresse: data.adresse || undefined,
         ville: data.ville || undefined,
         pays: data.pays,
-        chiffre_affaires_annuel: data.chiffre_affaires_annuel,
         nombre_employes: data.nombre_employes,
         statut: 'prospect',
         assigned_to: data.assigned_to || undefined,
@@ -300,29 +298,16 @@ export default function EditProspectPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">Chiffre d'affaires annuel (FCFA)</label>
-                      <input
-                        {...register('chiffre_affaires_annuel', { valueAsNumber: true })}
-                        type="number"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
-                        placeholder="50000000"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <Users className="w-4 h-4 text-[#D4AF37]" />
-                        Nombre d'employés
-                      </label>
-                      <input
-                        {...register('nombre_employes', { valueAsNumber: true })}
-                        type="number"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
-                        placeholder="50"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-[#D4AF37]" />
+                      Nombre d'employés (optionnel)
+                    </label>
+                    <input
+                      {...register('nombre_employes', { valueAsNumber: true })}
+                      type="number"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
+                    />
                   </div>
 
                   <div>
