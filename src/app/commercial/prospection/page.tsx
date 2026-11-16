@@ -140,14 +140,6 @@ export default function ProspectionPage() {
         },
       });
 
-      // Titre du tableau centré
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      const title = 'Détails des prospects';
-      const titleWidth = doc.getTextWidth(title);
-      doc.text(title, (doc.internal.pageSize.width - titleWidth) / 2, 95);
-      
       // Tableau
       const tableData = filteredProspects.map((p, index) => [
         index + 1,
@@ -162,16 +154,16 @@ export default function ProspectionPage() {
       ]);
       
       autoTable(doc, {
-        startY: 105,
+        startY: 90,
         head: [['#', 'Entreprise', 'Email', 'Téléphone', 'Ville', 'Pays', 'Secteur', 'Interlocuteur', 'Fonction']],
         body: tableData,
         theme: 'grid',
         headStyles: {
-          fillColor: [29, 78, 216],
+          fillColor: [212, 175, 55],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 9,
-          cellPadding: 5,
+          fontSize: 10,
+          cellPadding: 6,
           halign: 'center',
           valign: 'middle',
         },
@@ -197,7 +189,7 @@ export default function ProspectionPage() {
           7: { cellWidth: 25 },
           8: { cellWidth: 25 },
         },
-        margin: { top: 110, left: 15, right: 15, bottom: 30 },
+        margin: { top: 95, left: 15, right: 15, bottom: 30 },
         tableWidth: 'auto',
       });
       
