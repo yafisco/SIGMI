@@ -140,11 +140,13 @@ export default function ProspectionPage() {
         },
       });
 
-      // Titre du tableau
-      doc.setFontSize(14);
+      // Titre du tableau centré
+      doc.setFontSize(16);
       doc.setTextColor(0, 0, 0);
       doc.setFont('helvetica', 'bold');
-      doc.text('Détails des prospects', 15, 95);
+      const title = 'Détails des prospects';
+      const titleWidth = doc.getTextWidth(title);
+      doc.text(title, (doc.internal.pageSize.width - titleWidth) / 2, 95);
       
       // Tableau
       const tableData = filteredProspects.map((p, index) => [
@@ -163,34 +165,40 @@ export default function ProspectionPage() {
         startY: 105,
         head: [['#', 'Entreprise', 'Email', 'Téléphone', 'Ville', 'Pays', 'Secteur', 'Interlocuteur', 'Fonction']],
         body: tableData,
-        theme: 'striped',
+        theme: 'grid',
         headStyles: {
           fillColor: [29, 78, 216],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 9,
-          cellPadding: 4,
+          cellPadding: 5,
+          halign: 'center',
+          valign: 'middle',
         },
         styles: {
           fontSize: 9,
-          cellPadding: 4,
-          overflow: 'linebreak',
+          cellPadding: 5,
+          halign: 'left',
+          valign: 'middle',
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
         },
         alternateRowStyles: {
-          fillColor: [245, 245, 245],
+          fillColor: [248, 250, 252],
         },
         columnStyles: {
-          0: { cellWidth: 12, halign: 'center' },
-          1: { cellWidth: 28 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 22 },
-          4: { cellWidth: 18 },
-          5: { cellWidth: 18 },
-          6: { cellWidth: 22 },
-          7: { cellWidth: 22 },
-          8: { cellWidth: 22 },
+          0: { cellWidth: 15, halign: 'center' },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 32 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 25 },
+          7: { cellWidth: 25 },
+          8: { cellWidth: 25 },
         },
         margin: { top: 110, left: 15, right: 15, bottom: 30 },
+        tableWidth: 'auto',
       });
       
       doc.save(`Liste_Prospects_${new Date().toISOString().split('T')[0]}.pdf`);
