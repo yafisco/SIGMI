@@ -9,7 +9,6 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
-import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -129,16 +128,50 @@ export default function ProspectionPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      const doc = await generateGMITPDF({
-        type: 'facture',
-        titre: 'LISTE DES PROSPECTS',
-        date: new Date().toLocaleDateString('fr-FR'),
-        client: 'GROUP MI',
-        data: {
-          'Total prospects': filteredProspects.length.toString(),
-          'Date export': new Date().toLocaleDateString('fr-FR'),
-        },
-      });
+      const doc = new jsPDF();
+      
+      // Logo
+      try {
+        const logoBase64 = await fetch('/logo-document.png').then(res => res.blob()).then(blob => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+        });
+        doc.addImage(logoBase64 as string, 'PNG', 15, 15, 40, 40);
+      } catch (error) {
+        doc.setFontSize(24);
+        doc.setTextColor(29, 78, 216);
+        doc.text('MI', 15, 35);
+      }
+
+      // Pôles
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Ingénierie Informatique, Génie Civil & BTP,', 60, 25);
+      doc.text('Transition Energétique, Trading International,', 60, 35);
+      
+      // Ligne
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.5);
+      doc.line(15, 60, 195, 60);
+      
+      // Titre
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      const title = 'LISTE DES PROSPECTS';
+      const titleWidth = doc.getTextWidth(title);
+      doc.text(title, (doc.internal.pageSize.width - titleWidth) / 2, 80);
+      
+      // Informations
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 15, 95);
+      doc.text(`Total: ${filteredProspects.length} prospect(s)`, 120, 95);
 
       // Tableau
       const tableData = filteredProspects.map((p, index) => [
@@ -154,12 +187,12 @@ export default function ProspectionPage() {
       ]);
       
       autoTable(doc, {
-        startY: 90,
+        startY: 105,
         head: [['#', 'Entreprise', 'Email', 'Téléphone', 'Ville', 'Pays', 'Secteur', 'Interlocuteur', 'Fonction']],
         body: tableData,
         theme: 'grid',
         headStyles: {
-          fillColor: [212, 175, 55],
+          fillColor: [100, 100, 100],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 10,
@@ -176,7 +209,7 @@ export default function ProspectionPage() {
           lineWidth: 0.1,
         },
         alternateRowStyles: {
-          fillColor: [248, 250, 252],
+          fillColor: [245, 245, 245],
         },
         columnStyles: {
           0: { cellWidth: 15, halign: 'center' },
@@ -189,9 +222,16 @@ export default function ProspectionPage() {
           7: { cellWidth: 25 },
           8: { cellWidth: 25 },
         },
-        margin: { top: 95, left: 15, right: 15, bottom: 30 },
+        margin: { top: 110, left: 15, right: 15, bottom: 30 },
         tableWidth: 'auto',
       });
+
+      // Footer
+      const pageHeight = doc.internal.pageSize.height;
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('GROUP MI - Dixième RIAOM, Derrière la Manufacture, Thiès, Sénégal', 15, pageHeight - 15);
+      doc.text('RC: SN DKR 2026-B-16607 | NINEA: 013042817 2V2 | Tél: 77 450 20 32', 15, pageHeight - 10);
       
       doc.save(`Liste_Prospects_${new Date().toISOString().split('T')[0]}.pdf`);
 
