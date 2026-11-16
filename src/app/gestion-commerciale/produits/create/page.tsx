@@ -30,6 +30,27 @@ function CreateProduitPageContent() {
   const [fournisseurs, setFournisseurs] = useState<{ id: string; raison_sociale: string }[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  // Générer référence automatique
+  const generateReference = async () => {
+    const { data, error } = await supabase
+      .from('produits')
+      .select('reference')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (error || !data || data.length === 0) {
+      return 'PROD-001';
+    }
+    
+    const lastRef = data[0].reference;
+    const match = lastRef.match(/PROD-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1]) + 1;
+      return `PROD-${num.toString().padStart(3, '0')}`;
+    }
+    return 'PROD-001';
+  };
+
   const getBackLink = () => {
     if (from === 'gestion-commerciale') return '/gestion-commerciale';
     return '/gestion-commerciale/produits';
@@ -45,7 +66,12 @@ function CreateProduitPageContent() {
       setFournisseurs(data || []);
     }
     fetchFournisseurs();
-  }, []);
+    
+    // Générer référence automatique au chargement
+    generateReference().then(ref => {
+      setFormData(prev => ({ ...prev, reference: ref }));
+    });
+  }, [from]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

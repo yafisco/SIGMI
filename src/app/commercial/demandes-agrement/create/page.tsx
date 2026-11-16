@@ -24,6 +24,33 @@ export default function CreateDemandeAgrementPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Générer référence automatique
+  const generateReference = async () => {
+    const { data, error } = await supabase
+      .from('demandes_agrement')
+      .select('libelle')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (error || !data || data.length === 0) {
+      return 'AGR-001';
+    }
+    
+    const lastRef = data[0].libelle;
+    const match = lastRef.match(/AGR-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1]) + 1;
+      return `AGR-${num.toString().padStart(3, '0')}`;
+    }
+    return 'AGR-001';
+  };
+
+  useEffect(() => {
+    generateReference().then(ref => {
+      setFormData(prev => ({ ...prev, reference: ref }));
+    });
+  }, []);
+
   const handlePrint = () => {
     window.print();
   };

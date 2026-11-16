@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, DollarSign, Calendar, Building2, Save, TrendingUp, Target, Briefcase, Tag, Users, Search } from 'lucide-react';
@@ -13,6 +13,7 @@ import { useData } from '@/hooks/useData';
 import type { OpportunityStage } from '@/types';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
 
 function CreateOpportunityPageContent() {
   const router = useRouter();
@@ -35,6 +36,33 @@ function CreateOpportunityPageContent() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Générer référence automatique
+  const generateReference = async () => {
+    const { data, error } = await supabase
+      .from('opportunites')
+      .select('reference')
+      .order('created_at', { ascending: false })
+      .limit(1);
+    
+    if (error || !data || data.length === 0) {
+      return 'OPP-001';
+    }
+    
+    const lastRef = data[0].reference;
+    const match = lastRef.match(/OPP-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1]) + 1;
+      return `OPP-${num.toString().padStart(3, '0')}`;
+    }
+    return 'OPP-001';
+  };
+
+  useEffect(() => {
+    generateReference().then(ref => {
+      setFormData(prev => ({ ...prev, reference: ref }));
+    });
+  }, []);
 
   const getBackLink = () => {
     if (from === 'commercial') return '/commercial';
