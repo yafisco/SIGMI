@@ -243,116 +243,165 @@ export default function InteractionsPage() {
           onToggleFilters={() => {}}
         />
 
-        {/* Liste des interactions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredInteractions.map((interaction, index) => {
-            const Icon = typeIcons[interaction.type] || typeIcons.autre;
-            return (
-              <motion.div
-                key={interaction.id}
-                initial={{ opacity: 0, y: 50, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, delay: index * 0.05, ease: 'easeOut' }}
-                whileHover={{ y: -10, scale: 1.02 }}
-                className="relative group"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-2 group-hover:rotate-4 transition-all duration-500" />
-                <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-2xl group-hover:from-blue-200/50 transition-all duration-500" />
-                  
-                  <div className="flex items-start gap-4 mb-4 relative">
-                    <motion.div
-                      whileHover={{ rotate: 360, scale: 1.1 }}
-                      transition={{ duration: 0.6 }}
-                      className={`w-14 h-14 ${(typeColors[interaction.type] || typeColors.autre).split(' ')[0]} rounded-xl flex items-center justify-center shadow-lg flex-shrink-0`}
+        {/* Liste des interactions - Vue tableau quand filtré */}
+        {filterType !== 'all' ? (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+          >
+            <div className="p-6 border-b border-slate-200">
+              <h3 className="text-xl font-bold text-slate-900">
+                Liste des {typeLabels[filterType] || 'interactions'} ({filteredInteractions.length})
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Titre</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Entreprise</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Adresse</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Secteur</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
+                    <th className="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInteractions.map((interaction, index) => (
+                    <motion.tr
+                      key={interaction.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
+                      className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                     >
-                      <Icon className="w-7 h-7 text-white" />
-                    </motion.div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-slate-900 mb-1">{interaction.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <User className="w-4 h-4" />
-                        {interaction.created_by_nom || '-'}
+                      <td className="px-6 py-4 text-sm text-slate-900 font-medium">{interaction.title}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{interaction.client_nom || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{interaction.client_email || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{interaction.client_telephone || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {interaction.client_ville && interaction.client_pays ? `${interaction.client_ville}, ${interaction.client_pays}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{interaction.client_secteur || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {interaction.interaction_date ? new Date(interaction.interaction_date).toLocaleDateString('fr-FR') : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex gap-2 justify-center">
+                          {interaction.type === 'email' && (
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => {
+                                setSelectedInteraction(interaction);
+                                setIsEmailModalOpen(true);
+                              }}
+                              className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all"
+                              title="Envoyer un email"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </motion.button>
+                          )}
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => handleDelete(interaction.id, interaction.title)}
+                            className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredInteractions.map((interaction, index) => {
+              const Icon = typeIcons[interaction.type] || typeIcons.autre;
+              return (
+                <motion.div
+                  key={interaction.id}
+                  initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.6, delay: index * 0.05, ease: 'easeOut' }}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="relative group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-2 group-hover:rotate-4 transition-all duration-500" />
+                  <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500 overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-2xl group-hover:from-blue-200/50 transition-all duration-500" />
+                    
+                    <div className="flex items-start gap-4 mb-4 relative">
+                      <motion.div
+                        whileHover={{ rotate: 360, scale: 1.1 }}
+                        transition={{ duration: 0.6 }}
+                        className={`w-14 h-14 ${(typeColors[interaction.type] || typeColors.autre).split(' ')[0]} rounded-xl flex items-center justify-center shadow-lg flex-shrink-0`}
+                      >
+                        <Icon className="w-7 h-7 text-white" />
+                      </motion.div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-slate-900 mb-1">{interaction.title}</h3>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <User className="w-4 h-4" />
+                          {interaction.created_by_nom || '-'}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-1">
-                      {interaction.type === 'email' && (
+                      <div className="flex gap-1">
+                        {interaction.type === 'email' && (
+                          <motion.button
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => {
+                              setSelectedInteraction(interaction);
+                              setIsEmailModalOpen(true);
+                            }}
+                            className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all"
+                            title="Envoyer un email"
+                          >
+                            <Mail className="w-4 h-4" />
+                          </motion.button>
+                        )}
                         <motion.button
                           whileHover={{ scale: 1.1 }}
                           whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            setSelectedInteraction(interaction);
-                            setIsEmailModalOpen(true);
-                          }}
-                          className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all"
-                          title="Envoyer un email"
+                          onClick={() => handleDelete(interaction.id, interaction.title)}
+                          className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
                         >
-                          <Mail className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </motion.button>
-                      )}
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handleDelete(interaction.id, interaction.title)}
-                        className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.button>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2 relative">
-                    {interaction.description && (
-                      <p className="text-sm text-slate-600 line-clamp-2">{interaction.description}</p>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${typeColors[interaction.type] || typeColors.autre}`}>
-                        {typeLabels[interaction.type] || typeLabels.autre}
-                      </span>
+                    <div className="space-y-2 relative">
+                      {interaction.description && (
+                        <p className="text-sm text-slate-600 line-clamp-2">{interaction.description}</p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${typeColors[interaction.type] || typeColors.autre}`}>
+                          {typeLabels[interaction.type] || typeLabels.autre}
+                        </span>
+                      </div>
+                      {interaction.interaction_date && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(interaction.interaction_date).toLocaleDateString('fr-FR')}
+                        </div>
+                      )}
                     </div>
-                    {interaction.interaction_date && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(interaction.interaction_date).toLocaleDateString('fr-FR')}
-                      </div>
-                    )}
-                    {/* Informations détaillées du destinataire */}
-                    {interaction.client_nom && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Building2 className="w-4 h-4" />
-                        {interaction.client_nom}
-                      </div>
-                    )}
-                    {interaction.client_email && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Mail className="w-4 h-4" />
-                        {interaction.client_email}
-                      </div>
-                    )}
-                    {interaction.client_telephone && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Phone className="w-4 h-4" />
-                        {interaction.client_telephone}
-                      </div>
-                    )}
-                    {interaction.client_ville && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <MapPin className="w-4 h-4" />
-                        {interaction.client_ville}, {interaction.client_pays || ''}
-                      </div>
-                    )}
-                    {interaction.client_secteur && (
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Briefcase className="w-4 h-4" />
-                        {interaction.client_secteur}
-                      </div>
-                    )}
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {filteredInteractions.length === 0 && (
           <motion.div
