@@ -9,7 +9,8 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
-import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Prospect {
   id: string;
@@ -127,31 +128,71 @@ export default function ProspectionPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      const content = filteredProspects.map((p, index) => 
-        `${index + 1}. ${p.structure || p.nom || '-'}\n` +
-        `   Email: ${p.email || '-'}\n` +
-        `   Téléphone: ${p.telephone || '-'}\n` +
-        `   Ville: ${p.ville || '-'}\n` +
-        `   Pays: ${p.pays || '-'}\n` +
-        `   Secteur: ${p.secteur_activite || '-'}\n` +
-        `   Interlocuteur: ${p.interlocuteur || '-'}\n` +
-        `   Fonction: ${p.fonction || '-'}\n`
-      ).join('\n');
-
-      const doc = await generateGMITPDF({
-        type: 'facture',
-        numero: `PROSPECTS-${new Date().toISOString().split('T')[0]}`,
-        titre: 'LISTE DES PROSPECTS',
-        date: new Date().toLocaleDateString('fr-FR'),
-        client: 'GROUP MI',
-        objet: 'Suivi des prospects',
-        contenu: content,
-        data: {
-          'Total prospects': filteredProspects.length.toString(),
-          'Date export': new Date().toLocaleDateString('fr-FR'),
+      const doc = new jsPDF();
+      
+      // En-tête
+      doc.setFontSize(20);
+      doc.setTextColor(29, 78, 216);
+      doc.text('GROUP MI', 15, 25);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Ingénierie Informatique, Génie Civil & BTP,', 15, 35);
+      doc.text('Transition Energétique, Trading International,', 15, 42);
+      
+      doc.setDrawColor(212, 175, 55);
+      doc.setLineWidth(0.5);
+      doc.line(15, 50, 195, 50);
+      
+      // Titre
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text('LISTE DES PROSPECTS', 15, 65);
+      
+      doc.setFontSize(10);
+      doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 15, 75);
+      doc.text(`Total: ${filteredProspects.length} prospect(s)`, 15, 82);
+      
+      // Tableau
+      const tableData = filteredProspects.map((p, index) => [
+        index + 1,
+        p.structure || p.nom || '-',
+        p.email || '-',
+        p.telephone || '-',
+        p.ville || '-',
+        p.pays || '-',
+        p.secteur_activite || '-',
+        p.interlocuteur || '-',
+        p.fonction || '-',
+      ]);
+      
+      autoTable(doc, {
+        startY: 90,
+        head: [['#', 'Entreprise', 'Email', 'Téléphone', 'Ville', 'Pays', 'Secteur', 'Interlocuteur', 'Fonction']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [29, 78, 216],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 20 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 25 },
+          7: { cellWidth: 25 },
+          8: { cellWidth: 25 },
         },
       });
-
+      
       doc.save(`Liste_Prospects_${new Date().toISOString().split('T')[0]}.pdf`);
 
       await Swal.fire({
