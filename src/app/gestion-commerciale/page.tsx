@@ -41,11 +41,11 @@ const modules = [
   },
   {
     id: 'ventes',
-    title: 'Espace de Vente',
-    description: 'Enregistrement des ventes et clients',
+    title: 'Ventes',
+    description: 'Enregistrement et gestion des ventes',
     icon: ShoppingCart,
     color: 'from-amber-500 to-amber-600',
-    href: '/gestion-commerciale/ventes',
+    href: '/gestion-commerciale/ventes/historique',
   },
   {
     id: 'devis',

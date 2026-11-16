@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Search, Filter, ArrowLeft, Edit, Receipt } from 'lucide-react';
+import { ShoppingCart, Search, Filter, ArrowLeft, Edit, Receipt, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function VentesHistoriquePage() {
   const [ventes, setVentes] = useState<any[]>([]);
@@ -26,6 +29,52 @@ export default function VentesHistoriquePage() {
     v.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (v.client_nom && v.client_nom.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const handleDelete = async (id: string, numero: string) => {
+    const result = await Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: `Vous êtes sur le point de supprimer la vente "${numero}". Cette action est irréversible !`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // Supprimer d'abord les lignes de vente
+        const { error: lignesError } = await supabase.from('lignes_vente').delete().eq('vente_id', id);
+        if (lignesError) throw lignesError;
+
+        // Supprimer la vente
+        const { error: venteError } = await supabase.from('ventes').delete().eq('id', id);
+        if (venteError) throw venteError;
+
+        // Rafraîchir la liste
+        const { data } = await supabase.from('ventes').select('*, clients(*)').order('date', { ascending: false });
+        setVentes(data || []);
+
+        await Swal.fire({
+          title: 'Supprimé !',
+          text: 'La vente a été supprimée avec succès.',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (err) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: errorMessage(err, 'Erreur lors de la suppression de la vente'),
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -55,7 +104,7 @@ export default function VentesHistoriquePage() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="mb-8 flex flex-col sm:flex-row gap-4"
         >
-          <Link href="/gestion-commerciale/ventes">
+          <Link href="/gestion-commerciale/ventes/create">
             <Button className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
               <ShoppingCart className="w-4 h-4 mr-2" />
               Nouvelle vente
@@ -138,6 +187,14 @@ export default function VentesHistoriquePage() {
                               <Edit className="w-4 h-4" />
                             </Button>
                           </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => handleDelete(vente.id, vente.numero)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </td>
                     </motion.tr>
