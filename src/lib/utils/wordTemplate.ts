@@ -74,6 +74,12 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                       }),
                     ],
                     verticalAlign: 'center',
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE },
+                    },
                   }),
                   new TableCell({
                     width: {
@@ -101,6 +107,12 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                       }),
                     ],
                     verticalAlign: 'center',
+                    borders: {
+                      top: { style: BorderStyle.NONE },
+                      bottom: { style: BorderStyle.NONE },
+                      left: { style: BorderStyle.NONE },
+                      right: { style: BorderStyle.NONE },
+                    },
                   }),
                 ],
               }),
@@ -110,6 +122,8 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
               bottom: { style: BorderStyle.NONE },
               left: { style: BorderStyle.NONE },
               right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE },
             },
           }),
 
