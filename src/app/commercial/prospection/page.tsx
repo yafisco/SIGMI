@@ -140,6 +140,12 @@ export default function ProspectionPage() {
         },
       });
 
+      // Titre du tableau
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Détails des prospects', 15, 95);
+      
       // Tableau
       const tableData = filteredProspects.map((p, index) => [
         index + 1,
@@ -154,30 +160,37 @@ export default function ProspectionPage() {
       ]);
       
       autoTable(doc, {
-        startY: 100,
+        startY: 105,
         head: [['#', 'Entreprise', 'Email', 'Téléphone', 'Ville', 'Pays', 'Secteur', 'Interlocuteur', 'Fonction']],
         body: tableData,
-        theme: 'grid',
+        theme: 'striped',
         headStyles: {
           fillColor: [29, 78, 216],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
+          fontSize: 9,
+          cellPadding: 4,
         },
         styles: {
-          fontSize: 8,
-          cellPadding: 3,
+          fontSize: 9,
+          cellPadding: 4,
+          overflow: 'linebreak',
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245],
         },
         columnStyles: {
-          0: { cellWidth: 10 },
-          1: { cellWidth: 30 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 20 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 25 },
-          7: { cellWidth: 25 },
-          8: { cellWidth: 25 },
+          0: { cellWidth: 12, halign: 'center' },
+          1: { cellWidth: 28 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 22 },
+          4: { cellWidth: 18 },
+          5: { cellWidth: 18 },
+          6: { cellWidth: 22 },
+          7: { cellWidth: 22 },
+          8: { cellWidth: 22 },
         },
+        margin: { top: 110, left: 15, right: 15, bottom: 30 },
       });
       
       doc.save(`Liste_Prospects_${new Date().toISOString().split('T')[0]}.pdf`);
