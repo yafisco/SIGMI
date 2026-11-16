@@ -23,15 +23,6 @@ export default function CreateDemandeAgrementPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-
-  useEffect(() => {
-    async function fetchData() {
-      const clientsData = await supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom');
-      setClients(clientsData.data || []);
-    }
-    fetchData();
-  }, []);
 
   const handlePrint = () => {
     window.print();
@@ -176,17 +167,14 @@ export default function CreateDemandeAgrementPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.client_id}
                     onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                    placeholder="Nom du client"
                     required
-                  >
-                    <option value="">Sélectionnez un client</option>
-                    {clients.map((c) => (
-                      <option key={c.id} value={c.id}>{c.nom}</option>
-                    ))}
-                  </select>
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Libellé de la demande *</label>
