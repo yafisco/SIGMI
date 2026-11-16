@@ -25,40 +25,39 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
               }),
             ],
             heading: HeadingLevel.HEADING_1,
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
+            spacing: { after: 100 },
           }),
+
+          // Pôles d'activités
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Ingénierie Informatique | Génie Civil & BTP | Transition Energétique | Trading International',
+                text: 'Ingénierie Informatique, Génie Civil & BTP,',
                 bold: true,
-                size: 22,
+                size: 20,
               }),
             ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 200 },
+            spacing: { after: 50 },
           }),
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Diversifier, Innover, Impacter',
+                text: 'Transition Energétique, Trading International',
                 bold: true,
-                size: 24,
+                size: 20,
+              }),
+            ],
+            spacing: { after: 200 },
+          }),
+
+          // Ligne de séparation dorée
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '─'.repeat(40),
                 color: 'D4AF37',
               }),
             ],
-            alignment: AlignmentType.CENTER,
-            spacing: { after: 400 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: '______________________________________',
-                color: 'D4AF37',
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
             spacing: { after: 400 },
           }),
 
@@ -137,11 +136,10 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
           new Paragraph({
             children: [
               new TextRun({
-                text: '______________________________________',
+                text: '─'.repeat(40),
                 color: 'D4AF37',
               }),
             ],
-            alignment: AlignmentType.CENTER,
             spacing: { before: 400 },
           }),
           new Paragraph({
@@ -149,7 +147,7 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
               new TextRun({
                 text: 'GROUP MI',
                 bold: true,
-                size: 28,
+                size: 24,
                 color: '1D4ED8',
               }),
             ],
