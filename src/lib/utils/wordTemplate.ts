@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 
 export interface WordTemplateData {
   type: 'demande_agrement';
@@ -14,40 +14,82 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
       {
         properties: {},
         children: [
-          // En-tête GROUP MI
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'GROUP MI',
-                bold: true,
-                size: 48,
-                color: '1D4ED8',
+          // En-tête avec logo à gauche et pôles à droite
+          new Table({
+            width: {
+              size: 100,
+              type: WidthType.PERCENTAGE,
+            },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: {
+                      size: 30,
+                      type: WidthType.PERCENTAGE,
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'GROUP MI',
+                            bold: true,
+                            size: 48,
+                            color: '1D4ED8',
+                          }),
+                        ],
+                        alignment: AlignmentType.CENTER,
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Diversifier, Innover, Impacter',
+                            bold: true,
+                            size: 16,
+                            color: 'D4AF37',
+                          }),
+                        ],
+                        alignment: AlignmentType.CENTER,
+                      }),
+                    ],
+                    verticalAlign: 'center',
+                  }),
+                  new TableCell({
+                    width: {
+                      size: 70,
+                      type: WidthType.PERCENTAGE,
+                    },
+                    children: [
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Ingénierie Informatique, Génie Civil & BTP,',
+                            bold: true,
+                            size: 20,
+                          }),
+                        ],
+                      }),
+                      new Paragraph({
+                        children: [
+                          new TextRun({
+                            text: 'Transition Energétique, Trading International',
+                            bold: true,
+                            size: 20,
+                          }),
+                        ],
+                      }),
+                    ],
+                    verticalAlign: 'center',
+                  }),
+                ],
               }),
             ],
-            heading: HeadingLevel.HEADING_1,
-            spacing: { after: 100 },
-          }),
-
-          // Pôles d'activités
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Ingénierie Informatique, Génie Civil & BTP,',
-                bold: true,
-                size: 20,
-              }),
-            ],
-            spacing: { after: 50 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Transition Energétique, Trading International',
-                bold: true,
-                size: 20,
-              }),
-            ],
-            spacing: { after: 200 },
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+            },
           }),
 
           // Ligne de séparation dorée
