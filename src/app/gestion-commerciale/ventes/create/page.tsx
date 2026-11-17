@@ -70,7 +70,6 @@ export default function CreateVentePage() {
         client_id: selectedClient,
         total,
         mode_paiement: modePaiement,
-        reduction: 0,
       }).select().single();
 
       if (venteError) throw venteError;
