@@ -349,6 +349,14 @@ export default function InteractionsPage() {
                       </motion.div>
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-slate-900 mb-1">{interaction.title}</h3>
+                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
+                          <Building2 className="w-4 h-4" />
+                          {interaction.client_nom || '-'}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Mail className="w-4 h-4" />
+                          {interaction.client_email || '-'}
+                        </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <User className="w-4 h-4" />
                           {interaction.created_by_nom || '-'}
@@ -428,8 +436,8 @@ export default function InteractionsPage() {
           setIsEmailModalOpen(false);
           setSelectedInteraction(null);
         }}
-        clientName={selectedInteraction?.title || ''}
-        clientEmail={selectedInteraction?.description || ''}
+        clientName={selectedInteraction?.client_nom || ''}
+        clientEmail={selectedInteraction?.client_email || ''}
         interactionId={selectedInteraction?.id}
       />
     </div>

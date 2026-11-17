@@ -31,15 +31,15 @@ export function PageHeader({
       transition={{ duration: 0.6, ease: 'easeOut' }}
       className="bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#2563EB] bg-[length:200%_auto] animate-gradient border-b border-white/10"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {backHref && (
               <Link href={backHref}>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
-                  className="text-white hover:bg-white/10 hover:scale-110 transition-all duration-300"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 shadow-lg"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
