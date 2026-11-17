@@ -70,17 +70,6 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                         ],
                         alignment: AlignmentType.CENTER,
                       }),
-                      new Paragraph({
-                        children: [
-                          new TextRun({
-                            text: 'Diversifier, innover, impacter',
-                            bold: true,
-                            size: 16,
-                            color: 'D4AF37',
-                          }),
-                        ],
-                        alignment: AlignmentType.CENTER,
-                      }),
                     ],
                     verticalAlign: 'center',
                     borders: {
@@ -100,8 +89,8 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                         children: [
                           new TextRun({
                             text: 'Ingénierie Informatique, Génie Civil & BTP,',
-                            bold: true,
-                            size: 20,
+                            font: 'Eras Light ITC',
+                            size: 32, // taille 16 points = 32 half-points
                           }),
                         ],
                       }),
@@ -109,8 +98,8 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                         children: [
                           new TextRun({
                             text: 'Transition Energétique, Trading International, Agro Business',
-                            bold: true,
-                            size: 20,
+                            font: 'Eras Light ITC',
+                            size: 32,
                           }),
                         ],
                       }),
