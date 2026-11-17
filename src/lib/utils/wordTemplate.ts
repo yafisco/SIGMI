@@ -1,4 +1,4 @@
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun, convertInchesToTwip } from 'docx';
 
 export interface WordTemplateData {
   type: 'demande_agrement';
@@ -33,7 +33,16 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
   const doc = new Document({
     sections: [
       {
-        properties: {},
+        properties: {
+          page: {
+            margin: {
+              top: convertInchesToTwip(1),
+              bottom: convertInchesToTwip(1),
+              left: convertInchesToTwip(1),
+              right: convertInchesToTwip(1),
+            },
+          },
+        },
         children: [
           // En-tête avec logo à gauche et pôles à droite
           new Table({
@@ -64,7 +73,7 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Diversifier, Innover, Impacter',
+                            text: 'Diversifier, innover, impacter',
                             bold: true,
                             size: 16,
                             color: 'D4AF37',
@@ -99,7 +108,7 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                       new Paragraph({
                         children: [
                           new TextRun({
-                            text: 'Transition Energétique, Trading International',
+                            text: 'Transition Energétique, Trading International, Agro Business',
                             bold: true,
                             size: 20,
                           }),
@@ -127,26 +136,16 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
             },
           }),
 
-          // Ligne de séparation dorée
+          // Destinataire en haut à droite
           new Paragraph({
             children: [
               new TextRun({
-                text: '─'.repeat(40),
-                color: 'D4AF37',
+                text: data.destinataire || 'A......',
+                font: 'Eras Light ITC',
+                size: 22, // taille 11 points = 22 half-points
               }),
             ],
-            spacing: { after: 400 },
-          }),
-
-          // Destinataire
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `À : ${data.destinataire || 'Monsieur le Directeur Général'}`,
-                bold: true,
-                size: 12,
-              }),
-            ],
+            alignment: AlignmentType.RIGHT,
             spacing: { after: 200 },
           }),
 
@@ -155,20 +154,21 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
             children: [
               new TextRun({
                 text: `Réf. : ${data.numero || ''}`,
-                bold: true,
-                size: 12,
+                font: 'Eras Light ITC',
+                size: 22,
               }),
             ],
             spacing: { after: 200 },
           }),
 
-          // Objet
+          // Objet souligné
           new Paragraph({
             children: [
               new TextRun({
-                text: `Objet : ${data.objet || ''}`,
-                bold: true,
-                size: 12,
+                text: `Objet: ${data.objet || ''}`,
+                font: 'Eras Light ITC',
+                size: 22,
+                underline: {},
               }),
             ],
             spacing: { after: 400 },
@@ -179,7 +179,8 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
             children: [
               new TextRun({
                 text: data.contenu || '',
-                size: 11,
+                font: 'Eras Light ITC',
+                size: 22,
               }),
             ],
             spacing: { after: 200 },
@@ -190,72 +191,101 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
             children: [
               new TextRun({
                 text: 'Veuillez agréer, Monsieur, l\'expression de nos salutations distinguées.',
-                size: 11,
+                font: 'Eras Light ITC',
+                size: 22,
                 italics: true,
               }),
             ],
             spacing: { before: 400, after: 200 },
           }),
 
-          // Signature
+          // Signature en haut à droite
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Fait à Thiès le ${new Date().toLocaleDateString('fr-FR')}`,
+                font: 'Eras Light ITC',
+                size: 22,
+              }),
+            ],
+            alignment: AlignmentType.RIGHT,
+            spacing: { after: 200 },
+          }),
           new Paragraph({
             children: [
               new TextRun({
                 text: 'Le Directeur Général',
+                font: 'Eras Light ITC',
+                size: 22,
                 bold: true,
-                size: 12,
+                underline: {},
               }),
             ],
+            alignment: AlignmentType.RIGHT,
             spacing: { before: 400 },
           }),
 
-          // Footer avec informations GROUP MI
+          // Footer en bas à gauche
           new Paragraph({
             children: [
               new TextRun({
-                text: '─'.repeat(40),
-                color: 'D4AF37',
+                text: 'Holding GROUP MI',
+                font: 'Eras Light ITC',
+                size: 22,
               }),
             ],
-            spacing: { before: 400 },
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'GROUP MI',
-                bold: true,
-                size: 24,
-                color: '1D4ED8',
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
           }),
           new Paragraph({
             children: [
               new TextRun({
                 text: 'Dixième RIAOM, Derrière la Manufacture, Thiès, Sénégal',
-                size: 10,
+                font: 'Eras Light ITC',
+                size: 22,
               }),
             ],
-            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
           }),
           new Paragraph({
             children: [
               new TextRun({
-                text: 'RC: SN DKR 2026-B-16607 | NINEA: 013042817 2V2',
-                size: 10,
+                text: 'RC : SN DKR 2026-B-16607',
+                font: 'Eras Light ITC',
+                size: 22,
               }),
             ],
-            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
           }),
           new Paragraph({
             children: [
               new TextRun({
-                text: 'Tél: 77 450 20 32 | Email: info@madinainfotech.com',
-                size: 10,
+                text: 'NINEA : 013042817 2V2',
+                font: 'Eras Light ITC',
+                size: 22,
               }),
             ],
-            alignment: AlignmentType.CENTER,
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Tel : 77 450 20 32',
+                font: 'Eras Light ITC',
+                size: 22,
+              }),
+            ],
+            spacing: { after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: 'Email : info@madinainfotech.com',
+                font: 'Eras Light ITC',
+                size: 22,
+                color: '0000FF',
+                underline: {},
+              }),
+            ],
           }),
         ],
       },
