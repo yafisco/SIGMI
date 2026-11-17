@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Search, Filter, ArrowLeft, Edit, Receipt, Trash2 } from 'lucide-react';
+import { ShoppingCart, Search, Filter, ArrowLeft, Edit, Receipt, Trash2, DollarSign, TrendingUp, Calendar, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
@@ -29,6 +29,20 @@ export default function VentesHistoriquePage() {
     v.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (v.client_nom && v.client_nom.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Calcul des métriques
+  const totalCA = ventes.reduce((sum, v) => sum + (v.total || 0), 0);
+  const nombreVentes = ventes.length;
+  const venteMoyenne = nombreVentes > 0 ? totalCA / nombreVentes : 0;
+
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const ventesDuMois = ventes.filter(v => {
+    const date = new Date(v.date);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+  const ventesMoisCount = ventesDuMois.length;
+  const ventesMoisCA = ventesDuMois.reduce((sum, v) => sum + (v.total || 0), 0);
 
   const handleDelete = async (id: string, numero: string) => {
     const result = await Swal.fire({
@@ -126,6 +140,74 @@ export default function VentesHistoriquePage() {
             <Filter className="w-4 h-4 mr-2" />
             Filtrer
           </Button>
+        </motion.div>
+
+        {/* Tableau de bord des métriques */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        >
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1D4ED8] to-[#2563EB] flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                +0%
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-1">
+              {totalCA.toLocaleString('fr-FR')} FCFA
+            </h3>
+            <p className="text-sm text-slate-600">Chiffre d'affaires total</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#B89B6E] flex items-center justify-center">
+                <ShoppingCart className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                +0%
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-1">
+              {nombreVentes}
+            </h3>
+            <p className="text-sm text-slate-600">Nombre de ventes</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-full">
+                Moyenne
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-1">
+              {venteMoyenne.toLocaleString('fr-FR')} FCFA
+            </h3>
+            <p className="text-sm text-slate-600">Panier moyen</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8B5CF6] to-[#7C3AED] flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                Ce mois
+              </span>
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-1">
+              {ventesMoisCA.toLocaleString('fr-FR')} FCFA
+            </h3>
+            <p className="text-sm text-slate-600">CA du mois ({ventesMoisCount} ventes)</p>
+          </div>
         </motion.div>
 
         <motion.div
