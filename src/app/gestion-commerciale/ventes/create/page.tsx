@@ -15,7 +15,7 @@ import { useRouter } from 'next/navigation';
 export default function CreateVentePage() {
   const router = useRouter();
   const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
-  const [produits, setProduits] = useState<{ id: string; designation: string; prix_unitaire: number; stock?: number }[]>([]);
+  const [produits, setProduits] = useState<{ id: string; designation: string; prix_unitaire: number; stock_minimum?: number }[]>([]);
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedProduit, setSelectedProduit] = useState('');
   const [quantite, setQuantite] = useState(1);
@@ -26,8 +26,9 @@ export default function CreateVentePage() {
     async function fetchData() {
       const [clientsData, produitsData] = await Promise.all([
         supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom'),
-        supabase.from('produits').select('id, designation, prix_unitaire, stock').eq('actif', true).order('designation'),
+        supabase.from('produits').select('id, designation, prix_unitaire, stock_minimum, actif').order('designation'),
       ]);
+      console.log('Produits chargés:', produitsData.data);
       setClients(clientsData.data || []);
       setProduits(produitsData.data || []);
     }
