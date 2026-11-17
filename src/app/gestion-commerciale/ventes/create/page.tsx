@@ -26,7 +26,7 @@ export default function CreateVentePage() {
     async function fetchData() {
       const [clientsData, produitsData] = await Promise.all([
         supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom'),
-        supabase.from('produits').select('id, designation, prix_unitaire, stock').order('designation'),
+        supabase.from('produits').select('id, designation, prix_unitaire, stock').eq('actif', true).order('designation'),
       ]);
       setClients(clientsData.data || []);
       setProduits(produitsData.data || []);

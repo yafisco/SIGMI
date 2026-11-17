@@ -111,6 +111,7 @@ function CreateProduitPageContent() {
         pole: formData.pole || null,
         stock_minimum: parseInt(formData.stock_minimum),
         image_url: formData.image_url || null,
+        actif: true,
       });
 
       if (error) throw error;
