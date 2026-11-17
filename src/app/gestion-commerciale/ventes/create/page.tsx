@@ -178,7 +178,7 @@ export default function CreateVentePage() {
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Étape 1 : Sélectionnez un client *</label>
                   <select
                     value={selectedClient}
                     onChange={(e) => setSelectedClient(e.target.value)}
@@ -199,7 +199,7 @@ export default function CreateVentePage() {
                   <Package className="w-5 h-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Rechercher un produit</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Étape 2 : Recherchez et ajoutez des produits</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -210,33 +210,44 @@ export default function CreateVentePage() {
                       className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg"
                     />
                   </div>
+                  <p className="text-xs text-slate-500 mt-1">Cliquez sur un produit pour l'ajouter au panier</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                {filteredProduits.map((produit, index) => (
-                  <motion.div
-                    key={produit.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
-                    className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-[#1D4ED8] transition-colors cursor-pointer"
-                    onClick={() => addToCart(produit)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-semibold text-slate-900">{produit.designation}</h4>
-                        <p className="text-sm text-slate-600 mt-1">
-                          {produit.prix_unitaire.toLocaleString('fr-FR')} FCFA
-                        </p>
+              {filteredProduits.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <Package className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                  <p>Aucun produit trouvé</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  {filteredProduits.map((produit, index) => (
+                    <motion.div
+                      key={produit.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: 0.2 + index * 0.05 }}
+                      className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-[#1D4ED8] hover:shadow-lg transition-all cursor-pointer"
+                      onClick={() => addToCart(produit)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-semibold text-slate-900">{produit.designation}</h4>
+                          <p className="text-sm text-slate-600 mt-1">
+                            {produit.prix_unitaire.toLocaleString('fr-FR')} FCFA
+                          </p>
+                          {produit.stock !== undefined && (
+                            <p className="text-xs text-slate-500 mt-1">Stock: {produit.stock}</p>
+                          )}
+                        </div>
+                        <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
+                          <Plus className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -251,13 +262,17 @@ export default function CreateVentePage() {
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center">
                   <ShoppingCart className="w-5 h-5 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">Panier</h3>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-slate-900">Étape 3 : Panier</h3>
+                  <p className="text-xs text-slate-500">Vérifiez votre commande avant d'enregistrer</p>
+                </div>
               </div>
 
               {cart.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                  <p>Le panier est vide</p>
+                  <p className="font-medium">Le panier est vide</p>
+                  <p className="text-sm mt-2">Ajoutez des produits depuis la liste à gauche</p>
                 </div>
               ) : (
                 <>
