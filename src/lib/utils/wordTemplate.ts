@@ -125,6 +125,16 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
             },
           }),
 
+          // Première barre de séparation après l'en-tête
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '______________________________________',
+              }),
+            ],
+            spacing: { after: 400 },
+          }),
+
           // Destinataire en haut à droite
           new Paragraph({
             children: [
@@ -186,6 +196,16 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
               }),
             ],
             spacing: { before: 400, after: 200 },
+          }),
+
+          // Deuxième barre de séparation avant la signature
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '______________________________________',
+              }),
+            ],
+            spacing: { after: 400 },
           }),
 
           // Signature en haut à droite
