@@ -3,17 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ShoppingCart, Edit, Receipt, Printer, Download } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Edit, Receipt, Printer, Download, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 interface LigneVente {
   id: string;
   produit_id: string;
   quantite: number;
   prix_unitaire: number;
-  produit_nom?: string;
+  produits?: {
+    designation: string;
+    reference: string;
+    image_url?: string;
+  };
 }
 
 interface Vente {
@@ -46,7 +53,7 @@ export default function VenteDetailPage() {
 
       const { data: lignesData } = await supabase
         .from('lignes_vente')
-        .select('*, produits(designation)')
+        .select('*, produits(designation, reference, image_url)')
         .eq('vente_id', params.id);
 
       setLignes(lignesData || []);
@@ -54,6 +61,53 @@ export default function VenteDetailPage() {
     }
     fetchVente();
   }, [params.id]);
+
+  const handleExportPDF = async () => {
+    if (!vente) return;
+
+    try {
+      const lignesText = lignes.map(l =>
+        `${l.produits?.reference || 'N/A'} - ${l.produits?.designation || 'N/A'} : ${l.quantite} x ${l.prix_unitaire.toLocaleString('fr-FR')} FCFA = ${(l.quantite * l.prix_unitaire).toLocaleString('fr-FR')} FCFA`
+      ).join('\n');
+
+      const doc = await generateGMITPDF({
+        type: 'rapport',
+        titre: `Vente ${vente.numero}`,
+        date: new Date(vente.date).toLocaleDateString('fr-FR'),
+        objet: `Vente pour ${vente.client_nom || 'Client inconnu'}`,
+        contenu: lignesText,
+        data: {
+          'Client': vente.client_nom || 'Client inconnu',
+          'Date': new Date(vente.date).toLocaleDateString('fr-FR'),
+          'Mode de paiement': vente.mode_paiement,
+          'Nombre d\'articles': lignes.length.toString(),
+          'Total': `${vente.total.toLocaleString('fr-FR')} FCFA`,
+        },
+      });
+
+      doc.save(`Vente_${vente.numero}.pdf`);
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le PDF a été généré',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de la génération du PDF',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   if (loading) {
     return (
@@ -106,11 +160,11 @@ export default function VenteDetailPage() {
                   Modifier
                 </Button>
               </Link>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-2" />
                 Imprimer
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleExportPDF}>
                 <Download className="w-4 h-4 mr-2" />
                 PDF
               </Button>
@@ -139,24 +193,50 @@ export default function VenteDetailPage() {
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Produit</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Quantité</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Prix unitaire</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Total</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Photo</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Référence</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Désignation</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Quantité</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Prix unitaire</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {lignes.map((ligne) => (
-                      <tr key={ligne.id} className="border-b border-slate-100">
-                        <td className="px-4 py-3 text-sm text-slate-900">{ligne.produit_nom || '-'}</td>
-                        <td className="px-4 py-3 text-sm text-right text-slate-600">{ligne.quantite}</td>
-                        <td className="px-4 py-3 text-sm text-right text-slate-600">
+                    {lignes.map((ligne, index) => (
+                      <motion.tr
+                        key={ligne.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.3 + index * 0.05 }}
+                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm text-slate-900">
+                          {ligne.produits?.image_url ? (
+                            <img
+                              src={ligne.produits.image_url}
+                              alt={ligne.produits.designation}
+                              className="w-16 h-16 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-slate-200 flex items-center justify-center">
+                              <Package className="w-8 h-8 text-slate-400" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-900 font-medium">
+                          {ligne.produits?.reference || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-900">
+                          {ligne.produits?.designation || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-right text-slate-600">{ligne.quantite}</td>
+                        <td className="px-6 py-4 text-sm text-right text-slate-600">
                           {ligne.prix_unitaire.toLocaleString('fr-FR')} FCFA
                         </td>
-                        <td className="px-4 py-3 text-sm font-medium text-right text-slate-900">
+                        <td className="px-6 py-4 text-sm font-medium text-right text-slate-900">
                           {(ligne.quantite * ligne.prix_unitaire).toLocaleString('fr-FR')} FCFA
                         </td>
-                      </tr>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
