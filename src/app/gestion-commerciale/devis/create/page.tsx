@@ -14,8 +14,11 @@ import { SWEETALERT_CONFIG } from '@/lib/constants';
 interface LigneDevis {
   produit_id?: string;
   designation: string;
+  description?: string;
+  unite?: string;
   quantite: number;
   prix_unitaire: number;
+  remise?: number;
 }
 
 function CreateDevisPageContent() {
@@ -26,13 +29,19 @@ function CreateDevisPageContent() {
     numero: '',
     client_id: '',
     date: new Date().toISOString().split('T')[0],
-    date_validite: '',
-    notes: '',
+    date_validite: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    objet: '',
+    conditions_paiement: 'comptant',
+    remise_globale: 0,
+    remise_globale_type: 'montant',
+    notes_client: '',
+    notes_internes: '',
   });
   const [lignes, setLignes] = useState<LigneDevis[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [clients, setClients] = useState<{ id: string; nom: string }[]>([]);
+  const [clients, setClients] = useState<{ id: string; nom: string; adresse?: string; telephone?: string; email?: string }[]>([]);
+  const [selectedClient, setSelectedClient] = useState<{ id: string; nom: string; adresse?: string; telephone?: string; email?: string } | null>(null);
   const [produits, setProduits] = useState<{ id: string; designation: string; prix_unitaire: number }[]>([]);
 
   const getBackLink = () => {
@@ -43,17 +52,63 @@ function CreateDevisPageContent() {
   useEffect(() => {
     async function fetchData() {
       const [clientsData, produitsData] = await Promise.all([
-        supabase.from('clients').select('id, nom').eq('statut', 'client').order('nom'),
+        supabase.from('clients').select('id, nom, adresse, telephone, email').eq('statut', 'client').order('nom'),
         supabase.from('produits').select('id, designation, prix_unitaire').eq('actif', true).order('designation'),
       ]);
       setClients(clientsData.data || []);
       setProduits(produitsData.data || []);
+      
+      // Générer numéro auto
+      generateNumero();
     }
     fetchData();
   }, []);
 
+  const generateNumero = async () => {
+    const currentYear = new Date().getFullYear();
+    let newNumero = `DEV-${currentYear}-0001`;
+    let isUnique = false;
+    let attempts = 0;
+    
+    while (!isUnique && attempts < 100) {
+      const { data } = await supabase
+        .from('devis')
+        .select('numero')
+        .eq('numero', newNumero)
+        .limit(1);
+      
+      if (!data || data.length === 0) {
+        isUnique = true;
+      } else {
+        const { data: lastDevis } = await supabase
+          .from('devis')
+          .select('numero')
+          .like('numero', `DEV-${currentYear}-%`)
+          .order('numero', { ascending: false })
+          .limit(1);
+        
+        if (lastDevis && lastDevis.length > 0) {
+          const lastNum = lastDevis[0].numero;
+          const match = lastNum.match(/DEV-\d{4}-(\d{4})/);
+          if (match) {
+            const num = parseInt(match[1]) + 1;
+            newNumero = `DEV-${currentYear}-${num.toString().padStart(4, '0')}`;
+          }
+        }
+      }
+      attempts++;
+    }
+    
+    setFormData(prev => ({ ...prev, numero: newNumero }));
+  };
+
   const addLigne = () => {
-    setLignes([...lignes, { designation: '', quantite: 1, prix_unitaire: 0 }]);
+    setLignes([...lignes, { designation: '', quantite: 1, prix_unitaire: 0, unite: 'pièce' }]);
+  };
+
+  const duplicateLigne = (index: number) => {
+    const ligneToDuplicate = lignes[index];
+    setLignes([...lignes, { ...ligneToDuplicate }]);
   };
 
   const removeLigne = (index: number) => {
@@ -66,7 +121,41 @@ function CreateDevisPageContent() {
     setLignes(newLignes);
   };
 
-  const totalHT = lignes.reduce((sum, ligne) => sum + (ligne.quantite * ligne.prix_unitaire), 0);
+  const totalHT = lignes.reduce((sum, ligne) => {
+    const remise = ligne.remise || 0;
+    const ligneTotal = ligne.quantite * ligne.prix_unitaire * (1 - remise / 100);
+    return sum + ligneTotal;
+  }, 0);
+
+  const remiseGlobale = formData.remise_globale_type === 'pourcentage'
+    ? totalHT * (formData.remise_globale / 100)
+    : formData.remise_globale;
+
+  const totalHTApresRemise = Math.max(0, totalHT - remiseGlobale);
+  const tva = totalHTApresRemise * 0.18;
+  const totalTTC = totalHTApresRemise + tva;
+
+  const nombreEnLettres = (montant: number): string => {
+    // Fonction simplifiée pour convertir en lettres
+    return `${Math.round(montant).toLocaleString('fr-FR')} FCFA`;
+  };
+
+  const handleClientChange = (clientId: string) => {
+    setFormData({ ...formData, client_id: clientId });
+    const client = clients.find(c => c.id === clientId);
+    setSelectedClient(client || null);
+  };
+
+  const handleDateChange = (date: string) => {
+    setFormData({ ...formData, date });
+    // Mettre à jour la date de validité pour être au minimum +30 jours
+    const newDate = new Date(date);
+    const minValidite = new Date(newDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const currentValidite = formData.date_validite ? new Date(formData.date_validite) : null;
+    if (!currentValidite || currentValidite < minValidite) {
+      setFormData(prev => ({ ...prev, date_validite: minValidite.toISOString().split('T')[0] }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,17 +168,26 @@ function CreateDevisPageContent() {
       return;
     }
 
+    // Validation des lignes
+    const lignesInvalides = lignes.filter(l => !l.designation || l.quantite <= 0 || l.prix_unitaire < 0);
+    if (lignesInvalides.length > 0) {
+      setError('Veuillez remplir correctement toutes les lignes (désignation, quantité > 0, prix ≥ 0)');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const numero = formData.numero || `DEV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
-      
       const { data: devis, error: devisError } = await supabase.from('devis').insert({
-        numero,
+        numero: formData.numero,
         client_id: formData.client_id,
         date: formData.date,
         date_validite: formData.date_validite || null,
-        total_ht: totalHT,
-        total_ttc: totalHT * 1.18,
-        notes: formData.notes,
+        objet: formData.objet,
+        conditions_paiement: formData.conditions_paiement,
+        total_ht: totalHTApresRemise,
+        total_ttc: totalTTC,
+        notes_client: formData.notes_client,
+        notes_internes: formData.notes_internes,
         statut: 'brouillon',
       }).select().single();
 
@@ -99,8 +197,11 @@ function CreateDevisPageContent() {
         devis_id: devis.id,
         produit_id: ligne.produit_id || null,
         designation: ligne.designation,
+        description: ligne.description || null,
+        unite: ligne.unite || 'pièce',
         quantite: ligne.quantite,
         prix_unitaire: ligne.prix_unitaire,
+        remise: ligne.remise || 0,
       }));
 
       const { error: lignesError } = await supabase.from('lignes_devis').insert(lignesToInsert);
@@ -108,26 +209,33 @@ function CreateDevisPageContent() {
 
       // Générer et télécharger le PDF
       const client = clients.find(c => c.id === formData.client_id);
-      const lignesText = lignes.map(l => `${l.designation} x${l.quantite} : ${(l.quantite * l.prix_unitaire).toLocaleString('fr-FR')} FCFA`).join('\n');
+      const lignesText = lignes.map(l => 
+        `${l.designation}${l.description ? ` - ${l.description}` : ''} x${l.quantite} ${l.unite || 'pièce'} : ${l.prix_unitaire.toLocaleString('fr-FR')} FCFA${l.remise ? ` (-${l.remise}%)` : ''} = ${((l.quantite * l.prix_unitaire) * (1 - (l.remise || 0) / 100)).toLocaleString('fr-FR')} FCFA`
+      ).join('\n');
       
       const doc = await generateGMITPDF({
         type: 'facture',
-        numero,
+        numero: formData.numero,
         titre: 'DEVIS',
         date: new Date(formData.date).toLocaleDateString('fr-FR'),
         client: client?.nom || 'Client',
-        objet: 'Devis client',
+        objet: formData.objet || 'Devis client',
         contenu: lignesText,
-        montant: totalHT * 1.18,
+        montant: totalTTC,
         data: {
           'Date de validité': formData.date_validite ? new Date(formData.date_validite).toLocaleDateString('fr-FR') : 'Non spécifiée',
-          'Total HT': `${totalHT.toLocaleString('fr-FR')} FCFA`,
-          'TTC (18%)': `${(totalHT * 1.18).toLocaleString('fr-FR')} FCFA`,
+          'Conditions de paiement': formData.conditions_paiement,
+          'Sous-total HT': `${totalHT.toLocaleString('fr-FR')} FCFA`,
+          'Remise globale': `${remiseGlobale.toLocaleString('fr-FR')} FCFA`,
+          'Total HT': `${totalHTApresRemise.toLocaleString('fr-FR')} FCFA`,
+          'TVA (18%)': `${tva.toLocaleString('fr-FR')} FCFA`,
+          'Total TTC': `${totalTTC.toLocaleString('fr-FR')} FCFA`,
+          'Montant en lettres': nombreEnLettres(totalTTC),
           'Nombre de lignes': lignes.length.toString(),
         },
       });
       
-      doc.save(`Devis_${numero}.pdf`);
+      doc.save(`Devis_${formData.numero}.pdf`);
 
       await Swal.fire({
         title: 'Succès !',
@@ -184,15 +292,15 @@ function CreateDevisPageContent() {
                       type="text"
                       value={formData.numero}
                       onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
-                      placeholder="Auto-généré si vide"
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl bg-slate-50"
+                      readOnly
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Client *</label>
                     <select
                       value={formData.client_id}
-                      onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                      onChange={(e) => handleClientChange(e.target.value)}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                       required
                     >
@@ -203,13 +311,46 @@ function CreateDevisPageContent() {
                     </select>
                   </div>
                 </div>
+
+                {/* Récap client */}
+                {selectedClient && (
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Informations client</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-slate-500">Adresse</p>
+                        <p className="text-slate-900">{selectedClient.adresse || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Téléphone</p>
+                        <p className="text-slate-900">{selectedClient.telephone || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-slate-500">Email</p>
+                        <p className="text-slate-900">{selectedClient.email || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Objet du devis</label>
+                  <input
+                    type="text"
+                    value={formData.objet}
+                    onChange={(e) => setFormData({ ...formData, objet: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
+                    placeholder="Objet du devis..."
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Date *</label>
                     <input
                       type="date"
                       value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      onChange={(e) => handleDateChange(e.target.value)}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                       required
                     />
@@ -220,6 +361,7 @@ function CreateDevisPageContent() {
                       type="date"
                       value={formData.date_validite}
                       onChange={(e) => setFormData({ ...formData, date_validite: e.target.value })}
+                      min={formData.date}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                     />
                   </div>
@@ -245,9 +387,9 @@ function CreateDevisPageContent() {
                 <div className="space-y-4">
                   {lignes.map((ligne, index) => (
                     <div key={index} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                         <div className="md:col-span-2">
-                          <label className="block text-xs font-semibold text-slate-600 mb-1">Produit / Désignation</label>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Produit / Désignation *</label>
                           <select
                             value={ligne.produit_id || ''}
                             onChange={(e) => {
@@ -271,31 +413,78 @@ function CreateDevisPageContent() {
                             onChange={(e) => updateLigne(index, 'designation', e.target.value)}
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mt-2"
                             placeholder="Désignation"
+                            required
+                          />
+                          <input
+                            type="text"
+                            value={ligne.description || ''}
+                            onChange={(e) => updateLigne(index, 'description', e.target.value)}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mt-2"
+                            placeholder="Description (optionnel)"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-1">Quantité</label>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Unité</label>
+                          <select
+                            value={ligne.unite || 'pièce'}
+                            onChange={(e) => updateLigne(index, 'unite', e.target.value)}
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                          >
+                            <option value="pièce">Pièce</option>
+                            <option value="heure">Heure</option>
+                            <option value="jour">Jour</option>
+                            <option value="forfait">Forfait</option>
+                            <option value="mètre">Mètre</option>
+                            <option value="m2">M²</option>
+                            <option value="m3">M³</option>
+                            <option value="kg">Kg</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Quantité *</label>
                           <input
                             type="number"
                             value={ligne.quantite}
                             onChange={(e) => updateLigne(index, 'quantite', parseInt(e.target.value) || 0)}
+                            min="1"
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                            required
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-slate-600 mb-1">Prix unitaire</label>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Prix unitaire *</label>
                           <input
                             type="number"
                             value={ligne.prix_unitaire}
                             onChange={(e) => updateLigne(index, 'prix_unitaire', parseFloat(e.target.value) || 0)}
+                            min="0"
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-600 mb-1">Remise (%)</label>
+                          <input
+                            type="number"
+                            value={ligne.remise || 0}
+                            onChange={(e) => updateLigne(index, 'remise', parseFloat(e.target.value) || 0)}
+                            min="0"
+                            max="100"
                             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                           />
                         </div>
-                        <div className="flex items-end">
-                          <div className="flex-1 text-right">
-                            <p className="text-sm font-bold text-slate-900">{(ligne.quantite * ligne.prix_unitaire).toLocaleString('fr-FR')} FCFA</p>
-                          </div>
-                          <Button type="button" variant="ghost" size="sm" className="text-red-600 ml-2" onClick={() => removeLigne(index)}>
+                      </div>
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200">
+                        <div className="flex gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => duplicateLigne(index)}>
+                            Dupliquer
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <p className="text-sm font-bold text-slate-900">
+                            {((ligne.quantite * ligne.prix_unitaire) * (1 - ((ligne.remise || 0) / 100))).toLocaleString('fr-FR')} FCFA
+                          </p>
+                          <Button type="button" variant="ghost" size="sm" className="text-red-600" onClick={() => removeLigne(index)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -305,25 +494,79 @@ function CreateDevisPageContent() {
                 </div>
               )}
 
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex justify-between text-xl font-bold text-slate-900">
-                  <span>Total HT</span>
+              <div className="mt-6 pt-6 border-t border-slate-200 space-y-3">
+                <div className="flex justify-between text-slate-600">
+                  <span>Sous-total HT</span>
                   <span>{totalHT.toLocaleString('fr-FR')} FCFA</span>
                 </div>
-                <div className="flex justify-between text-slate-600 mt-2">
-                  <span>TTC (18%)</span>
-                  <span>{(totalHT * 1.18).toLocaleString('fr-FR')} FCFA</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600">Remise globale</span>
+                  <input
+                    type="number"
+                    value={formData.remise_globale}
+                    onChange={(e) => setFormData({ ...formData, remise_globale: parseFloat(e.target.value) || 0 })}
+                    className="w-24 px-2 py-1 border border-slate-200 rounded text-sm"
+                    min="0"
+                  />
+                  <select
+                    value={formData.remise_globale_type}
+                    onChange={(e) => setFormData({ ...formData, remise_globale_type: e.target.value })}
+                    className="px-2 py-1 border border-slate-200 rounded text-sm"
+                  >
+                    <option value="montant">FCFA</option>
+                    <option value="pourcentage">%</option>
+                  </select>
+                </div>
+                <div className="flex justify-between font-semibold text-slate-900">
+                  <span>Total HT</span>
+                  <span>{totalHTApresRemise.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>TVA (18%)</span>
+                  <span>{tva.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="flex justify-between text-2xl font-bold text-slate-900 pt-3 border-t border-slate-200">
+                  <span>Total TTC</span>
+                  <span>{totalTTC.toLocaleString('fr-FR')} FCFA</span>
+                </div>
+                <div className="text-sm text-slate-500 italic">
+                  {nombreEnLettres(totalTTC)}
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Notes</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Conditions de paiement</label>
+              <select
+                value={formData.conditions_paiement}
+                onChange={(e) => setFormData({ ...formData, conditions_paiement: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl mb-4"
+              >
+                <option value="comptant">Comptant</option>
+                <option value="30j">30 jours</option>
+                <option value="45j">45 jours</option>
+                <option value="60j">60 jours</option>
+                <option value="90j">90 jours</option>
+                <option value="acompte50">Acompte 50%</option>
+                <option value="acompte30">Acompte 30%</option>
+              </select>
+
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Notes client (visibles sur PDF)</label>
               <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                value={formData.notes_client}
+                onChange={(e) => setFormData({ ...formData, notes_client: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl mb-4"
+                rows={3}
+                placeholder="Notes visibles par le client..."
+              />
+
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Notes internes (non visibles)</label>
+              <textarea
+                value={formData.notes_internes}
+                onChange={(e) => setFormData({ ...formData, notes_internes: e.target.value })}
                 className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl"
                 rows={3}
+                placeholder="Notes internes..."
               />
             </div>
 

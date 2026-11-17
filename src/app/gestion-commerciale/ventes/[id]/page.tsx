@@ -56,6 +56,7 @@ export default function VenteDetailPage() {
         .select('*, produits(designation, reference, image_url)')
         .eq('vente_id', params.id);
 
+      console.log('Lignes de vente:', lignesData);
       setLignes(lignesData || []);
       setLoading(false);
     }
