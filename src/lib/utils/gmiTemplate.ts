@@ -53,39 +53,83 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   
   let yPos = 75;
   
-  // Pour demande d'agrément : destinataire en haut à droite
+  // Pour demande d'agrément : modèle professionnel
   if (data.type === 'demande_agrement') {
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.text(data.destinataire || 'A.........', 170, yPos);
-    yPos += 15;
-  }
+    // Destinataire en haut à droite
+    if (data.destinataire) {
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(data.destinataire, 195, yPos, { align: 'right' });
+      yPos += 15;
+    }
 
-  // Référence
-  if (data.numero) {
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`Réf.: ${data.numero}`, 15, yPos);
-    yPos += 12;
-  }
+    // Référence
+    if (data.numero) {
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Réf.: ${data.numero}`, 15, yPos);
+      yPos += 12;
+    }
 
-  // Objet
-  if (data.objet) {
+    // Objet
+    if (data.objet) {
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Objet: ${data.objet}`, 15, yPos);
+      yPos += 15;
+    }
+
+    // Civilité formelle
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Objet: ${data.objet}`, 15, yPos);
+    doc.text('Monsieur,', 15, yPos);
     yPos += 15;
-  }
-  
-  // Contenu principal
-  if (data.contenu) {
+
+    // Contenu principal
+    if (data.contenu) {
+      doc.setFontSize(11);
+      doc.setTextColor(50, 50, 50);
+      const contenuLines = doc.splitTextToSize(data.contenu, 170);
+      contenuLines.forEach((line: string) => {
+        doc.text(line, 15, yPos);
+        yPos += 6;
+      });
+    }
+
+    // Formule de politesse
+    yPos += 15;
     doc.setFontSize(11);
-    doc.setTextColor(50, 50, 50);
-    const contenuLines = doc.splitTextToSize(data.contenu, 170);
-    contenuLines.forEach((line: string) => {
-      doc.text(line, 15, yPos);
-      yPos += 6;
-    });
+    doc.setTextColor(0, 0, 0);
+    doc.text('Dans l\'attente de votre réponse favorable, nous vous prions d\'agréer, Monsieur, l\'expression de nos salutations distinguées.', 15, yPos);
+    yPos += 20;
+  } else {
+    // Autres types de documents
+    // Référence
+    if (data.numero) {
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Réf.: ${data.numero}`, 15, yPos);
+      yPos += 12;
+    }
+
+    // Objet
+    if (data.objet) {
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Objet: ${data.objet}`, 15, yPos);
+      yPos += 15;
+    }
+
+    // Contenu principal
+    if (data.contenu) {
+      doc.setFontSize(11);
+      doc.setTextColor(50, 50, 50);
+      const contenuLines = doc.splitTextToSize(data.contenu, 170);
+      contenuLines.forEach((line: string) => {
+        doc.text(line, 15, yPos);
+        yPos += 6;
+      });
+    }
   }
   
   // Données spécifiques (pour rapports/factures)
