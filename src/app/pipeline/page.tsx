@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Plus, TrendingUp, DollarSign, ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 import { Opportunity, OpportunityStage } from '@/types';
 import Link from 'next/link';
+import { opportunitiesService } from '@/lib/services/opportunities';
 
 // Données initialisées à vide
 const mockOpportunities: Opportunity[] = [];
@@ -30,9 +31,24 @@ const stageLabels: Record<OpportunityStage, string> = {
 const stageOrder: OpportunityStage[] = ['nouveau', 'qualifié', 'proposition', 'négociation', 'gagné', 'perdu'];
 
 export default function PipelinePage() {
-  const [opportunities] = useState<Opportunity[]>(mockOpportunities);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStage, setFilterStage] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchOpportunities() {
+      try {
+        const data = await opportunitiesService.getAll();
+        setOpportunities(data);
+      } catch (error) {
+        console.error('Erreur chargement opportunités:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchOpportunities();
+  }, []);
 
   const filteredOpportunities = opportunities.filter((opp) => {
     const matchesSearch =
@@ -62,7 +78,9 @@ export default function PipelinePage() {
   };
 
   const opportunitiesByStage = stageOrder.reduce((acc, stage) => {
-    acc[stage] = filteredOpportunities.filter((o) => o.stage === stage);
+    // Si un filtre est actif, on utilise les opportunités filtrées, sinon toutes
+    const sourceOpportunities = filterStage === 'all' ? opportunities : filteredOpportunities;
+    acc[stage] = sourceOpportunities.filter((o) => o.stage === stage);
     return acc;
   }, {} as Record<OpportunityStage, Opportunity[]>);
 
@@ -156,27 +174,71 @@ export default function PipelinePage() {
           </div>
         </div>
 
-        {/* Pipeline Kanban */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {stageOrder.map((stage) => (
+        {/* Filtre actif */}
+        {filterStage !== 'all' && (
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <button
-                key={stage}
-                onClick={() => setFilterStage(filterStage === stage ? 'all' : stage)}
-                className={`text-left bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors ${filterStage === stage ? 'ring-2 ring-blue-500' : ''}`}
+                onClick={() => setFilterStage('all')}
+                className="text-sm text-blue-600 hover:text-blue-800"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium text-slate-900 text-sm">{stageLabels[stage]}</h3>
-                  <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${stageColors[stage]}`}>
-                    {opportunitiesByStage[stage]?.length || 0}
-                  </span>
-                </div>
-                <div className="mb-3">
-                  <p className="text-xs text-slate-600">{formatAmount(stageValue(stage))}</p>
-                </div>
-                <div className="space-y-3">
-                  {opportunitiesByStage[stage]?.map((opp) => (
-                    <div key={opp.id} className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                ← Retour à tous les stages
+              </button>
+              <span className="text-sm text-slate-600">
+                | Filtré par : <span className="font-medium">{stageLabels[filterStage as OpportunityStage]}</span>
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Pipeline Kanban */}
+        {filterStage === 'all' ? (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+              {stageOrder.map((stage) => (
+                <button
+                  key={stage}
+                  onClick={() => setFilterStage(stage)}
+                  className={`text-left bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors cursor-pointer`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-slate-900 text-sm">{stageLabels[stage]}</h3>
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${stageColors[stage]}`}>
+                      {opportunitiesByStage[stage]?.length || 0}
+                    </span>
+                  </div>
+                  <div className="mb-3">
+                    <p className="text-xs text-slate-600">{formatAmount(stageValue(stage))}</p>
+                  </div>
+                  <div className="space-y-3">
+                    {opportunitiesByStage[stage]?.length > 0 ? (
+                      opportunitiesByStage[stage]?.slice(0, 3).map((opp) => (
+                        <Link key={opp.id} href={`/opportunites/${opp.id}`}>
+                          <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300">
+                            <p className="font-medium text-slate-900 text-xs line-clamp-1">{opp.name}</p>
+                            <p className="text-xs text-slate-600 mt-1">{opp.client_nom}</p>
+                            <p className="text-xs font-medium text-slate-900 mt-1">{formatAmount(opp.amount)}</p>
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-xs text-slate-500 italic text-center py-4">Aucune opportunité</p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <h2 className="text-lg font-medium text-slate-900 mb-4">
+              Opportunités : {stageLabels[filterStage as OpportunityStage]}
+            </h2>
+            {filteredOpportunities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredOpportunities.map((opp) => (
+                  <Link key={opp.id} href={`/opportunites/${opp.id}`}>
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300">
                       <div className="flex items-start justify-between mb-2">
                         <p className="font-medium text-slate-900 text-sm line-clamp-2">{opp.name}</p>
                         {opp.stage === 'gagné' && (
@@ -186,7 +248,7 @@ export default function PipelinePage() {
                           <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 ml-2" />
                         )}
                       </div>
-                      <p className="text-xs text-slate-600 mb-2">{opp.client_nom}</p>
+                      <p className="text-xs text-slate-600 mb-2 font-medium">{opp.client_nom || 'Client non renseigné'}</p>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-slate-900">{formatAmount(opp.amount)}</span>
                         <span className="text-xs text-slate-600">{opp.probability}%</span>
@@ -201,12 +263,17 @@ export default function PipelinePage() {
                         <p className="text-xs text-slate-500 mt-2">{opp.assigned_to_nom}</p>
                       )}
                     </div>
-                  ))}
-                </div>
-              </button>
-            ))}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-slate-600 text-lg">Aucune opportunité trouvée</p>
+                <p className="text-slate-500 text-sm mt-2">Cliquez sur "Retour à tous les stages" pour voir toutes les opportunités</p>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
