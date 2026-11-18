@@ -9,11 +9,13 @@ import { tasksService } from '@/lib/services';
 import { collaborateursService } from '@/lib/services';
 import { errorMessage } from '@/lib/utils/errorHandler';
 import { useData } from '@/hooks/useData';
+import { useAuth } from '@/hooks/useAuth';
 import type { TaskPriority, TaskStatus } from '@/types';
 
 export default function EditTaskPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -173,21 +175,24 @@ export default function EditTaskPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Assigné à</label>
-                    <select
-                      value={formData.assigned_to}
-                      onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
-                    >
-                      <option value="">Non assigné</option>
-                      {collaborateurs?.map((collab) => (
-                        <option key={collab.id} value={collab.id}>
-                          {collab.prenom} {collab.nom}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Champ Assigné à uniquement pour le DG */}
+                  {user?.role === 'direction_generale' && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Assigné à</label>
+                      <select
+                        value={formData.assigned_to}
+                        onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                        className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
+                      >
+                        <option value="">Non assigné</option>
+                        {collaborateurs?.map((collab) => (
+                          <option key={collab.id} value={collab.id}>
+                            {collab.prenom} {collab.nom}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

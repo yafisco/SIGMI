@@ -146,24 +146,27 @@ export default function CreateTaskPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                    <User className="w-4 h-4 text-[#1D4ED8]" />
-                    Assigné à
-                  </label>
-                  <select
-                    value={formData.assigned_to}
-                    onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
-                  >
-                    <option value="">Non assigné</option>
-                    {collaborateurs.map((collab) => (
-                      <option key={collab.id} value={collab.id}>
-                        {collab.prenom} {collab.nom} ({collab.poste || 'Sans poste'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* Champ Assigné à uniquement pour le DG */}
+                {user?.role === 'direction_generale' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <User className="w-4 h-4 text-[#1D4ED8]" />
+                      Assigné à
+                    </label>
+                    <select
+                      value={formData.assigned_to}
+                      onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                    >
+                      <option value="">Non assigné</option>
+                      {collaborateurs.map((collab) => (
+                        <option key={collab.id} value={collab.id}>
+                          {collab.prenom} {collab.nom} ({collab.poste || 'Sans poste'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {error && (
