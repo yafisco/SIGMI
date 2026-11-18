@@ -121,7 +121,7 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
   yPos += 40;
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
-  doc.text(`Fait à Thiès le ${new Date().toLocaleDateString('fr-FR')}`, 15, yPos);
+  doc.text(`Fait à Thiès le ${new Date().toLocaleDateString('fr-FR')}`, 195, yPos, { align: 'right' });
 
   // Signature alignée à droite avec espace pour apposer
   yPos += 25;
