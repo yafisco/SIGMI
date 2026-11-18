@@ -7,7 +7,7 @@ import { ArrowLeft, FileText, Plus, Minus, Save, Trash2, Download } from 'lucide
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { errorMessage } from '@/lib/utils/errorHandler';
-import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import { generateDevisPDF } from '@/lib/utils/devisTemplate';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 
@@ -207,32 +207,41 @@ function CreateDevisPageContent() {
       const { error: lignesError } = await supabase.from('lignes_devis').insert(lignesToInsert);
       if (lignesError) throw lignesError;
 
-      // Générer et télécharger le PDF
+      // Générer et télécharger le PDF avec le template professionnel
       const client = clients.find(c => c.id === formData.client_id);
-      const lignesText = lignes.map(l => 
-        `${l.designation}${l.description ? ` - ${l.description}` : ''} x${l.quantite} ${l.unite || 'pièce'} : ${l.prix_unitaire.toLocaleString('fr-FR')} FCFA${l.remise ? ` (-${l.remise}%)` : ''} = ${((l.quantite * l.prix_unitaire) * (1 - (l.remise || 0) / 100)).toLocaleString('fr-FR')} FCFA`
-      ).join('\n');
+      const lignesForPDF = lignes.map((l, index) => ({
+        n: index + 1,
+        designation: l.designation,
+        description: l.description || '',
+        qte: l.quantite,
+        unite: l.unite || 'pièce',
+        pu_ht: l.prix_unitaire,
+        remise: l.remise || 0,
+        total_ligne: (l.quantite * l.prix_unitaire) * (1 - ((l.remise || 0) / 100)),
+      }));
       
-      const doc = await generateGMITPDF({
-        type: 'facture',
+      const doc = await generateDevisPDF({
         numero: formData.numero,
-        titre: 'DEVIS',
         date: new Date(formData.date).toLocaleDateString('fr-FR'),
-        client: client?.nom || 'Client',
+        date_validite: formData.date_validite ? new Date(formData.date_validite).toLocaleDateString('fr-FR') : 'Non spécifiée',
         objet: formData.objet || 'Devis client',
-        contenu: lignesText,
-        montant: totalTTC,
-        data: {
-          'Date de validité': formData.date_validite ? new Date(formData.date_validite).toLocaleDateString('fr-FR') : 'Non spécifiée',
-          'Conditions de paiement': formData.conditions_paiement,
-          'Sous-total HT': `${totalHT.toLocaleString('fr-FR')} FCFA`,
-          'Remise globale': `${remiseGlobale.toLocaleString('fr-FR')} FCFA`,
-          'Total HT': `${totalHTApresRemise.toLocaleString('fr-FR')} FCFA`,
-          'TVA (18%)': `${tva.toLocaleString('fr-FR')} FCFA`,
-          'Total TTC': `${totalTTC.toLocaleString('fr-FR')} FCFA`,
-          'Montant en lettres': nombreEnLettres(totalTTC),
-          'Nombre de lignes': lignes.length.toString(),
-        },
+        client_nom: client?.nom || 'Client',
+        client_adresse: client?.adresse || '-',
+        client_tel: client?.telephone || '-',
+        client_email: client?.email || '-',
+        commercial_nom: 'Commercial',
+        lignes: lignesForPDF,
+        sous_total_ht: totalHT,
+        montant_remise: remiseGlobale,
+        total_ht: totalHTApresRemise,
+        taux_tva: 18,
+        montant_tva: tva,
+        total_ttc: totalTTC,
+        total_ttc_en_lettres: nombreEnLettres(totalTTC),
+        conditions_paiement: formData.conditions_paiement,
+        delai_livraison: 'À confirmer',
+        garantie: 'Selon conditions générales',
+        notes_client: formData.notes_client || '',
       });
       
       doc.save(`Devis_${formData.numero}.pdf`);

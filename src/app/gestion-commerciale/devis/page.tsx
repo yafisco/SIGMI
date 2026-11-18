@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Plus, Search, Filter, Edit, ArrowLeft, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Edit, ArrowLeft, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { Devis } from '@/types';
+import Swal from 'sweetalert2';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function DevisPage() {
   const [devis, setDevis] = useState<Devis[]>([]);
@@ -38,6 +41,52 @@ export default function DevisPage() {
         return { color: 'bg-blue-100 text-blue-700', icon: Clock };
       default:
         return { color: 'bg-gray-100 text-gray-700', icon: FileText };
+    }
+  };
+
+  const handleDelete = async (id: string, numero: string) => {
+    const result = await Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: `Vous êtes sur le point de supprimer le devis "${numero}". Cette action est irréversible !`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: '#64748B',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler',
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        // Supprimer d'abord les lignes de devis
+        const { error: lignesError } = await supabase.from('lignes_devis').delete().eq('devis_id', id);
+        if (lignesError) throw lignesError;
+
+        // Supprimer le devis
+        const { error: devisError } = await supabase.from('devis').delete().eq('id', id);
+        if (devisError) throw devisError;
+
+        // Rafraîchir la liste
+        const { data } = await supabase.from('devis').select('*, clients(nom)').order('date', { ascending: false });
+        setDevis(data || []);
+
+        await Swal.fire({
+          title: 'Supprimé !',
+          text: 'Le devis a été supprimé avec succès.',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (err) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: errorMessage(err, 'Erreur lors de la suppression du devis'),
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
     }
   };
 
@@ -155,6 +204,14 @@ export default function DevisPage() {
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDelete(dev.id, dev.numero)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </td>
                       </motion.tr>
