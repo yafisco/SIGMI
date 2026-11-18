@@ -96,6 +96,11 @@ export default function TachesPage() {
     }
   };
 
+  const isOverdue = (task: Task) => {
+    if (!task.due_date || task.status === 'done') return false;
+    return new Date(task.due_date) < new Date();
+  };
+
   const filteredTasks = localTasks.filter((task) => {
     const matchesSearch =
       (task.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -126,11 +131,6 @@ export default function TachesPage() {
       if (!t.due_date || t.status === 'done') return false;
       return new Date(t.due_date) < new Date();
     }).length,
-  };
-
-  const isOverdue = (task: Task) => {
-    if (!task.due_date || task.status === 'done') return false;
-    return new Date(task.due_date) < new Date();
   };
 
   if (loading) {
