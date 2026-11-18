@@ -252,7 +252,7 @@ function OpportunitesPageContent() {
                         >
                           <p className="font-medium text-slate-900 text-sm line-clamp-1">{opp.name || '-'}</p>
                           <p className="text-xs text-slate-600 mt-1">{formatAmount(opp.amount || 0)}</p>
-                          <p className="text-xs text-slate-500 mt-1">{opp.client_nom}</p>
+                          <p className="text-xs text-slate-500 mt-1">{opp.client_nom || opp.structure_concernee || '-'}</p>
                         </motion.div>
                       ))}
                     </div>
@@ -290,7 +290,7 @@ function OpportunitesPageContent() {
                       <h3 className="text-lg font-bold text-slate-900 mb-1">{opp.name || '-'}</h3>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Building2 className="w-4 h-4" />
-                        {opp.client_nom || '-'}
+                        {opp.client_nom || opp.structure_concernee || '-'}
                       </div>
                     </div>
                     <motion.button

@@ -217,7 +217,7 @@ export default function PipelinePage() {
                         <Link key={opp.id} href={`/opportunites/${opp.id}`}>
                           <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300">
                             <p className="font-medium text-slate-900 text-xs line-clamp-1">{opp.name}</p>
-                            <p className="text-xs text-slate-600 mt-1">{opp.client_nom || 'Client non renseigné'}</p>
+                            <p className="text-xs text-slate-600 mt-1">{opp.client_nom || opp.structure_concernee || 'Client non renseigné'}</p>
                             <p className="text-xs font-medium text-slate-900 mt-1">{formatAmount(opp.amount)}</p>
                           </div>
                         </Link>
@@ -249,7 +249,7 @@ export default function PipelinePage() {
                           <XCircle className="w-4 h-4 text-red-600 flex-shrink-0 ml-2" />
                         )}
                       </div>
-                      <p className="text-xs text-slate-600 mb-2 font-medium">{opp.client_nom || 'Client non renseigné'}</p>
+                      <p className="text-xs text-slate-600 mb-2 font-medium">{opp.client_nom || opp.structure_concernee || 'Client non renseigné'}</p>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-slate-900">{formatAmount(opp.amount)}</span>
                         <span className="text-xs text-slate-600">{opp.probability}%</span>
