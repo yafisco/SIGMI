@@ -21,9 +21,6 @@ interface DemandeAgrement {
   decision?: string;
   reference?: string;
   destinataire?: string;
-  clients?: {
-    nom: string;
-  };
 }
 
 export default function DemandesAgrementPage() {
@@ -33,7 +30,7 @@ export default function DemandesAgrementPage() {
 
   useEffect(() => {
     async function fetchDemandes() {
-      const { data } = await supabase.from('demandes_agrement').select('*, clients!inner(*)').order('created_at', { ascending: false });
+      const { data } = await supabase.from('demandes_agrement').select('*').order('created_at', { ascending: false });
       setDemandes(data || []);
       setLoading(false);
     }
@@ -42,7 +39,7 @@ export default function DemandesAgrementPage() {
 
   const filteredDemandes = demandes.filter(d =>
     d.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (d.clients?.nom && d.clients.nom.toLowerCase().includes(searchTerm.toLowerCase()))
+    (d.client_id && d.client_id.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getStatutBadge = (statut: string) => {
@@ -223,7 +220,7 @@ export default function DemandesAgrementPage() {
                         className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                       >
                         <td className="px-6 py-4 text-sm text-slate-900 font-medium">{demande.libelle}</td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{demande.clients?.nom || '-'}</td>
+                        <td className="px-6 py-4 text-sm text-slate-900">{demande.client_id || '-'}</td>
                         <td className="px-6 py-4 text-sm text-slate-600">{demande.pole}</td>
                         <td className="px-6 py-4 text-sm text-slate-600">{new Date(demande.created_at).toLocaleDateString('fr-FR')}</td>
                         <td className="px-6 py-4 text-center">
