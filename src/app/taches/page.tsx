@@ -102,7 +102,15 @@ export default function TachesPage() {
       (task.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (task.assigned_to_nom || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
+    // Filtre par statut
+    let matchesStatus = true;
+    if (filterStatus === 'overdue') {
+      // Pour "En retard", on filtre les tâches en retard
+      matchesStatus = isOverdue(task);
+    } else if (filterStatus !== 'all') {
+      matchesStatus = task.status === filterStatus;
+    }
+
     const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
     const matchesPole = filterPole === 'all' || (task.pole && task.pole === filterPole);
 
