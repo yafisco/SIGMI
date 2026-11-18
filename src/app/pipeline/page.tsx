@@ -32,13 +32,17 @@ const stageOrder: OpportunityStage[] = ['nouveau', 'qualifié', 'proposition', '
 export default function PipelinePage() {
   const [opportunities] = useState<Opportunity[]>(mockOpportunities);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStage, setFilterStage] = useState<string>('all');
 
   const filteredOpportunities = opportunities.filter((opp) => {
-    return (
+    const matchesSearch =
       opp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       opp.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      opp.client_nom?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      opp.client_nom?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStage = filterStage === 'all' || opp.stage === filterStage;
+    
+    return matchesSearch && matchesStage;
   });
 
   const stats = {
@@ -156,7 +160,11 @@ export default function PipelinePage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {stageOrder.map((stage) => (
-              <div key={stage} className="bg-slate-50 rounded-lg p-4">
+              <button
+                key={stage}
+                onClick={() => setFilterStage(filterStage === stage ? 'all' : stage)}
+                className={`text-left bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors ${filterStage === stage ? 'ring-2 ring-blue-500' : ''}`}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-medium text-slate-900 text-sm">{stageLabels[stage]}</h3>
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${stageColors[stage]}`}>
@@ -195,7 +203,7 @@ export default function PipelinePage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
