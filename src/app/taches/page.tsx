@@ -165,46 +165,71 @@ export default function TachesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <StatCard
-            title="Total"
-            value={stats.total}
-            icon={CheckCircle2}
-            color="text-blue-600"
-            bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
-            delay={0}
-          />
-          <StatCard
-            title="À faire"
-            value={stats.todo}
-            icon={Target}
-            color="text-slate-600"
-            bgColor="bg-gradient-to-br from-slate-100 to-slate-200"
-            delay={0.1}
-          />
-          <StatCard
-            title="En cours"
-            value={stats.in_progress}
-            icon={Zap}
-            color="text-amber-600"
-            bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
-            delay={0.2}
-          />
-          <StatCard
-            title="Terminées"
-            value={stats.done}
-            icon={CheckCircle}
-            color="text-green-600"
-            bgColor="bg-gradient-to-br from-green-100 to-green-200"
-            delay={0.3}
-          />
-          <StatCard
-            title="En retard"
-            value={stats.overdue}
-            icon={AlertCircle}
-            color="text-red-600"
-            bgColor="bg-gradient-to-br from-red-100 to-red-200"
-            delay={0.4}
-          />
+          <button
+            onClick={() => setFilterStatus('all')}
+            className={`cursor-pointer transition-transform hover:scale-105 ${filterStatus === 'all' ? 'ring-2 ring-blue-500 rounded-2xl' : ''}`}
+          >
+            <StatCard
+              title="Total"
+              value={stats.total}
+              icon={CheckCircle2}
+              color="text-blue-600"
+              bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
+              delay={0}
+            />
+          </button>
+          <button
+            onClick={() => setFilterStatus('todo')}
+            className={`cursor-pointer transition-transform hover:scale-105 ${filterStatus === 'todo' ? 'ring-2 ring-slate-500 rounded-2xl' : ''}`}
+          >
+            <StatCard
+              title="À faire"
+              value={stats.todo}
+              icon={Target}
+              color="text-slate-600"
+              bgColor="bg-gradient-to-br from-slate-100 to-slate-200"
+              delay={0.1}
+            />
+          </button>
+          <button
+            onClick={() => setFilterStatus('in_progress')}
+            className={`cursor-pointer transition-transform hover:scale-105 ${filterStatus === 'in_progress' ? 'ring-2 ring-amber-500 rounded-2xl' : ''}`}
+          >
+            <StatCard
+              title="En cours"
+              value={stats.in_progress}
+              icon={Zap}
+              color="text-amber-600"
+              bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
+              delay={0.2}
+            />
+          </button>
+          <button
+            onClick={() => setFilterStatus('done')}
+            className={`cursor-pointer transition-transform hover:scale-105 ${filterStatus === 'done' ? 'ring-2 ring-green-500 rounded-2xl' : ''}`}
+          >
+            <StatCard
+              title="Terminées"
+              value={stats.done}
+              icon={CheckCircle}
+              color="text-green-600"
+              bgColor="bg-gradient-to-br from-green-100 to-green-200"
+              delay={0.3}
+            />
+          </button>
+          <button
+            onClick={() => setFilterStatus('overdue')}
+            className={`cursor-pointer transition-transform hover:scale-105 ${filterStatus === 'overdue' ? 'ring-2 ring-red-500 rounded-2xl' : ''}`}
+          >
+            <StatCard
+              title="En retard"
+              value={stats.overdue}
+              icon={AlertCircle}
+              color="text-red-600"
+              bgColor="bg-gradient-to-br from-red-100 to-red-200"
+              delay={0.4}
+            />
+          </button>
         </div>
 
         {/* Filtres et recherche */}
