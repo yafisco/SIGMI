@@ -198,7 +198,7 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
             spacing: { before: 400, after: 200 },
           }),
 
-          // Signature en haut à droite
+          // Signature avec espace dédié
           new Paragraph({
             children: [
               new TextRun({
@@ -208,7 +208,7 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
               }),
             ],
             alignment: AlignmentType.RIGHT,
-            spacing: { after: 200 },
+            spacing: { before: 800, after: 200 },
           }),
           new Paragraph({
             children: [
@@ -217,14 +217,33 @@ export async function generateWordDocument(data: WordTemplateData): Promise<Blob
                 font: 'Eras Light ITC',
                 size: 22,
                 bold: true,
-                underline: {},
               }),
             ],
             alignment: AlignmentType.RIGHT,
-            spacing: { before: 400 },
+            spacing: { after: 400 },
+          }),
+          // Ligne pour signature
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '_____________________',
+                font: 'Eras Light ITC',
+                size: 22,
+              }),
+            ],
+            alignment: AlignmentType.RIGHT,
+            spacing: { after: 1200 },
           }),
 
-          // Footer en bas à gauche
+          // Footer avec plus d'espacement avant pour éviter le chevauchement
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: '____________________________________________________________________________',
+              }),
+            ],
+            spacing: { before: 400, after: 400 },
+          }),
           new Paragraph({
             children: [
               new TextRun({
