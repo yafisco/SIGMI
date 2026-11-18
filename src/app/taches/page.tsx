@@ -110,9 +110,10 @@ export default function TachesPage() {
     // Filtre par statut
     let matchesStatus = true;
     if (filterStatus === 'overdue') {
-      // Pour "En retard", on filtre les tâches en retard
+      // Pour "En retard", on filtre uniquement les tâches en retard
       matchesStatus = isOverdue(task);
     } else if (filterStatus !== 'all') {
+      // Pour les autres statuts, on filtre exactement par statut
       matchesStatus = task.status === filterStatus;
     }
 
