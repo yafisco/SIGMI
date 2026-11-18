@@ -95,7 +95,7 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
     doc.text('Dans l\'attente de votre réponse favorable, nous vous prions d\'agréer, Monsieur, l\'expression de nos salutations distinguées.', 15, yPos);
-    yPos += 20;
+    yPos += 25;
   } else {
     // Autres types de documents
     // Référence
