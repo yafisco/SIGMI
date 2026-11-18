@@ -104,7 +104,6 @@ export default function DashboardPage() {
           if (userData && userData.prenom && userData.nom) {
             setUserName(`${userData.prenom} ${userData.nom}`);
           } else if (user.email) {
-            // Fallback: utiliser l'email si le nom n'est pas disponible
             const emailName = user.email.split('@')[0];
             setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
           } else {
@@ -112,39 +111,64 @@ export default function DashboardPage() {
           }
         }
 
-        const [
-          { count: oppCount },
-          { count: projectsCount },
-          { count: collabsCount },
-          { count: tasksCount },
-          { count: clientsCount },
-          { count: docsCount },
-        ] = await Promise.all([
-          supabase.from('opportunities').select('*', { count: 'exact', head: true }),
-          supabase.from('projets').select('*', { count: 'exact', head: true }),
-          supabase.from('collaborateurs').select('*', { count: 'exact', head: true }),
-          supabase.from('tasks').select('*', { count: 'exact', head: true }),
-          supabase.from('clients').select('*', { count: 'exact', head: true }).eq('statut', 'client'),
-          supabase.from('documents').select('*', { count: 'exact', head: true }),
-        ]);
+        const dateRange = getDateRange(timeFilter);
 
-        const { data: opps } = await supabase.from('opportunities').select('amount, stage');
+        let oppQuery = supabase.from('opportunities').select('*', { count: 'exact', head: true });
+        if (dateRange.start) {
+          oppQuery = oppQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { count: oppCount } = await oppQuery;
+
+        let projectsQuery = supabase.from('projets').select('*', { count: 'exact', head: true });
+        if (dateRange.start) {
+          projectsQuery = projectsQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { count: projectsCount } = await projectsQuery;
+
+        const { count: collabsCount } = await supabase.from('collaborateurs').select('*', { count: 'exact', head: true });
+
+        let tasksQuery = supabase.from('tasks').select('*', { count: 'exact', head: true });
+        if (dateRange.start) {
+          tasksQuery = tasksQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { count: tasksCount } = await tasksQuery;
+
+        let clientsQuery = supabase.from('clients').select('*', { count: 'exact', head: true }).eq('statut', 'client');
+        if (dateRange.start) {
+          clientsQuery = clientsQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { count: clientsCount } = await clientsQuery;
+
+        let docsQuery = supabase.from('documents').select('*', { count: 'exact', head: true });
+        if (dateRange.start) {
+          docsQuery = docsQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { count: docsCount } = await docsQuery;
+
+        let oppsQuery = supabase.from('opportunities').select('amount, stage, created_at');
+        if (dateRange.start) {
+          oppsQuery = oppsQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { data: opps } = await oppsQuery;
         const pipelineValue = opps?.reduce((sum, opp) => sum + (opp.amount || 0), 0) || 0;
 
-        const { data: urgentTasksData } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('priority', 'urgent')
-          .eq('status', 'todo')
-          .limit(5);
+        let urgentTasksQuery = supabase.from('tasks').select('*').eq('priority', 'urgent').eq('status', 'todo').limit(5);
+        if (dateRange.start) {
+          urgentTasksQuery = urgentTasksQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { data: urgentTasksData } = await urgentTasksQuery;
 
-        const { data: interactionsData } = await supabase
-          .from('interactions')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(5);
+        let interactionsQuery = supabase.from('interactions').select('*').order('created_at', { ascending: false }).limit(5);
+        if (dateRange.start) {
+          interactionsQuery = interactionsQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { data: interactionsData } = await interactionsQuery;
 
-        const { data: oppsByStage } = await supabase.from('opportunities').select('stage, amount');
+        let oppsByStageQuery = supabase.from('opportunities').select('stage, amount, created_at');
+        if (dateRange.start) {
+          oppsByStageQuery = oppsByStageQuery.gte('created_at', dateRange.start.toISOString()).lte('created_at', dateRange.end.toISOString());
+        }
+        const { data: oppsByStage } = await oppsByStageQuery;
         const pipelineStages = ['nouveau', 'qualifié', 'proposition', 'négociation', 'gagné'];
         const pipelineCounts = pipelineStages.map(stage => ({
           stage: stage.charAt(0).toUpperCase() + stage.slice(1),
@@ -186,7 +210,7 @@ export default function DashboardPage() {
     return () => {
       supabase.removeChannel(clientsChannel);
     };
-  }, []);
+  }, [timeFilter]);
 
   const formatAmount = (value: number) => {
     if (!value || value === 0) return '0 FCFA';
@@ -196,10 +220,26 @@ export default function DashboardPage() {
     return `${(value / 1000).toFixed(0)}K FCFA`;
   };
 
-  const filterStatsByTime = (baseStats: any) => {
-    // Pour l'instant, retourne les stats complètes
-    // TODO: Implémenter le filtrage temporel réel avec les dates
-    return baseStats;
+  const getDateRange = (filter: 'all' | 'today' | 'week' | 'month' | 'year') => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (filter) {
+      case 'today':
+        return { start: startOfDay, end: now };
+      case 'week':
+        const startOfWeek = new Date(startOfDay);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        return { start: startOfWeek, end: now };
+      case 'month':
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { start: startOfMonth, end: now };
+      case 'year':
+        const startOfYear = new Date(now.getFullYear(), 0, 1);
+        return { start: startOfYear, end: now };
+      default:
+        return { start: null, end: null };
+    }
   };
 
   // Dashboard spécifique par rôle
