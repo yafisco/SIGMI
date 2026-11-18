@@ -144,10 +144,10 @@ export default function AppSidebar() {
       {/* User info */}
       <div className="px-5 py-3 border-b border-white/10">
         <p className="text-sm font-medium text-white truncate">
-          {user.prenom} {user.nom}
+          {user.prenom?.charAt(0).toUpperCase() + user.prenom?.slice(1)} {user.nom?.charAt(0).toUpperCase() + user.nom?.slice(1)}
         </p>
         <p className="text-xs text-[#D4AF37]/80 capitalize">
-          {user.role.replace(/_/g, ' ')}
+          {user.role === 'commercial' ? 'Assistante Commerciale et Marketing' : user.role.replace(/_/g, ' ')}
         </p>
       </div>
 

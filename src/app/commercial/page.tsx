@@ -131,7 +131,7 @@ export default function CommercialPage() {
             Bonjour, {userName || 'Assistante Commerciale et Marketing'} 👋
           </h1>
           <p className="text-white/80 text-lg md:text-xl">
-            Espace Commercial et Marketing - Prêt à développer les affaires de GROUP MI ?
+            Espace Assistante Commerciale et Marketing - Prêt à développer les affaires de GROUP MI ?
           </p>
         </div>
       </div>

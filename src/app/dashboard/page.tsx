@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'all' | 'today' | 'week' | 'month' | 'year'>('all');
 
-  // Charger le prénom de l'utilisateur
+  // Charger le nom complet de l'utilisateur avec première lettre en majuscule
   useEffect(() => {
     async function fetchUserName() {
       if (user) {
@@ -39,15 +39,21 @@ export default function DashboardPage() {
           .eq('id', user.id)
           .maybeSingle();
         if (data) {
-          if (data.prenom) {
-            setUserName(data.prenom);
+          const formatName = (str: string) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+          
+          if (data.prenom && data.nom) {
+            setUserName(`${formatName(data.prenom)} ${formatName(data.nom)}`);
+          } else if (data.prenom) {
+            setUserName(formatName(data.prenom));
+          } else if (data.nom) {
+            setUserName(formatName(data.nom));
           } else if (data.email) {
             const emailName = data.email.split('@')[0];
-            const formattedName = emailName.charAt(0).toUpperCase() + emailName.slice(1);
-            setUserName(formattedName);
-          } else if (data.nom) {
-            setUserName(data.nom);
+            setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
           }
+        } else if (user.email) {
+          const emailName = user.email.split('@')[0];
+          setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
         }
         setIsLoading(false);
       }
