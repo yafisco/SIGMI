@@ -79,12 +79,6 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
       yPos += 15;
     }
 
-    // Civilité formelle
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.text('Monsieur,', 15, yPos);
-    yPos += 15;
-
     // Contenu principal
     if (data.contenu) {
       doc.setFontSize(11);
