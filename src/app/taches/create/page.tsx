@@ -19,6 +19,8 @@ export default function CreateTaskPage() {
     title: '',
     description: '',
     due_date: '',
+    start_time: '',
+    end_time: '',
     priority: 'medium' as TaskPriority,
     assigned_to: '',
   });
@@ -39,6 +41,8 @@ export default function CreateTaskPage() {
         title: formData.title,
         description: formData.description,
         due_date: formData.due_date || undefined,
+        start_time: formData.start_time || undefined,
+        end_time: formData.end_time || undefined,
         priority: formData.priority,
         status: 'todo',
         assigned_to: formData.assigned_to || undefined,
@@ -130,7 +134,7 @@ export default function CreateTaskPage() {
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <Flag className="w-4 h-4 text-[#1D4ED8]" />
+                      <Clock className="w-4 h-4 text-[#1D4ED8]" />
                       Priorité
                     </label>
                     <select
@@ -143,6 +147,34 @@ export default function CreateTaskPage() {
                       <option value="high">Haute</option>
                       <option value="urgent">Critique</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#1D4ED8]" />
+                      Heure de début
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.start_time}
+                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#1D4ED8]" />
+                      Heure de fin
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.end_time}
+                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white"
+                    />
                   </div>
                 </div>
 

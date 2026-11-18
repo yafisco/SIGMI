@@ -20,6 +20,8 @@ export default function EditTaskPage() {
     title: '',
     description: '',
     due_date: '',
+    start_time: '',
+    end_time: '',
     priority: 'medium' as TaskPriority,
     assigned_to: '',
     status: 'todo' as TaskStatus,
@@ -37,6 +39,8 @@ export default function EditTaskPage() {
           title: data.title,
           description: data.description || '',
           due_date: data.due_date || '',
+          start_time: data.start_time || '',
+          end_time: data.end_time || '',
           priority: data.priority,
           assigned_to: data.assigned_to || '',
           status: data.status,
@@ -58,6 +62,8 @@ export default function EditTaskPage() {
         title: formData.title,
         description: formData.description,
         due_date: formData.due_date || undefined,
+        start_time: formData.start_time || undefined,
+        end_time: formData.end_time || undefined,
         priority: formData.priority,
         status: formData.status,
         assigned_to: formData.assigned_to || undefined,
@@ -171,6 +177,28 @@ export default function EditTaskPage() {
                       type="date"
                       value={formData.due_date}
                       onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Heure de début</label>
+                    <input
+                      type="time"
+                      value={formData.start_time}
+                      onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Heure de fin</label>
+                    <input
+                      type="time"
+                      value={formData.end_time}
+                      onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB]"
                     />
                   </div>
