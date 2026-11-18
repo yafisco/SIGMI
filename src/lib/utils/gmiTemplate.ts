@@ -117,40 +117,47 @@ export async function generateGMITPDF(data: GMITemplateData): Promise<jsPDF> {
     yPos += 15;
   }
   
-  // Footer : Lieu, date et signature
-  yPos += 20;
+  // Footer : Lieu, date et signature avec plus d'espace
+  yPos += 40;
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
   doc.text(`Fait à Thiès le ${new Date().toLocaleDateString('fr-FR')}`, 15, yPos);
 
-  // Signature alignée à droite
-  yPos += 20;
+  // Signature alignée à droite avec espace pour apposer
+  yPos += 25;
   doc.setFontSize(11);
   doc.setTextColor(0, 0, 0);
   doc.text('Le Directeur Général', 150, yPos);
+  yPos += 15;
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.3);
-  doc.line(135, yPos + 2, 175, yPos + 2);
+  doc.line(135, yPos, 175, yPos);
 
-  // Pied de page avec informations de contact
+  // Ligne de séparation avant le footer
+  yPos += 25;
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(0.5);
+  doc.line(15, yPos, 195, yPos);
+
+  // Pied de page avec informations de contact et espacement augmenté
   const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(7);
     doc.setTextColor(100, 100, 100);
 
-    // Informations de contact en bas de page avec plus d'espacement
-    let footerY = 265;
+    // Informations de contact en bas de page avec espacement augmenté
+    let footerY = 270;
     doc.text('Holding GROUP MI', 15, footerY);
-    footerY += 5;
+    footerY += 6;
     doc.text('Dixième RIAOM, Derrière la Manufacture, Thiès, Sénégal', 15, footerY);
-    footerY += 5;
+    footerY += 6;
     doc.text('RC : SN DKR 2026-B-16607', 15, footerY);
-    footerY += 4;
+    footerY += 6;
     doc.text('NINEA : 013042817 2V2', 15, footerY);
-    footerY += 5;
+    footerY += 6;
     doc.text('Tel : 77 450 20 32', 15, footerY);
-    footerY += 4;
+    footerY += 6;
     doc.text('Email : info@madinainfotech.com', 15, footerY);
 
     // Numéro de page
