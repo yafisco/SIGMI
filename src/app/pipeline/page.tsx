@@ -196,27 +196,28 @@ export default function PipelinePage() {
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               {stageOrder.map((stage) => (
-                <button
-                  key={stage}
-                  onClick={() => setFilterStage(stage)}
-                  className={`text-left bg-slate-50 rounded-lg p-4 hover:bg-slate-100 transition-colors cursor-pointer`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-slate-900 text-sm">{stageLabels[stage]}</h3>
-                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${stageColors[stage]}`}>
-                      {opportunitiesByStage[stage]?.length || 0}
-                    </span>
-                  </div>
-                  <div className="mb-3">
-                    <p className="text-xs text-slate-600">{formatAmount(stageValue(stage))}</p>
-                  </div>
+                <div key={stage} className="bg-slate-50 rounded-lg p-4">
+                  <button
+                    onClick={() => setFilterStage(stage)}
+                    className="w-full text-left mb-3 hover:bg-slate-100 transition-colors cursor-pointer rounded p-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-slate-900 text-sm">{stageLabels[stage]}</h3>
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${stageColors[stage]}`}>
+                        {opportunitiesByStage[stage]?.length || 0}
+                      </span>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-xs text-slate-600">{formatAmount(stageValue(stage))}</p>
+                    </div>
+                  </button>
                   <div className="space-y-3">
                     {opportunitiesByStage[stage]?.length > 0 ? (
                       opportunitiesByStage[stage]?.slice(0, 3).map((opp) => (
                         <Link key={opp.id} href={`/opportunites/${opp.id}`}>
                           <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300">
                             <p className="font-medium text-slate-900 text-xs line-clamp-1">{opp.name}</p>
-                            <p className="text-xs text-slate-600 mt-1">{opp.client_nom}</p>
+                            <p className="text-xs text-slate-600 mt-1">{opp.client_nom || 'Client non renseigné'}</p>
                             <p className="text-xs font-medium text-slate-900 mt-1">{formatAmount(opp.amount)}</p>
                           </div>
                         </Link>
@@ -225,7 +226,7 @@ export default function PipelinePage() {
                       <p className="text-xs text-slate-500 italic text-center py-4">Aucune opportunité</p>
                     )}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
