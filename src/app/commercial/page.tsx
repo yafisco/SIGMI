@@ -2,29 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, DollarSign, Users, Briefcase, MessageSquare, Calendar, Plus, ArrowRight, Sparkles } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Users, Briefcase, MessageSquare, Calendar, Plus, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StatCard } from '@/components/AnimatedCard';
-import { AnimatedCounter } from '@/components/AnimatedCounter';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import type { Opportunity } from '@/types';
 
 export default function CommercialPage() {
   const { user } = useAuth();
   const [userName, setUserName] = useState('');
-
-  const [stats, setStats] = useState({
-    totalOpportunities: 0,
-    totalPipeline: 0,
-    conversionRate: 0,
-    totalClients: 0,
-    wonDeals: 0,
-    avgDealSize: 0,
-  });
-
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
 
   useEffect(() => {
     async function fetchUserName() {
@@ -36,86 +22,77 @@ export default function CommercialPage() {
           .maybeSingle();
 
         if (data) {
-          // Construire les initiales avec majuscules
-          const getInitials = (prenom: string, nom: string) => {
-            const first = prenom ? prenom.charAt(0).toUpperCase() : '';
-            const last = nom ? nom.charAt(0).toUpperCase() : '';
-            return first + last;
-          };
-          const initials = getInitials(data.prenom || '', data.nom || '');
-          setUserName(initials);
-        } else {
-          if (user.email) {
-            const emailName = user.email.split('@')[0];
-            const initials = emailName.charAt(0).toUpperCase() + (emailName.charAt(1) || '').toUpperCase();
-            setUserName(initials);
+          const formatName = (str: string) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+          
+          if (data.prenom && data.nom) {
+            setUserName(`${formatName(data.prenom)} ${formatName(data.nom)}`);
+          } else if (data.prenom) {
+            setUserName(formatName(data.prenom));
+          } else if (data.nom) {
+            setUserName(formatName(data.nom));
+          } else if (data.email) {
+            const emailName = data.email.split('@')[0];
+            setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
           }
+        } else if (user.email) {
+          const emailName = user.email.split('@')[0];
+          setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
         }
       }
     }
     fetchUserName();
   }, [user]);
 
-  useEffect(() => {
-    async function fetchCommercialData() {
-      try {
-        const { data: opps } = await supabase
-          .from('opportunities')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        const totalOpps = opps?.length || 0;
-        const totalPipeline = opps?.reduce((sum, opp) => sum + (opp.amount || 0), 0) || 0;
-        const wonDeals = opps?.filter(o => o.stage === 'gagné').length || 0;
-        const conversionRate = totalOpps > 0 ? (wonDeals / totalOpps) * 100 : 0;
-        const avgDealSize = wonDeals > 0 
-          ? opps?.filter(o => o.stage === 'gagné').reduce((sum, o) => sum + (o.amount || 0), 0) / wonDeals 
-          : 0;
-
-        const { count: clientsCount } = await supabase
-          .from('clients')
-          .select('*', { count: 'exact', head: true });
-
-        setStats({
-          totalOpportunities: totalOpps,
-          totalPipeline,
-          conversionRate,
-          totalClients: clientsCount || 0,
-          wonDeals,
-          avgDealSize,
-        });
-
-        setOpportunities(opps || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-      }
-    }
-    fetchCommercialData();
-
-    // Synchronisation en temps réel
-    const channels = [
-      supabase
-        .channel('opportunities_realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'opportunities' }, () => fetchCommercialData())
-        .subscribe(),
-      supabase
-        .channel('clients_realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => fetchCommercialData())
-        .subscribe(),
-    ];
-
-    return () => {
-      channels.forEach(channel => supabase.removeChannel(channel));
-    };
-  }, []);
-
-  const formatAmount = (value: number) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M FCFA`;
-    }
-    return `${(value / 1000).toFixed(0)}K FCFA`;
-  };
+  const sections = [
+    {
+      id: 'prospection',
+      title: 'Prospection',
+      description: 'Gérez vos prospects et campagnes de prospection',
+      icon: Briefcase,
+      color: 'from-blue-500 to-blue-600',
+      link: '/commercial/prospection',
+    },
+    {
+      id: 'clients',
+      title: 'Clients',
+      description: 'Gérez votre portefeuille de clients',
+      icon: Users,
+      color: 'from-green-500 to-green-600',
+      link: '/clients',
+    },
+    {
+      id: 'interactions',
+      title: 'Interactions',
+      description: 'Suivez vos communications avec clients et prospects',
+      icon: MessageSquare,
+      color: 'from-purple-500 to-purple-600',
+      link: '/commercial/interactions',
+    },
+    {
+      id: 'calendrier',
+      title: 'Calendrier',
+      description: 'Planifiez vos rendez-vous et événements',
+      icon: Calendar,
+      color: 'from-amber-500 to-amber-600',
+      link: '/commercial/calendrier',
+    },
+    {
+      id: 'opportunites',
+      title: 'Opportunités',
+      description: 'Gérez votre pipeline commercial',
+      icon: Target,
+      color: 'from-indigo-500 to-indigo-600',
+      link: '/opportunites',
+    },
+    {
+      id: 'demandes-agrement',
+      title: 'Demandes d\'agrément',
+      description: 'Créez et suivez vos demandes d\'agrément',
+      icon: TrendingUp,
+      color: 'from-rose-500 to-rose-600',
+      link: '/commercial/demandes-agrement',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
@@ -137,176 +114,76 @@ export default function CommercialPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Onglets horizontaux */}
-        <div className="flex gap-4 mb-8 border-b border-slate-200">
-          {[
-            { id: 'overview', label: 'Vue d\'ensemble', icon: Target },
-            { id: 'prospection', label: 'Prospection', icon: Briefcase },
-            { id: 'clients', label: 'Clients', icon: Users },
-            { id: 'interactions', label: 'Interactions', icon: MessageSquare },
-            { id: 'calendrier', label: 'Calendrier', icon: Calendar },
-          ].map((tab) => (
-            <Link
-              key={tab.id}
-              href={tab.id === 'overview' ? '/commercial' : `/commercial/${tab.id}`}
-              className="flex items-center gap-2 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 border-b-2 border-transparent hover:border-slate-300 transition-all"
+        {/* Back to Dashboard */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8"
+        >
+          <Link href="/dashboard">
+            <Button variant="ghost" className="text-slate-600 hover:text-slate-900">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour au tableau de bord
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Navigation Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sections.map((section, index) => (
+            <motion.div
+              key={section.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </Link>
+              <Link href={section.link}>
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-xl hover:border-slate-300 transition-all cursor-pointer group">
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${section.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <section.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{section.title}</h3>
+                  <p className="text-slate-600 text-sm mb-4">{section.description}</p>
+                  <div className="flex items-center text-[#1D4ED8] font-medium text-sm group-hover:translate-x-2 transition-transform">
+                    Accéder
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           ))}
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Opportunités"
-            value={stats.totalOpportunities}
-            icon={Target}
-            color="text-blue-600"
-            bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
-            delay={0}
-          />
-          <StatCard
-            title="Pipeline"
-            value={formatAmount(stats.totalPipeline)}
-            icon={DollarSign}
-            color="text-amber-600"
-            bgColor="bg-gradient-to-br from-amber-100 to-amber-200"
-            delay={0.1}
-          />
-          <StatCard
-            title="Taux de conversion"
-            value={`${stats.conversionRate.toFixed(1)}%`}
-            icon={TrendingUp}
-            color="text-green-600"
-            bgColor="bg-gradient-to-br from-green-100 to-green-200"
-            delay={0.2}
-          />
-          <StatCard
-            title="Clients"
-            value={stats.totalClients}
-            icon={Users}
-            color="text-purple-600"
-            bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
-            delay={0.3}
-          />
-        </div>
-
-        {/* Actions rapides */}
-        <div className="mb-8 flex gap-4">
-          <Link href="/opportunites/create">
-            <Button className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle opportunité
-            </Button>
-          </Link>
-          <Link href="/commercial/prospection">
-            <Button variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Lancer une prospection
-            </Button>
-          </Link>
-          <Link href="/clients/create?from=commercial">
-            <Button variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Nouveau client
-            </Button>
-          </Link>
-          <Link href="/commercial/demandes-agrement/create">
-            <Button variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Demande d'agrément
-            </Button>
-          </Link>
-        </div>
-
-        {/* Statistiques supplémentaires */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Affaires gagnées</h3>
-                <p className="text-sm text-slate-600">Opportunités converties</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-green-600">
-              <AnimatedCounter value={stats.wonDeals} />
-            </p>
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="mt-12"
+        >
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Actions rapides</h2>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/opportunites/create">
+              <Button className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8]">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouvelle opportunité
+              </Button>
+            </Link>
+            <Link href="/clients/create?from=commercial">
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouveau client
+              </Button>
+            </Link>
+            <Link href="/commercial/demandes-agrement/create">
+              <Button variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Demande d'agrément
+              </Button>
+            </Link>
           </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Taille moyenne</h3>
-                <p className="text-sm text-slate-600">Valeur moyenne par affaire</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-blue-600">
-              {formatAmount(stats.avgDealSize)}
-            </p>
-          </div>
-        </div>
-
-        {/* Opportunités récentes */}
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-900">Opportunités récentes</h3>
-              <Link href="/opportunites">
-                <Button variant="outline" size="sm">
-                  Voir tout
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Nom</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Montant</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Étape</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Probabilité</th>
-                </tr>
-              </thead>
-              <tbody>
-                {opportunities.map((opp, index) => (
-                  <motion.tr
-                    key={opp.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 + index * 0.1 }}
-                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 text-sm text-slate-900 font-medium">{opp.name}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{opp.client_id || '-'}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{formatAmount(opp.amount || 0)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                        opp.stage === 'gagné' ? 'bg-green-100 text-green-700' :
-                        opp.stage === 'perdu' ? 'bg-red-100 text-red-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {opp.stage}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{opp.probability || 0}%</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
