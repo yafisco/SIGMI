@@ -293,19 +293,6 @@ function CreateClientPageContent() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-[#D4AF37]" />
-                      Nombre d&apos;employés (optionnel)
-                    </label>
-                    <input
-                      {...register('nombre_employes', { valueAsNumber: true })}
-                      type="number"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 transition-all duration-300"
-                      placeholder="50"
-                    />
-                  </div>
-
-                  <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Statut *</label>
                     <select
                       {...register('statut')}
