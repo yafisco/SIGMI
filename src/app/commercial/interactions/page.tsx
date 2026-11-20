@@ -347,41 +347,99 @@ export default function InteractionsPage() {
           </motion.button>
 
           <motion.button
-            onClick={() => setFilterType('envois')}
+            onClick={() => setFilterType('appel')}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className={`bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'envois' ? 'ring-2 ring-amber-500' : ''}`}
+            className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'appel' ? 'ring-2 ring-green-500' : ''}`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <Phone className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm text-green-100 font-medium">Appels</p>
+                <p className="text-2xl font-bold text-white">{stats.appels}</p>
+              </div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            onClick={() => setFilterType('réunion')}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className={`bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'réunion' ? 'ring-2 ring-amber-500' : ''}`}
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div className="text-left">
-                <p className="text-sm text-amber-100 font-medium">À envoyer</p>
-                <p className="text-2xl font-bold text-white">{stats.aEnvoyer}</p>
-              </div>
-            </div>
-          </motion.button>
-
-          <motion.button
-            onClick={() => setFilterType('envois')}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className={`bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer ${filterType === 'envois' ? 'ring-2 ring-green-500' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Send className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm text-green-100 font-medium">Envoyés ce mois</p>
-                <p className="text-2xl font-bold text-white">{stats.envoyesMois}</p>
+                <p className="text-sm text-amber-100 font-medium">Réunions</p>
+                <p className="text-2xl font-bold text-white">{stats.reunions}</p>
               </div>
             </div>
           </motion.button>
         </div>
+
+        {/* Sous-section Email avec stats d'envois */}
+        {filterType === 'email' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-8"
+          >
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Statistiques d'envois d'e-mails</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <motion.button
+                onClick={() => setFilterType('envois')}
+                className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-amber-100 font-medium">À envoyer</p>
+                    <p className="text-2xl font-bold text-white">{stats.aEnvoyer}</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setFilterType('envois')}
+                className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Send className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-green-100 font-medium">Envoyés ce mois</p>
+                    <p className="text-2xl font-bold text-white">{stats.envoyesMois}</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setFilterType('envois')}
+                className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm text-purple-100 font-medium">Total envoyés</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalEnvoyes}</p>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Filtres et recherche */}
         <FilterBar
