@@ -3,7 +3,7 @@
 -- Créer le type enum pour les statuts de demande d'agrément
 CREATE TYPE agrement_statut AS ENUM ('soumise', 'en_examen', 'accepte', 'refusee');
 
--- Si la colonne statut existe déjà avec un autre type, l'adapter
+-- Si la colonne statut existe déjà, la supprimer et recréer avec le nouveau type
 DO $$
 BEGIN
   -- Vérifier si la colonne statut existe
@@ -12,20 +12,17 @@ BEGIN
     WHERE table_name = 'demandes_agrement'
     AND column_name = 'statut'
   ) THEN
-    -- Alter table pour utiliser le nouveau type
-    ALTER TABLE demandes_agrement
-    ALTER COLUMN statut TYPE agrement_statut
-    USING statut::text::agrement_statut;
-  ELSE
-    -- Ajouter la colonne si elle n'existe pas
-    ALTER TABLE demandes_agrement
-    ADD COLUMN statut agrement_statut DEFAULT 'soumise';
+    -- Supprimer l'ancienne colonne statut
+    ALTER TABLE demandes_agrement DROP COLUMN statut;
   END IF;
+  
+  -- Ajouter la colonne statut avec le nouveau type
+  ALTER TABLE demandes_agrement
+  ADD COLUMN statut agrement_statut DEFAULT 'soumise';
 END $$;
 
--- Ajouter les colonnes pour le statut et l'historique
+-- Ajouter les autres colonnes pour l'historique
 ALTER TABLE demandes_agrement
-ADD COLUMN IF NOT EXISTS statut agrement_statut DEFAULT 'soumise',
 ADD COLUMN IF NOT EXISTS date_acceptation TIMESTAMPTZ,
 ADD COLUMN IF NOT EXISTS date_refus TIMESTAMPTZ,
 ADD COLUMN IF NOT EXISTS motif_refus TEXT;
