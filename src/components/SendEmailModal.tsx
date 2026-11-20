@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 import { EmailTemplate } from '@/types';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { useEnvoisEmail } from '@/lib/api/useEnvoisEmail';
 
 interface SendEmailModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [uploadingAttachments, setUploadingAttachments] = useState(false);
   const supabase = createClient();
+  const { createEnvoi } = useEnvoisEmail();
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -139,9 +141,24 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
         to: toEmail,
         subject: selectedTemplate.sujet,
         html: preview,
-        text: preview.replace(/<[^>]*>/g, ''), // Version texte sans HTML
+        text: preview.replace(/<[^>]*>/g, ''),
         attachments: attachmentUrls,
       });
+
+      // Créer l'enregistrement dans envois_email après envoi réussi
+      try {
+        await createEnvoi.mutateAsync({
+          contact_id: null, // À mapper si contact email existe
+          modele_id: selectedTemplate.id,
+          objet: selectedTemplate.sujet,
+          corps: preview,
+          date_planifiee: new Date().toISOString().split('T')[0],
+          statut: 'envoye',
+        });
+      } catch (error) {
+        console.error('Erreur lors de l\'enregistrement dans envois_email:', error);
+        // Ne pas bloquer l'envoi si l'enregistrement échoue
+      }
 
       await Swal.fire({
         title: 'Email envoyé !',
