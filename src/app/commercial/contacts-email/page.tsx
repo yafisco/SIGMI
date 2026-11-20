@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Users, Upload, Download, Search, Trash2, Edit, Mail, Building2, ArrowLeft, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/PageHeader';
+import Link from 'next/link';
 import { useContactsEmail } from '@/lib/api/useContactsEmail';
-import { Plus, Upload, Download, Search, Trash2, Edit } from 'lucide-react';
 import Swal from 'sweetalert2';
-import type { ContactEmail } from '@/types';
+import { SWEETALERT_CONFIG } from '@/lib/constants';
 
 export default function ContactsEmailPage() {
   const { contacts, createContact, deleteContact, importContacts } = useContactsEmail();
@@ -24,18 +28,31 @@ export default function ContactsEmailPage() {
       text: `Êtes-vous sûr de vouloir supprimer ${nom} ?`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
       confirmButtonText: 'Oui, supprimer',
       cancelButtonText: 'Annuler',
+      customClass: SWEETALERT_CONFIG.customClass,
     });
 
     if (result.isConfirmed) {
       try {
         await deleteContact.mutateAsync(id);
-        Swal.fire('Supprimé !', 'Le contact a été supprimé.', 'success');
+        await Swal.fire({
+          title: 'Supprimé !',
+          text: 'Le contact a été supprimé.',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
       } catch (error) {
-        Swal.fire('Erreur', 'Impossible de supprimer le contact.', 'error');
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible de supprimer le contact.',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
       }
     }
   };
@@ -47,8 +64,8 @@ export default function ContactsEmailPage() {
     const reader = new FileReader();
     reader.onload = async (e) => {
       const text = e.target?.result as string;
-      const lines = text.split('\n').slice(1); // Skip header
-      const contacts = lines
+      const lines = text.split('\n').slice(1);
+      const contactsData = lines
         .filter((line) => line.trim())
         .map((line) => {
           const [nom_entreprise, email, telephone, adresse, secteur] = line.split(',');
@@ -63,10 +80,22 @@ export default function ContactsEmailPage() {
         .filter((c) => c.nom_entreprise && c.email);
 
       try {
-        await importContacts.mutateAsync(contacts);
-        Swal.fire('Import réussi !', `${contacts.length} contacts importés.`, 'success');
+        await importContacts.mutateAsync(contactsData);
+        await Swal.fire({
+          title: 'Import réussi !',
+          text: `${contactsData.length} contacts importés.`,
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
       } catch (error) {
-        Swal.fire('Erreur', 'Impossible d\'importer les contacts.', 'error');
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Impossible d\'importer les contacts.',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
       }
     };
     reader.readAsText(file);
@@ -92,114 +121,203 @@ export default function ContactsEmailPage() {
     a.click();
   };
 
-  if (contacts.isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Base de contacts e-mails</h1>
-          <p className="text-gray-600 mt-1">Gérez vos contacts pour les campagnes d'e-mailing</p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => document.getElementById('csvInput')?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            <Upload className="w-4 h-4" />
-            Import CSV
-          </button>
-          <input
-            id="csvInput"
-            type="file"
-            accept=".csv"
-            onChange={handleImportCSV}
-            className="hidden"
-          />
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </button>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus className="w-4 h-4" />
-            Nouveau contact
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      <PageHeader
+        title="Base de Contacts E-mails"
+        description="Gérez votre base de contacts pour les campagnes d'e-mailing"
+        actionLabel="Nouveau contact"
+        extraAction={
+          <div className="flex gap-2">
+            <Button onClick={handleImportCSV} variant="outline">
+              <Upload className="w-4 h-4 mr-2" />
+              Import CSV
+            </Button>
+            <Button onClick={handleExportCSV} variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
+        }
+      />
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="mb-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mb-6"
+      >
+        <Link href="/commercial">
+          <button className="flex items-center gap-2 text-slate-600 hover:text-[#1D4ED8] transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+            Retour à Commercial
+          </button>
+        </Link>
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Cartes de statistiques */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        >
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm mb-1">Total contacts</p>
+                <p className="text-3xl font-bold">{contacts.data?.length || 0}</p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <Users className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm mb-1">Contacts ce mois</p>
+                <p className="text-3xl font-bold">
+                  {contacts.data?.filter(c => {
+                    const date = new Date(c.date);
+                    const now = new Date();
+                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                  }).length || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <Mail className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm mb-1">Secteurs représentés</p>
+                <p className="text-3xl font-bold">
+                  {new Set(contacts.data?.map(c => c.secteur).filter(Boolean)).size || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <Building2 className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Recherche */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mb-6"
+        >
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Rechercher par entreprise, email ou secteur..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] focus:border-[#1D4ED8] transition-all"
             />
           </div>
-        </div>
+        </motion.div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Entreprise</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Téléphone</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Secteur</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                <th className="text-right py-3 px-4 font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredContacts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-500">
-                    Aucun contact trouvé
-                  </td>
-                </tr>
-              ) : (
-                filteredContacts.map((contact) => (
-                  <tr key={contact.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium">{contact.nom_entreprise}</td>
-                    <td className="py-3 px-4">{contact.email}</td>
-                    <td className="py-3 px-4">{contact.telephone || '-'}</td>
-                    <td className="py-3 px-4">{contact.secteur || '-'}</td>
-                    <td className="py-3 px-4">{contact.date}</td>
-                    <td className="py-3 px-4 text-right">
-                      <button
-                        onClick={() => {/* TODO: Implement edit modal */}}
-                        className="text-blue-600 hover:text-blue-800 mr-3"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(contact.id, contact.nom_entreprise)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* Liste des contacts */}
+        {contacts.isLoading ? (
+          <div className="text-center py-16">
+            <div className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-slate-600">Chargement des contacts...</p>
+          </div>
+        ) : filteredContacts.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center py-16"
+          >
+            <div className="inline-block w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+            <p className="text-slate-600 text-lg">Aucun contact trouvé</p>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {filteredContacts.map((contact, index) => (
+              <motion.div
+                key={contact.id}
+                initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, delay: index * 0.05 }}
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="relative group"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-2 group-hover:rotate-4 transition-all duration-500" />
+                <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-2xl group-hover:from-blue-200/50 transition-all duration-500" />
+                  
+                  <div className="flex items-start gap-4 mb-4 relative">
+                    <motion.div
+                      whileHover={{ rotate: 360, scale: 1.1 }}
+                      transition={{ duration: 0.6 }}
+                      className="w-14 h-14 bg-gradient-to-br from-[#1D4ED8] to-[#2563EB] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+                    >
+                      <Building2 className="w-7 h-7 text-white" />
+                    </motion.div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-slate-900 mb-1">{contact.nom_entreprise}</h3>
+                      <p className="text-sm text-slate-600">{contact.secteur || 'Secteur non renseigné'}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 relative">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Mail className="w-4 h-4 text-[#1D4ED8]" />
+                      {contact.email}
+                    </div>
+                    {contact.telephone && (
+                      <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <span className="w-4 h-4 text-[#1D4ED8]">📞</span>
+                        {contact.telephone}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <span className="w-4 h-4 text-[#1D4ED8]">📅</span>
+                      {contact.date}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {/* TODO: Implement edit modal */}}
+                      className="flex-1 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white px-3 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                    >
+                      <Edit className="w-4 h-4 mr-2 inline" />
+                      Modifier
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(contact.id, contact.nom_entreprise)}
+                      className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
       {showCreateModal && (
@@ -209,9 +327,21 @@ export default function ContactsEmailPage() {
             try {
               await createContact.mutateAsync(data);
               setShowCreateModal(false);
-              Swal.fire('Succès', 'Contact créé avec succès.', 'success');
+              await Swal.fire({
+                title: 'Succès',
+                text: 'Contact créé avec succès.',
+                icon: 'success',
+                confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+                customClass: SWEETALERT_CONFIG.customClass,
+              });
             } catch (error) {
-              Swal.fire('Erreur', 'Impossible de créer le contact.', 'error');
+              await Swal.fire({
+                title: 'Erreur',
+                text: 'Impossible de créer le contact.',
+                icon: 'error',
+                confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+                customClass: SWEETALERT_CONFIG.customClass,
+              });
             }
           }}
         />
@@ -235,74 +365,78 @@ function CreateContactModal({ onClose, onSubmit }: { onClose: () => void; onSubm
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
+      >
         <h2 className="text-xl font-bold mb-4">Nouveau contact</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom entreprise *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Nom entreprise *</label>
             <input
               type="text"
               required
               value={formData.nom_entreprise}
               onChange={(e) => setFormData({ ...formData, nom_entreprise: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email *</label>
             <input
               type="email"
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Téléphone</label>
             <input
               type="text"
               value={formData.telephone}
               onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Adresse</label>
             <input
               type="text"
               value={formData.adresse}
               onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Secteur</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Secteur</label>
             <input
               type="text"
               value={formData.secteur}
               onChange={(e) => setFormData({ ...formData, secteur: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
             />
           </div>
           <div className="flex gap-3 justify-end pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white rounded-lg hover:shadow-lg"
             >
               Créer
             </button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }
