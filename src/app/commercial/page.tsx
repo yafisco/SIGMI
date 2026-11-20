@@ -146,7 +146,7 @@ export default function CommercialPage() {
         </motion.div>
 
         {/* Navigation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" key="commercial-grid">
           {sections.map((section, index) => (
             <motion.div
               key={section.id}
