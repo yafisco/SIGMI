@@ -1,9 +1,27 @@
 -- Amélioration de la table demandes_agrement pour gérer les statuts et l'historique
 
--- Modifier le type de statut pour inclure les nouveaux statuts
-ALTER TYPE demande_statut RENAME TO agrement_statut;
-ALTER TYPE agrement_statut ADD VALUE IF NOT EXISTS 'accepte';
-ALTER TYPE agrement_statut ADD VALUE IF NOT EXISTS 'refusee';
+-- Créer le type enum pour les statuts de demande d'agrément
+CREATE TYPE agrement_statut AS ENUM ('soumise', 'en_examen', 'accepte', 'refusee');
+
+-- Si la colonne statut existe déjà avec un autre type, l'adapter
+DO $$
+BEGIN
+  -- Vérifier si la colonne statut existe
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'demandes_agrement'
+    AND column_name = 'statut'
+  ) THEN
+    -- Alter table pour utiliser le nouveau type
+    ALTER TABLE demandes_agrement
+    ALTER COLUMN statut TYPE agrement_statut
+    USING statut::text::agrement_statut;
+  ELSE
+    -- Ajouter la colonne si elle n'existe pas
+    ALTER TABLE demandes_agrement
+    ADD COLUMN statut agrement_statut DEFAULT 'soumise';
+  END IF;
+END $$;
 
 -- Ajouter les colonnes pour le statut et l'historique
 ALTER TABLE demandes_agrement
