@@ -66,7 +66,6 @@ export default function InteractionsPage() {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [selectedInteraction, setSelectedInteraction] = useState<Interaction | null>(null);
   const [showCreateEnvoiModal, setShowCreateEnvoiModal] = useState(false);
-  const [envoiFromInteraction, setEnvoiFromInteraction] = useState<any>(null);
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
@@ -476,17 +475,11 @@ export default function InteractionsPage() {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => {
-                              // Pré-remplir le formulaire de planification d'envoi
-                              setEnvoiFromInteraction({
-                                contact_id: null, // À mapper avec le contact correspondant
-                                objet: interaction.title,
-                                corps: interaction.description || '',
-                                date_planifiee: new Date().toISOString().split('T')[0],
-                              });
-                              setShowCreateEnvoiModal(true);
+                              setSelectedInteraction(interaction);
+                              setIsEmailModalOpen(true);
                             }}
                             className="text-blue-500 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-all"
-                            title="Planifier un envoi"
+                            title="Envoyer un email"
                           >
                             <Mail className="w-4 h-4" />
                           </motion.button>
@@ -559,12 +552,8 @@ export default function InteractionsPage() {
         <CreateEnvoiModal
           contacts={contacts.data || []}
           templates={templates.data || []}
-          onClose={() => {
-            setShowCreateEnvoiModal(false);
-            setEnvoiFromInteraction(null);
-          }}
+          onClose={() => setShowCreateEnvoiModal(false)}
           onSubmit={handleCreateEnvoi}
-          initialData={envoiFromInteraction}
         />
       )}
     </div>
@@ -693,15 +682,13 @@ function CreateEnvoiModal({
   templates,
   onClose,
   onSubmit,
-  initialData,
 }: {
   contacts: any[];
   templates: any[];
   onClose: () => void;
   onSubmit: (data: any) => void;
-  initialData?: any;
 }) {
-  const [formData, setFormData] = useState(initialData || {
+  const [formData, setFormData] = useState({
     contact_id: '',
     modele_id: '',
     objet: '',
