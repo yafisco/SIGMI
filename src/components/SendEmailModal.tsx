@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Send, Loader2 } from 'lucide-react';
+import { X, Mail, Send, Loader2, Paperclip, File, X as XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { emailTemplatesService } from '@/lib/services';
 import { emailService } from '@/lib/services/emailService';
+import { supabase } from '@/lib/supabase/client';
 import { EmailTemplate } from '@/types';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
@@ -16,15 +17,19 @@ interface SendEmailModalProps {
   clientName?: string;
   clientEmail?: string;
   interactionId?: string;
+  onSendPDF?: () => Promise<string | null>; // Fonction optionnelle pour générer un PDF
 }
 
-export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail = '', interactionId }: SendEmailModalProps) {
+export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail = '', interactionId, onSendPDF }: SendEmailModalProps) {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [preview, setPreview] = useState('');
   const [toEmail, setToEmail] = useState(clientEmail);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
+  const [uploadingAttachments, setUploadingAttachments] = useState(false);
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -58,6 +63,71 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
     setToEmail(clientEmail);
   }, [clientEmail, isOpen]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploadingAttachments(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of files) {
+        // Upload vers Supabase Storage bucket 'documents'
+        const fileName = `${Date.now()}-${file.name}`;
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        // Récupérer l'URL publique
+        const { data: { publicUrl } } = supabase.storage
+          .from('documents')
+          .getPublicUrl(fileName);
+
+        newUrls.push(publicUrl);
+      }
+
+      setAttachments([...attachments, ...files]);
+      setAttachmentUrls([...attachmentUrls, ...newUrls]);
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de l\'upload des pièces jointes',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } finally {
+      setUploadingAttachments(false);
+    }
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+    setAttachmentUrls(attachmentUrls.filter((_, i) => i !== index));
+  };
+
+  const handleAttachPDF = async () => {
+    if (!onSendPDF) return;
+
+    try {
+      const pdfUrl = await onSendPDF();
+      if (pdfUrl) {
+        setAttachmentUrls([...attachmentUrls, pdfUrl]);
+        setAttachments([...attachments, new File([''], 'Document.pdf', { type: 'application/pdf' })]);
+      }
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors de la génération du PDF',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
   const handleSend = async () => {
     if (!selectedTemplate) return;
 
@@ -69,6 +139,7 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
         subject: selectedTemplate.sujet,
         html: preview,
         text: preview.replace(/<[^>]*>/g, ''), // Version texte sans HTML
+        attachments: attachmentUrls,
       });
 
       await Swal.fire({
@@ -80,6 +151,8 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
       });
 
       onClose();
+      setAttachments([]);
+      setAttachmentUrls([]);
     } catch (error) {
       await Swal.fire({
         title: 'Erreur',
@@ -209,6 +282,57 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
                         }}
                         className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] min-h-[200px] whitespace-pre-wrap"
                       />
+                    </div>
+                    {/* Pièces jointes */}
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Pièces jointes</label>
+                      <div className="space-y-2">
+                        {attachments.length > 0 && (
+                          <div className="space-y-2">
+                            {attachments.map((file, index) => (
+                              <div key={index} className="flex items-center justify-between bg-slate-50 rounded-lg p-2">
+                                <div className="flex items-center gap-2">
+                                  <File className="w-4 h-4 text-slate-500" />
+                                  <span className="text-sm text-slate-700">{file.name}</span>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveAttachment(index)}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <XIcon className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <label className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition">
+                            <Paperclip className="w-4 h-4 text-slate-500" />
+                            <span className="text-sm text-slate-700">Ajouter un fichier</span>
+                            <input
+                              type="file"
+                              multiple
+                              onChange={handleFileSelect}
+                              className="hidden"
+                            />
+                          </label>
+                          {onSendPDF && (
+                            <button
+                              onClick={handleAttachPDF}
+                              className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+                            >
+                              <File className="w-4 h-4 text-slate-500" />
+                              <span className="text-sm text-slate-700">Joindre le PDF</span>
+                            </button>
+                          )}
+                        </div>
+                        {uploadingAttachments && (
+                          <div className="flex items-center gap-2 text-sm text-slate-500">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Upload en cours...
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ) : (

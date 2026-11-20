@@ -5,10 +5,11 @@ interface SendEmailParams {
   subject: string;
   html: string;
   text?: string;
+  attachments?: string[]; // URLs des pièces jointes
 }
 
 export const emailService = {
-  async sendEmail({ to, subject, html, text }: SendEmailParams) {
+  async sendEmail({ to, subject, html, text, attachments = [] }: SendEmailParams) {
     try {
       // Utiliser fetch direct avec l'URL complète de l'Edge Function
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xhgspkunwikvufrireqw.supabase.co';
@@ -23,7 +24,7 @@ export const emailService = {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ to, subject, html, text }),
+        body: JSON.stringify({ to, subject, html, text, attachments }),
       });
 
       const data = await response.json();
