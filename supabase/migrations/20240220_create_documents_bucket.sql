@@ -1,12 +1,12 @@
 -- Bucket public pour les documents et pièces jointes
 -- Accessible pour tous les utilisateurs connectés
 
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
 VALUES (
   'documents',
   'documents',
   true,
-  104857600, -- 100 MB
+  104857600 -- 100 MB
 )
 ON CONFLICT (id) DO NOTHING;
 
