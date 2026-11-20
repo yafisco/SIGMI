@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import type { EmailTemplate, CreateEmailTemplateInput, UpdateEmailTemplateInput } from '@/types';
+
+const supabase = createClient();
 
 export const emailTemplatesService = {
   async getAll() {
