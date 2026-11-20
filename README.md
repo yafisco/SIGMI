@@ -84,14 +84,22 @@ npm run build   # build de production (vérifie aussi les types)
 npm run start   # sert le build de production
 ```
 
-## Déploiement (préproduction)
+## Déploiement
 
-Recommandé : Vercel, avec un projet Supabase dédié à la préproduction.
+Pour un déploiement sur Vercel avec Supabase, voir le guide détaillé : [DEPLOIEMENT_TEST.md](./DEPLOIEMENT_TEST.md).
 
-1. Importer le dépôt GitHub dans Vercel.
-2. Définir `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` du projet Supabase de préproduction (environnements Preview et Production selon le besoin).
-3. Brancher la branche `dev` sur l'environnement de préproduction, `main` sur la production.
-4. Dans Supabase > Authentication > URL Configuration, ajouter l'URL de préproduction aux Redirect URLs (callback `/auth/callback`).
+### Résumé rapide
+
+1. **Créer un projet Supabase dédié** (un par environnement : dev, staging, prod)
+2. **Connecter le dépôt GitHub à Vercel**
+3. **Configurer les variables d'environnement** dans Vercel (voir `.env.example`)
+4. **Appliquer les migrations** sur le projet Supabase (`npx supabase db push`)
+5. **Configurer les URL de redirection** dans Supabase Auth (callback `/auth/callback`)
+6. **Brancher les branches** : `dev` → preview/staging, `main` → production
+
+### Seed minimal
+
+Un seed minimal est disponible dans `supabase/migrations/20240220_seed_minimal.sql` pour initialiser les données de base (sources de prospects, catégories de dépenses, types de campagnes, postes par défaut) sans données réelles de client.
 
 ## Organisation du code
 
