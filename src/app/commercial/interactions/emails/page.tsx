@@ -353,6 +353,15 @@ function EnvoisList({
                 <h3 className="text-lg font-bold text-slate-900 mb-1">{envoi.objet}</h3>
                 <p className="text-sm text-slate-600">À : {envoi.contact_nom_entreprise}</p>
               </div>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => onDelete(envoi.id, envoi.contact_nom_entreprise)}
+                className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
+                title="Supprimer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </motion.button>
             </div>
 
             <div className="space-y-2 relative mb-4">
@@ -397,14 +406,6 @@ function EnvoisList({
                 >
                   <X className="w-4 h-4 mr-2 inline" />
                   Annuler
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => onDelete(envoi.id, envoi.contact_nom_entreprise)}
-                  className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
                 </motion.button>
               </div>
             )}
