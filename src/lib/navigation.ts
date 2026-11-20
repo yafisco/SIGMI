@@ -29,6 +29,8 @@ import {
   ShieldCheck,
   Building2,
   CheckSquare,
+  Send,
+  Database,
 } from 'lucide-react';
 import type { AppRole } from '@/types';
 
@@ -80,6 +82,8 @@ export const NAV_SECTIONS: NavSection[] = [
       { href: '/opportunites', label: 'Opportunités', icon: Briefcase, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/commercial/demandes-agrement', label: 'Demandes d\'agrément', icon: FileCheck, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/commercial/modeles-emails', label: 'Modèles d\'e-mails', icon: Mail, roles: ['direction_generale', 'commercial'] },
+      { href: '/commercial/contacts-email', label: 'Base e-mails', icon: Database, roles: ['direction_generale', 'commercial', 'back_office'] },
+      { href: '/commercial/envois-email', label: 'Envois d\'e-mails', icon: Send, roles: ['direction_generale', 'commercial', 'back_office'] },
     ],
   },
   {
@@ -198,6 +202,8 @@ ROUTE_ROLE_MAP['/commercial/interactions'] = ['direction_generale', 'commercial'
 ROUTE_ROLE_MAP['/commercial/interactions/create'] = ['direction_generale', 'commercial', 'responsable_pole'];
 ROUTE_ROLE_MAP['/commercial/calendrier'] = ['direction_generale', 'commercial', 'responsable_pole'];
 ROUTE_ROLE_MAP['/commercial/calendrier/create'] = ['direction_generale', 'commercial', 'responsable_pole'];
+ROUTE_ROLE_MAP['/commercial/contacts-email'] = ['direction_generale', 'commercial', 'back_office'];
+ROUTE_ROLE_MAP['/commercial/envois-email'] = ['direction_generale', 'commercial', 'back_office'];
 ROUTE_ROLE_MAP['/documents'] = ROLES_METIER;
 ROUTE_ROLE_MAP['/documents/create'] = ROLES_METIER;
 ROUTE_ROLE_MAP['/taches'] = ROLES_METIER;
