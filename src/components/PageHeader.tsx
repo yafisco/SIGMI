@@ -25,10 +25,7 @@ export function PageHeader({
   extraAction,
 }: PageHeaderProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
+    <div
       className="bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#2563EB] bg-[length:200%_auto] animate-gradient border-b border-white/10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -70,6 +67,6 @@ export function PageHeader({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
