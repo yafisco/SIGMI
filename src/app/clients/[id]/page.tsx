@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, MapPin, Mail, Phone, Calendar, TrendingUp, Users, FileText, MessageSquare, FolderKanban, Plus, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Mail, Phone, Calendar, TrendingUp, Users, FileText, MessageSquare, FolderKanban, Plus, Edit, Trash2, Clock, Mail as MailIcon, MessageSquare as MsgIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useSingleData } from '@/hooks/useData';
 import { clientsService } from '@/lib/services';
@@ -461,7 +461,7 @@ export default function ClientDetailPage() {
           </motion.div>
         </div>
 
-        {/* Historique des interactions */}
+        {/* Chronologie des interactions */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -471,42 +471,97 @@ export default function ClientDetailPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-slate-100 to-white rounded-2xl transform rotate-1" />
           <div className="relative bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl border border-slate-100 hover:border-blue-200 transition-all duration-500 overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-100/50 to-transparent rounded-full blur-2xl" />
-            <div className="flex items-center justify-between mb-4 relative">
+            <div className="flex items-center justify-between mb-6 relative">
               <div className="flex items-center gap-3">
                 <Calendar className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-bold text-slate-900">Historique des interactions</h3>
+                <h3 className="text-lg font-bold text-slate-900">Chronologie des interactions</h3>
               </div>
-              <Link href="/interactions/create">
+              <Link href={`/commercial/interactions/create?client_id=${id}`}>
                 <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8] border-2 border-[#D4AF37]">
                   <Plus className="w-4 h-4 mr-1" />
                   Nouvelle
                 </Button>
               </Link>
             </div>
-            <div className="space-y-3 relative">
+            <div className="relative">
               {(interactions || []).length === 0 ? (
-                <div className="text-center py-8 text-slate-500 relative">
-                  Aucune interaction enregistrée
+                <div className="text-center py-12 text-slate-500 relative">
+                  <div className="inline-block w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <Calendar className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <p>Aucune interaction enregistrée</p>
                 </div>
               ) : (
-                interactions?.slice(0, 5).map((interaction) => (
-                  <div key={interaction.id} className="p-3 bg-white rounded-lg">
-                    <div className="font-medium text-slate-900">{interaction.title}</div>
-                    <div className="text-sm text-slate-600">
-                      {new Date(interaction.interaction_date || interaction.created_at).toLocaleDateString('fr-FR')}
-                    </div>
-                  </div>
-                ))
-              )}
-              {(interactions || []).length > 5 && (
-                <div className="text-center text-sm text-slate-500">
-                  +{(interactions || []).length - 5} autres interactions
-                </div>
+                <InteractionTimeline interactions={interactions || []} />
               )}
             </div>
           </div>
         </motion.div>
       </div>
+    </div>
+  );
+}
+
+function InteractionTimeline({ interactions }: { interactions: Interaction[] }) {
+  const typeIcons: Record<string, any> = {
+    email: MailIcon,
+    appel: Phone,
+    réunion: MsgIcon,
+    visite: Calendar,
+    autre: Clock,
+  };
+
+  const typeColors: Record<string, string> = {
+    email: 'bg-blue-100 text-blue-700',
+    appel: 'bg-green-100 text-green-700',
+    réunion: 'bg-purple-100 text-purple-700',
+    visite: 'bg-amber-100 text-amber-700',
+    autre: 'bg-slate-100 text-slate-700',
+  };
+
+  // Group by date
+  const grouped = interactions.reduce((acc, interaction) => {
+    const date = new Date(interaction.interaction_date || interaction.created_at).toLocaleDateString('fr-FR');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(interaction);
+    return acc;
+  }, {} as Record<string, Interaction[]>);
+
+  const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+
+  return (
+    <div className="space-y-6">
+      {sortedDates.map((date) => (
+        <div key={date}>
+          <h4 className="text-sm font-semibold text-slate-500 mb-3 pl-4">{date}</h4>
+          <div className="space-y-3 pl-4 border-l-2 border-slate-200">
+            {grouped[date].map((interaction) => {
+              const Icon = typeIcons[interaction.type] || Clock;
+              return (
+                <div key={interaction.id} className="relative pl-6">
+                  <div className="absolute left-[-5px] top-1 w-2 h-2 rounded-full bg-blue-500" />
+                  <div className="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${typeColors[interaction.type]}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-slate-900">{interaction.title}</div>
+                        {interaction.description && (
+                          <div className="text-sm text-slate-600 mt-1 line-clamp-2">{interaction.description}</div>
+                        )}
+                        <div className="text-xs text-slate-500 mt-2">
+                          {interaction.created_by_nom || '-'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
