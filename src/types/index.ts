@@ -379,6 +379,7 @@ export interface UpdateContactInput extends Partial<CreateContactInput> {
 // === INTERACTION ===
 export type InteractionType = 'email' | 'appel' | 'réunion' | 'visite' | 'autre';
 export type InteractionRelatedType = 'client' | 'opportunity' | 'projet' | 'collaborateur';
+export type AppelResultat = 'interesse' | 'a_rappeler' | 'pas_de_reponse' | 'refus' | 'accord' | 'autre';
 
 export interface Interaction {
   id: string;
@@ -398,6 +399,14 @@ export interface Interaction {
   client_secteur?: string;
   created_at: string;
   updated_at: string;
+  // Champs spécifiques appels
+  telephone?: string;
+  duree_minutes?: number;
+  resultat?: AppelResultat;
+  // Champs spécifiques réunions
+  lieu?: string;
+  participants?: string[];
+  ordre_du_jour?: string;
 }
 
 export interface CreateInteractionInput {

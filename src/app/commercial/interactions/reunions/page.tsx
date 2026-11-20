@@ -54,6 +54,29 @@ export default function ReunionsPage() {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      await interactionsService.create(data);
+      setShowCreateModal(false);
+      refresh();
+      await Swal.fire({
+        title: 'Succès',
+        text: 'La réunion a été enregistrée avec succès.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (err) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: errorMessage(err, "Erreur lors de la création de la réunion"),
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
   const reunions = (interactions || []).filter((i) => i.type === 'réunion');
   const stats = {
     total: reunions.length,
@@ -85,6 +108,7 @@ export default function ReunionsPage() {
         title="Réunions"
         description="Historique des réunions"
         actionLabel="Nouvelle réunion"
+        onAction={() => setShowCreateModal(true)}
       />
 
       <motion.div
@@ -148,6 +172,13 @@ export default function ReunionsPage() {
           <ReunionsList reunions={reunions} onDelete={handleDelete} />
         </motion.div>
       </div>
+
+      {showCreateModal && (
+        <CreateReunionModal
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreate}
+        />
+      )}
     </div>
   );
 }
@@ -215,16 +246,22 @@ function ReunionsList({ reunions, onDelete }: { reunions: any[]; onDelete: (id: 
               {reunion.description && (
                 <p className="text-sm text-slate-600 line-clamp-2">{reunion.description}</p>
               )}
-              {reunion.interaction_date && (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Calendar className="w-4 h-4 text-amber-600" />
-                  {new Date(reunion.interaction_date).toLocaleDateString('fr-FR')}
-                </div>
-              )}
               {reunion.lieu && (
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <MapPin className="w-4 h-4 text-amber-600" />
                   {reunion.lieu}
+                </div>
+              )}
+              {reunion.participants && reunion.participants.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <User className="w-4 h-4 text-amber-600" />
+                  {reunion.participants.length} participant(s)
+                </div>
+              )}
+              {reunion.interaction_date && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Calendar className="w-4 h-4 text-amber-600" />
+                  {new Date(reunion.interaction_date).toLocaleDateString('fr-FR')}
                 </div>
               )}
               <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -236,5 +273,112 @@ function ReunionsList({ reunions, onDelete }: { reunions: any[]; onDelete: (id: 
         </motion.div>
       ))}
     </motion.div>
+  );
+}
+
+function CreateReunionModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'réunion' as const,
+    interaction_date: new Date().toISOString().split('T')[0],
+    lieu: '',
+    participants: '',
+    ordre_du_jour: '',
+    related_type: 'client' as const,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      participants: formData.participants ? formData.participants.split(',').map(p => p.trim()) : [],
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+      >
+        <h2 className="text-xl font-bold mb-4">Nouvelle réunion</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Titre *</label>
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Lieu</label>
+            <input
+              type="text"
+              value={formData.lieu}
+              onChange={(e) => setFormData({ ...formData, lieu: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Participants (séparés par des virgules)</label>
+            <input
+              type="text"
+              value={formData.participants}
+              onChange={(e) => setFormData({ ...formData, participants: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Ordre du jour</label>
+            <textarea
+              rows={3}
+              value={formData.ordre_du_jour}
+              onChange={(e) => setFormData({ ...formData, ordre_du_jour: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Compte rendu</label>
+            <textarea
+              rows={4}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
+            <input
+              type="date"
+              required
+              value={formData.interaction_date}
+              onChange={(e) => setFormData({ ...formData, interaction_date: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="outline"
+              className="flex-1"
+            >
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white"
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   );
 }

@@ -11,6 +11,7 @@ import { interactionsService } from '@/lib/services';
 import { useData } from '@/hooks/useData';
 import { errorMessage } from '@/lib/utils/errorHandler';
 import Link from 'next/link';
+import { AppelResultat } from '@/types';
 
 export default function AppelsPage() {
   const { data: interactions, loading, error, refresh } = useData({
@@ -54,6 +55,29 @@ export default function AppelsPage() {
     }
   };
 
+  const handleCreate = async (data: any) => {
+    try {
+      await interactionsService.create(data);
+      setShowCreateModal(false);
+      refresh();
+      await Swal.fire({
+        title: 'Succès',
+        text: 'L\'appel a été enregistré avec succès.',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (err) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: errorMessage(err, "Erreur lors de la création de l'appel"),
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
   const appels = (interactions || []).filter((i) => i.type === 'appel');
   const stats = {
     total: appels.length,
@@ -85,6 +109,7 @@ export default function AppelsPage() {
         title="Appels"
         description="Historique des appels"
         actionLabel="Nouvel appel"
+        onAction={() => setShowCreateModal(true)}
       />
 
       <motion.div
@@ -148,6 +173,13 @@ export default function AppelsPage() {
           <AppelsList appels={appels} onDelete={handleDelete} />
         </motion.div>
       </div>
+
+      {showCreateModal && (
+        <CreateAppelModal
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreate}
+        />
+      )}
     </div>
   );
 }
@@ -215,6 +247,23 @@ function AppelsList({ appels, onDelete }: { appels: any[]; onDelete: (id: string
               {appel.description && (
                 <p className="text-sm text-slate-600 line-clamp-2">{appel.description}</p>
               )}
+              {appel.telephone && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Phone className="w-4 h-4 text-green-600" />
+                  {appel.telephone}
+                </div>
+              )}
+              {appel.duree_minutes && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  {appel.duree_minutes} min
+                </div>
+              )}
+              {appel.resultat && (
+                <div className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                  {appel.resultat}
+                </div>
+              )}
               {appel.interaction_date && (
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Clock className="w-4 h-4 text-green-600" />
@@ -230,5 +279,119 @@ function AppelsList({ appels, onDelete }: { appels: any[]; onDelete: (id: string
         </motion.div>
       ))}
     </motion.div>
+  );
+}
+
+function CreateAppelModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (data: any) => void }) {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'appel' as const,
+    interaction_date: new Date().toISOString().split('T')[0],
+    telephone: '',
+    duree_minutes: '',
+    resultat: '' as AppelResultat,
+    related_type: 'client' as const,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      duree_minutes: formData.duree_minutes ? parseInt(formData.duree_minutes) : null,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+      >
+        <h2 className="text-xl font-bold mb-4">Nouvel appel</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Titre *</label>
+            <input
+              type="text"
+              required
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Numéro de téléphone</label>
+            <input
+              type="tel"
+              value={formData.telephone}
+              onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Durée (minutes)</label>
+            <input
+              type="number"
+              value={formData.duree_minutes}
+              onChange={(e) => setFormData({ ...formData, duree_minutes: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Résultat</label>
+            <select
+              value={formData.resultat}
+              onChange={(e) => setFormData({ ...formData, resultat: e.target.value as AppelResultat })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            >
+              <option value="">Sélectionner</option>
+              <option value="interesse">Intéressé</option>
+              <option value="a_rappeler">À rappeler</option>
+              <option value="pas_de_reponse">Pas de réponse</option>
+              <option value="refus">Refus</option>
+              <option value="accord">Accord</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Compte rendu</label>
+            <textarea
+              rows={4}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
+            <input
+              type="date"
+              required
+              value={formData.interaction_date}
+              onChange={(e) => setFormData({ ...formData, interaction_date: e.target.value })}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+            />
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="outline"
+              className="flex-1"
+            >
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1 bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] text-white"
+            >
+              Enregistrer
+            </Button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   );
 }
