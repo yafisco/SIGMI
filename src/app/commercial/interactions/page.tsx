@@ -257,8 +257,8 @@ export default function InteractionsPage() {
   });
 
   const stats = {
-    total: (interactions || []).length,
-    emails: (interactions || []).filter((i) => i.type === 'email').length,
+    total: (interactions || []).length + (envoisPlanifies.data?.length || 0) + (envoisEnvoyes.data?.length || 0),
+    emails: (interactions || []).filter((i) => i.type === 'email').length + (envoisEnvoyes.data?.length || 0),
     appels: (interactions || []).filter((i) => i.type === 'appel').length,
     reunions: (interactions || []).filter((i) => i.type === 'réunion').length,
     aEnvoyer: envoisPlanifies.data?.length || 0,
