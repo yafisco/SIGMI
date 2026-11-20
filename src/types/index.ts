@@ -906,3 +906,67 @@ export interface CreateSourceProspectInput {
 export interface UpdateSourceProspectInput extends Partial<CreateSourceProspectInput> {
   id: string;
 }
+
+// === CONTACTS EMAIL ===
+
+export interface ContactEmail {
+  id: string;
+  nom_entreprise: string;
+  email: string;
+  telephone?: string;
+  adresse?: string;
+  date: string;
+  secteur?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateContactEmailInput {
+  nom_entreprise: string;
+  email: string;
+  telephone?: string;
+  adresse?: string;
+  date?: string;
+  secteur?: string;
+}
+
+export interface UpdateContactEmailInput extends Partial<CreateContactEmailInput> {
+  id: string;
+}
+
+// === ENVOIS EMAIL ===
+
+export type EnvoiStatut = 'planifie' | 'envoye' | 'annule';
+
+export interface EnvoiEmail {
+  id: string;
+  contact_id: string;
+  contact_nom_entreprise?: string;
+  contact_email?: string;
+  modele_id?: string;
+  modele_nom?: string;
+  objet: string;
+  corps: string;
+  date_planifiee: string;
+  statut: EnvoiStatut;
+  date_envoi_reelle?: string;
+  auteur?: string;
+  auteur_nom?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateEnvoiEmailInput {
+  contact_id: string;
+  modele_id?: string;
+  objet: string;
+  corps: string;
+  date_planifiee: string;
+  statut?: EnvoiStatut;
+}
+
+export interface UpdateEnvoiEmailInput extends Partial<CreateEnvoiEmailInput> {
+  id: string;
+  date_envoi_reelle?: string;
+}

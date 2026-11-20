@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, DollarSign, Users, Briefcase, MessageSquare, Calendar, Plus, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Users, Briefcase, MessageSquare, Calendar, Mail, Send, Plus, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -92,6 +92,22 @@ export default function CommercialPage() {
       color: 'from-rose-500 to-rose-600',
       link: '/commercial/demandes-agrement',
     },
+    {
+      id: 'contacts-email',
+      title: 'Base e-mails',
+      description: 'Gérez votre base de contacts pour l\'e-mailing',
+      icon: Mail,
+      color: 'from-cyan-500 to-cyan-600',
+      link: '/commercial/contacts-email',
+    },
+    {
+      id: 'envois-email',
+      title: 'Envois d\'e-mails',
+      description: 'Planifiez et suivez vos envois d\'e-mails',
+      icon: Send,
+      color: 'from-teal-500 to-teal-600',
+      link: '/commercial/envois-email',
+    },
   ];
 
   return (
@@ -130,7 +146,7 @@ export default function CommercialPage() {
         </motion.div>
 
         {/* Navigation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {sections.map((section, index) => (
             <motion.div
               key={section.id}
