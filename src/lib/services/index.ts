@@ -20,3 +20,6 @@ export { rapportsService } from './rapports';
 export { facturesService } from './factures';
 export { produitsService } from './produits';
 export { ventesService } from './ventes';
+export { demandesAgrementService } from './demandesAgrement';
+export { piecesJointesService } from './piecesJointes';
+export { historiqueAgrementsService } from './historiqueAgrements';

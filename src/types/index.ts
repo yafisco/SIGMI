@@ -970,3 +970,74 @@ export interface UpdateEnvoiEmailInput extends Partial<CreateEnvoiEmailInput> {
   id: string;
   date_envoi_reelle?: string;
 }
+
+// === DEMANDES AGREMENT ===
+
+export type AgrementStatut = 'soumise' | 'en_examen' | 'accepte' | 'refusee';
+
+export interface DemandeAgrement {
+  id: string;
+  client_id?: string;
+  client_nom?: string;
+  structure_concernee?: string;
+  type_agrement?: string;
+  date_demande: string;
+  statut: AgrementStatut;
+  date_acceptation?: string;
+  date_refus?: string;
+  motif_refus?: string;
+  created_by?: string;
+  created_by_nom?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateDemandeAgrementInput {
+  client_id?: string;
+  structure_concernee?: string;
+  type_agrement?: string;
+  date_demande?: string;
+  statut?: AgrementStatut;
+}
+
+export interface UpdateDemandeAgrementInput extends Partial<CreateDemandeAgrementInput> {
+  id: string;
+  statut?: AgrementStatut;
+  date_acceptation?: string;
+  date_refus?: string;
+  motif_refus?: string;
+}
+
+// === HISTORIQUE STATUTS AGREMENTS ===
+
+export interface HistoriqueStatutAgrement {
+  id: string;
+  demande_id: string;
+  ancien_statut?: AgrementStatut;
+  nouveau_statut: AgrementStatut;
+  change_par?: string;
+  change_par_nom?: string;
+  commentaire?: string;
+  date_changement: string;
+}
+
+// === PIECES JOINTES ===
+
+export interface PieceJointe {
+  id: string;
+  demande_id: string;
+  nom_fichier: string;
+  type_mime: string;
+  taille_octets: number;
+  chemin_stockage: string;
+  uploaded_by?: string;
+  created_at: string;
+}
+
+export interface CreatePieceJointeInput {
+  demande_id: string;
+  nom_fichier: string;
+  type_mime: string;
+  taille_octets: number;
+  chemin_stockage: string;
+}
