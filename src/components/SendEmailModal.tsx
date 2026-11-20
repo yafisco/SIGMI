@@ -6,7 +6,7 @@ import { X, Mail, Send, Loader2, Paperclip, File, X as XIcon } from 'lucide-reac
 import { Button } from '@/components/ui/button';
 import { emailTemplatesService } from '@/lib/services';
 import { emailService } from '@/lib/services/emailService';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { EmailTemplate } from '@/types';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
@@ -30,6 +30,7 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentUrls, setAttachmentUrls] = useState<string[]>([]);
   const [uploadingAttachments, setUploadingAttachments] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     async function fetchTemplates() {
