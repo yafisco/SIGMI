@@ -145,10 +145,38 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
         attachments: attachmentUrls,
       });
 
+      // Créer ou trouver le contact dans contacts_email
+      let contactId = null;
+      try {
+        const { data: existingContacts } = await supabase
+          .from('contacts_email')
+          .select('id')
+          .eq('email', toEmail)
+          .maybeSingle();
+
+        if (existingContacts) {
+          contactId = existingContacts.id;
+        } else {
+          // Créer un nouveau contact si n'existe pas
+          const { data: newContact } = await supabase
+            .from('contacts_email')
+            .insert({
+              nom_entreprise: clientName || 'Inconnu',
+              email: toEmail,
+              date: new Date().toISOString().split('T')[0],
+            })
+            .select('id')
+            .single();
+          contactId = newContact.id;
+        }
+      } catch (error) {
+        console.error('Erreur lors de la gestion du contact:', error);
+      }
+
       // Créer l'enregistrement dans envois_email après envoi réussi
       try {
         await createEnvoi.mutateAsync({
-          contact_id: null, // À mapper si contact email existe
+          contact_id: contactId,
           modele_id: selectedTemplate.id,
           objet: selectedTemplate.sujet,
           corps: preview,
@@ -157,7 +185,6 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
         });
       } catch (error) {
         console.error('Erreur lors de l\'enregistrement dans envois_email:', error);
-        // Ne pas bloquer l'envoi si l'enregistrement échoue
       }
 
       await Swal.fire({
