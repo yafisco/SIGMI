@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Target, TrendingUp, DollarSign, Users, Briefcase, MessageSquare, Calendar, Mail, Send, Plus, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Users, Briefcase, MessageSquare, Calendar, Mail, Plus, ArrowRight, Sparkles, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CommercialPage() {
   const { user } = useAuth();
@@ -15,6 +15,7 @@ export default function CommercialPage() {
   useEffect(() => {
     async function fetchUserName() {
       if (user) {
+        const supabase = createClient();
         const { data, error } = await supabase
           .from('profiles')
           .select('prenom, nom, email')
@@ -63,7 +64,7 @@ export default function CommercialPage() {
     {
       id: 'interactions',
       title: 'Interactions',
-      description: 'Suivez vos communications avec clients et prospects',
+      description: 'Suivez vos communications et envois d\'e-mails',
       icon: MessageSquare,
       color: 'from-purple-500 to-purple-600',
       link: '/commercial/interactions',
@@ -99,14 +100,6 @@ export default function CommercialPage() {
       icon: Mail,
       color: 'from-cyan-500 to-cyan-600',
       link: '/commercial/contacts-email',
-    },
-    {
-      id: 'envois-email',
-      title: 'Envois d\'e-mails',
-      description: 'Planifiez et suivez vos envois d\'e-mails',
-      icon: Send,
-      color: 'from-teal-500 to-teal-600',
-      link: '/commercial/envois-email',
     },
   ];
 
@@ -146,7 +139,7 @@ export default function CommercialPage() {
         </motion.div>
 
         {/* Navigation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" key="commercial-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" key="commercial-grid">
           {sections.map((section, index) => (
             <motion.div
               key={section.id}
