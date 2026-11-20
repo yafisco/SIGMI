@@ -107,8 +107,15 @@ export default function ReunionsPage() {
       <PageHeader
         title="Réunions"
         description="Historique des réunions"
-        actionLabel="Nouvelle réunion"
-        onAction={() => setShowCreateModal(true)}
+        extraAction={
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient hover:scale-105 text-[#1D4ED8] shadow-lg shadow-[#D4AF37]/30 border-2 border-[#D4AF37] transition-all duration-300 font-semibold"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvelle réunion
+          </Button>
+        }
       />
 
       <motion.div
