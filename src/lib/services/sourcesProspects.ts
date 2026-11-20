@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+const supabase = createClient();
 import { SourceProspect, CreateSourceProspectInput, UpdateSourceProspectInput } from '@/types';
 
 export const sourcesProspectsService = {

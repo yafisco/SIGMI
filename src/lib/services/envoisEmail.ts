@@ -1,5 +1,7 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import type { EnvoiEmail, CreateEnvoiEmailInput, UpdateEnvoiEmailInput } from '@/types';
+
+const supabase = createClient();
 
 export const envoisEmailService = {
   // Récupérer tous les envois

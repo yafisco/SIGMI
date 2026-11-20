@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+const supabase = createClient();
 import { EmailTemplate, CreateEmailTemplateInput, UpdateEmailTemplateInput, EmailTemplateCategory } from '@/types';
 
 export const emailTemplatesService = {

@@ -1,5 +1,7 @@
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import type { ContactEmail, CreateContactEmailInput, UpdateContactEmailInput } from '@/types';
+
+const supabase = createClient();
 
 export const contactsEmailService = {
   // Récupérer tous les contacts

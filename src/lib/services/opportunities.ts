@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+const supabase = createClient();
 import { Opportunity, CreateOpportunityInput, UpdateOpportunityInput, OpportunityStage, Pole } from '@/types';
 
 export const opportunitiesService = {

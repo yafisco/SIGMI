@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
+const supabase = createClient();
 import { Task, CreateTaskInput, UpdateTaskInput, TaskStatus, TaskPriority, TaskRelatedType, Pole } from '@/types';
 
 export const tasksService = {
