@@ -311,6 +311,8 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   due_date?: string;
+  start_time?: string;
+  end_time?: string;
   completed_at?: string;
   related_type?: TaskRelatedType;
   related_id?: string;
@@ -328,6 +330,8 @@ export interface CreateTaskInput {
   status?: TaskStatus;
   priority: TaskPriority;
   due_date?: string;
+  start_time?: string;
+  end_time?: string;
   related_type?: TaskRelatedType;
   related_id?: string;
   assigned_to?: string;
