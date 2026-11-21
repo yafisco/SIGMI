@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Upload, Download, Search, Trash2, Edit, Mail, Building2, ArrowLeft, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export default function ContactsEmailPage() {
   const { contacts, createContact, deleteContact, importContacts } = useContactsEmail();
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredContacts = contacts.data?.filter(
     (contact) =>
@@ -129,10 +130,17 @@ export default function ContactsEmailPage() {
         actionLabel="Nouveau contact"
         extraAction={
           <div className="flex gap-2">
-            <Button onClick={(e) => { e.preventDefault(); handleImportCSV(); }} variant="outline">
+            <Button onClick={() => fileInputRef.current?.click()} variant="outline">
               <Upload className="w-4 h-4 mr-2" />
               Import CSV
             </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleImportCSV}
+              className="hidden"
+            />
             <Button onClick={handleExportCSV} variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Export CSV
