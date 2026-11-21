@@ -118,7 +118,13 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
       const pdfUrl = await onSendPDF();
       if (pdfUrl) {
         setAttachmentUrls([...attachmentUrls, pdfUrl]);
-        setAttachments([...attachments, new File([''], 'Document.pdf', { type: 'application/pdf' })]);
+        // Create a fake file object for display purposes
+        const fakeFile = {
+          name: 'Document.pdf',
+          type: 'application/pdf',
+          size: 0,
+        } as File;
+        setAttachments([...attachments, fakeFile]);
       }
     } catch (error) {
       await Swal.fire({
@@ -167,7 +173,9 @@ export function SendEmailModal({ isOpen, onClose, clientName = '', clientEmail =
             })
             .select('id')
             .single();
-          contactId = newContact.id;
+          if (newContact) {
+            contactId = newContact.id;
+          }
         }
       } catch (error) {
         console.error('Erreur lors de la gestion du contact:', error);

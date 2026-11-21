@@ -129,7 +129,7 @@ export default function ContactsEmailPage() {
         actionLabel="Nouveau contact"
         extraAction={
           <div className="flex gap-2">
-            <Button onClick={handleImportCSV} variant="outline">
+            <Button onClick={() => handleImportCSV()} variant="outline">
               <Upload className="w-4 h-4 mr-2" />
               Import CSV
             </Button>

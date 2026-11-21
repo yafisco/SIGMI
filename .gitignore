@@ -46,3 +46,5 @@ supabase/.temp/
 
 # comptes de test générés par scripts/test-roles.mjs
 scripts/.test-users.json
+
+.vercel

@@ -440,7 +440,7 @@ function CreateEnvoiModal({
     if (template) {
       setFormData({
         ...formData,
-        modele_id,
+        modeleId,
         objet: template.sujet,
         corps: template.corps,
       });
