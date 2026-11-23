@@ -29,7 +29,10 @@ export function PageHeader({
 
   const handleBack = () => {
     if (backHref) {
-      router.back();
+      router.push(backHref);
+    } else {
+      // Fallback si pas de backHref
+      router.push('/dashboard');
     }
   };
 
