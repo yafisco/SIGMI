@@ -7,8 +7,8 @@ export const clientsService = {
   async getAll(): Promise<Client[]> {
     const { data, error } = await supabase
       .from('clients')
-      .select('id, nom, email, telephone, ville, statut, raison_sociale')
-      .order('raison_sociale', { ascending: true });
+      .select('*')
+      .order('nom', { ascending: true });
 
     if (error) throw error;
     return data || [];

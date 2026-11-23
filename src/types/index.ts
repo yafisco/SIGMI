@@ -207,6 +207,7 @@ export type ClientStatut = 'prospect' | 'client' | 'inactif' | 'bloqué';
 export interface Client {
   id: string;
   nom: string;
+  raison_sociale?: string;
   structure?: string;
   secteur_activite?: string;
   interlocuteur?: string;
