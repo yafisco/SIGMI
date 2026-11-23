@@ -429,7 +429,7 @@ export default function ClientDetailPage() {
                   <FileText className="w-6 h-6 text-amber-600" />
                   <h3 className="text-lg font-bold text-slate-900">Documents</h3>
                 </div>
-                <Link href="/documents/create">
+                <Link href={`/documents/create?client_id=${id}`}>
                   <Button size="sm" className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8] border-2 border-[#D4AF37]">
                     <Plus className="w-4 h-4 mr-1" />
                     Nouveau

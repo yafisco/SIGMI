@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Plus, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface PageHeaderProps {
   title: string;
@@ -24,6 +25,14 @@ export function PageHeader({
   actionIcon = <Plus className="w-4 h-4" />,
   extraAction,
 }: PageHeaderProps) {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (backHref) {
+      router.back();
+    }
+  };
+
   return (
     <div
       className="bg-gradient-to-r from-[#0F172A] via-[#1D4ED8] to-[#2563EB] bg-[length:200%_auto] animate-gradient border-b border-white/10"
@@ -32,15 +41,14 @@ export function PageHeader({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {backHref && (
-              <Link href={backHref}>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 shadow-lg"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleBack}
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 shadow-lg"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
             )}
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">{title}</h1>

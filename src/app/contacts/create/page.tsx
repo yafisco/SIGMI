@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, Mail, Phone, Building2, Save, Briefcase, Sticker } from 'lucide-react';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function CreateContactPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -28,7 +29,12 @@ export default function CreateContactPage() {
 
   useEffect(() => {
     loadClients();
-  }, []);
+    // Pré-remplir client_id depuis l'URL
+    const clientId = searchParams.get('client_id');
+    if (clientId) {
+      setFormData(prev => ({ ...prev, client_id: clientId }));
+    }
+  }, [searchParams]);
 
   const loadClients = async () => {
     setLoadingClients(true);

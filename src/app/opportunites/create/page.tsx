@@ -33,6 +33,7 @@ function CreateOpportunityPageContent() {
     stage: 'nouveau' as OpportunityStage,
     expected_close_date: '',
     description: '',
+    client_id: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,7 +63,12 @@ function CreateOpportunityPageContent() {
     generateReference().then(ref => {
       setFormData(prev => ({ ...prev, reference: ref }));
     });
-  }, []);
+    // Pré-remplir client_id depuis l'URL
+    const clientId = searchParams.get('client_id');
+    if (clientId) {
+      setFormData(prev => ({ ...prev, client_id: clientId }));
+    }
+  }, [searchParams]);
 
   const getBackLink = () => {
     if (from === 'commercial') return '/commercial';
@@ -91,6 +97,7 @@ function CreateOpportunityPageContent() {
         stage: formData.stage,
         expected_close_date: formData.expected_close_date || undefined,
         description: formData.description,
+        client_id: formData.client_id || undefined,
       });
 
       await Swal.fire({

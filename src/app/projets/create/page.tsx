@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FolderKanban, Calendar, DollarSign, Users, Save, Flag, Building2 } from 'lucide-react';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import type { Pole, ProjectPriority, ProjectStatus } from '@/types';
 
 export default function CreateProjetPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: collaborateurs } = useData({ fetchFn: () => collaborateursService.getAll() });
   const [formData, setFormData] = useState({
     nom: '',
@@ -24,9 +25,17 @@ export default function CreateProjetPage() {
     date_fin_prevue: '',
     budget_estime: '',
     responsable_id: '',
+    client_id: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const clientId = searchParams.get('client_id');
+    if (clientId) {
+      setFormData(prev => ({ ...prev, client_id: clientId }));
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

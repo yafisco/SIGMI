@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Upload, Tag, Calendar, Save, FolderOpen, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import type { DocumentStatus, DocumentType } from '@/types';
 
 export default function CreateDocumentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
     nom: '',
@@ -22,10 +23,18 @@ export default function CreateDocumentPage() {
     statut: 'brouillon' as DocumentStatus,
     tags: '',
     file: null as File | null,
+    client_id: '',
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const clientId = searchParams.get('client_id');
+    if (clientId) {
+      setFormData(prev => ({ ...prev, client_id: clientId }));
+    }
+  }, [searchParams]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,6 +74,7 @@ export default function CreateDocumentPage() {
         fichier_nom,
         fichier_taille,
         uploaded_by: user.id,
+        client_id: formData.client_id || undefined,
       });
       router.push('/documents');
     } catch (err) {
