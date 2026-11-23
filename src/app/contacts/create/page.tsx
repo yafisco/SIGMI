@@ -208,7 +208,7 @@ export default function CreateContactPage() {
                     <option value="">Aucun client</option>
                     {clients.map((client) => (
                       <option key={client.id} value={client.id}>
-                        {client.raison_sociale}
+                        {client.raison_sociale || client.nom}
                       </option>
                     ))}
                   </select>

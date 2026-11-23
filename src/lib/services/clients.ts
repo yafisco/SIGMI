@@ -6,9 +6,9 @@ export const clientsService = {
   // Récupérer tous les clients avec détails (clients et prospects)
   async getAll(): Promise<Client[]> {
     const { data, error } = await supabase
-      .from('v_clients_detail')
-      .select('*')
-      .order('nom', { ascending: true });
+      .from('clients')
+      .select('id, nom, email, telephone, ville, statut, raison_sociale')
+      .order('raison_sociale', { ascending: true });
 
     if (error) throw error;
     return data || [];
