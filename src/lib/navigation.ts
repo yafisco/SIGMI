@@ -75,6 +75,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: '/commercial/prospection', label: 'Prospection', icon: Target, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/clients', label: 'Clients', icon: Users2, roles: ROLES_METIER },
+      { href: '/contacts', label: 'Contacts', icon: Users, roles: ROLES_METIER },
       { href: '/commercial/interactions', label: 'Interactions', icon: MessageSquare, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/commercial/calendrier', label: 'Calendrier', icon: Calendar, roles: ['direction_generale', 'commercial', 'responsable_pole'] },
       { href: '/taches', label: 'Tâches', icon: CheckSquare, roles: ROLES_METIER },
