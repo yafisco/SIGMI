@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FolderKanban, Calendar, DollarSign, Users, Save, Flag, Building2 } from 'lucide-react';
@@ -11,7 +11,7 @@ import { useData } from '@/hooks/useData';
 import { POLE_OPTIONS, PROJECT_PRIORITY_OPTIONS, PROJECT_STATUS_OPTIONS } from '@/lib/constants';
 import type { Pole, ProjectPriority, ProjectStatus } from '@/types';
 
-export default function CreateProjetPage() {
+function CreateProjetPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: collaborateurs } = useData({ fetchFn: () => collaborateursService.getAll() });
@@ -259,5 +259,15 @@ export default function CreateProjetPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateProjetPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-amber-50 flex items-center justify-center">
+      <p className="text-slate-600">Chargement...</p>
+    </div>}>
+      <CreateProjetPageContent />
+    </Suspense>
   );
 }

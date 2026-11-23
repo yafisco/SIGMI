@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Upload, Tag, Calendar, Save, FolderOpen, CheckCircle } from 'lucide-react';
@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { DOCUMENT_STATUS_OPTIONS, DOCUMENT_TYPE_OPTIONS } from '@/lib/constants';
 import type { DocumentStatus, DocumentType } from '@/types';
 
-export default function CreateDocumentPage() {
+function CreateDocumentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -250,5 +250,15 @@ export default function CreateDocumentPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateDocumentPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-amber-50 flex items-center justify-center">
+      <p className="text-slate-600">Chargement...</p>
+    </div>}>
+      <CreateDocumentPageContent />
+    </Suspense>
   );
 }

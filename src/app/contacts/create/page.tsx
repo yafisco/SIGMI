@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, Mail, Phone, Building2, Save, Briefcase, Sticker } from 'lucide-react';
@@ -9,7 +9,7 @@ import { contactsService, clientsService } from '@/lib/services';
 import type { ContactRole } from '@/types';
 import { errorMessage } from '@/lib/utils/errorHandler';
 
-export default function CreateContactPage() {
+function CreateContactPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
@@ -257,5 +257,15 @@ export default function CreateContactPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateContactPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-amber-50 flex items-center justify-center">
+      <p className="text-slate-600">Chargement...</p>
+    </div>}>
+      <CreateContactPageContent />
+    </Suspense>
   );
 }
