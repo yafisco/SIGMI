@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, Mail, Phone, Building2, Save, Briefcase, Sticker } from 'lucide-react';
 import Link from 'next/link';
-import { contactsService } from '@/lib/services';
+import { contactsService, clientsService } from '@/lib/services';
 import type { ContactRole } from '@/types';
 import { errorMessage } from '@/lib/utils/errorHandler';
 
@@ -23,6 +23,24 @@ export default function CreateContactPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [clients, setClients] = useState<any[]>([]);
+  const [loadingClients, setLoadingClients] = useState(false);
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  const loadClients = async () => {
+    setLoadingClients(true);
+    try {
+      const data = await clientsService.getAll();
+      setClients(data);
+    } catch (err) {
+      console.error('Erreur lors du chargement des clients:', err);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,13 +199,19 @@ export default function CreateContactPage() {
                     <Building2 className="w-4 h-4 text-[#1D4ED8]" />
                     Client associé
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.client_id}
                     onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 placeholder:text-slate-400 bg-white"
-                    placeholder="Nom du client"
-                  />
+                    disabled={loadingClients}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] transition-all hover:border-slate-300 text-slate-900 bg-white disabled:opacity-50"
+                  >
+                    <option value="">Aucun client</option>
+                    {clients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.raison_sociale}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
