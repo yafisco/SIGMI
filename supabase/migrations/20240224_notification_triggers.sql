@@ -29,7 +29,7 @@ BEGIN
   PERFORM create_notification_for_role(
     'interaction',
     'Nouvelle interaction',
-    'Une nouvelle interaction a été enregistrée par ' || COALESCE(NEW.created_by::text, 'un collaborateur'),
+    'Une nouvelle interaction a été enregistrée',
     NEW.id,
     'interaction'
   );
@@ -44,30 +44,10 @@ BEGIN
   PERFORM create_notification_for_role(
     'opportunity',
     'Nouvelle opportunité',
-    'Une nouvelle opportunité a été créée pour ' || COALESCE(
-      (SELECT raison_sociale FROM clients WHERE id = NEW.client_id),
-      'un client'
-    ),
+    'Une nouvelle opportunité a été créée : ' || NEW.name,
     NEW.id,
     'opportunity'
   );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger pour les tâches en retard
-CREATE OR REPLACE FUNCTION notify_overdue_task()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.statut = 'en_retard' AND (OLD.statut IS NULL OR OLD.statut != 'en_retard') THEN
-    PERFORM create_notification_for_role(
-      'task',
-      'Tâche en retard',
-      'La tâche "' || NEW.titre || '" est en retard',
-      NEW.id,
-      'task'
-    );
-  END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -79,14 +59,8 @@ AFTER INSERT ON interactions
 FOR EACH ROW
 EXECUTE FUNCTION notify_new_interaction();
 
-DROP TRIGGER IF EXISTS on_opportunity_insert ON opportunites;
+DROP TRIGGER IF EXISTS on_opportunity_insert ON opportunities;
 CREATE TRIGGER on_opportunity_insert
-AFTER INSERT ON opportunites
+AFTER INSERT ON opportunities
 FOR EACH ROW
 EXECUTE FUNCTION notify_new_opportunity();
-
-DROP TRIGGER IF EXISTS on_task_update ON taches;
-CREATE TRIGGER on_task_update
-AFTER UPDATE ON taches
-FOR EACH ROW
-EXECUTE FUNCTION notify_overdue_task();
