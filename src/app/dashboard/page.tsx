@@ -78,6 +78,8 @@ export default function DashboardPage() {
     clients: 0,
     documents: 0,
     budget: 0,
+    conversionRate: 0,
+    totalRevenue: 0,
   });
 
   const [urgentTasks, setUrgentTasks] = useState<Task[]>([]);
@@ -89,6 +91,9 @@ export default function DashboardPage() {
     { stage: 'Négociation', count: 0, value: 0, color: 'from-purple-400 to-purple-600' },
     { stage: 'Gagné', count: 0, value: 0, color: 'from-green-400 to-green-600' },
   ]);
+
+  const [polePerformance, setPolePerformance] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -177,6 +182,26 @@ export default function DashboardPage() {
           color: stage === 'nouveau' ? 'from-slate-400 to-slate-600' : stage === 'qualifié' ? 'from-blue-400 to-blue-600' : stage === 'proposition' ? 'from-amber-400 to-amber-600' : stage === 'négociation' ? 'from-purple-400 to-purple-600' : 'from-green-400 to-green-600',
         }));
 
+        // Calculer le taux de conversion
+        const wonOpps = oppsByStage?.filter(o => o.stage === 'gagné').length || 0;
+        const conversionRate = oppCount && oppCount > 0 ? parseFloat(((wonOpps / oppCount) * 100).toFixed(1)) : 0;
+
+        // Calculer le revenu total
+        const totalRevenue = oppsByStage?.filter(o => o.stage === 'gagné').reduce((sum, o) => sum + (o.amount || 0), 0) || 0;
+
+        // Récupérer les performances par pôle
+        const { data: poleProjects } = await supabase.from('projets').select('poles, statut');
+        const poles = ['ingénierie informatique', 'génie civil et BTP', 'agrobusiness', 'trading international', 'transition énergétique', 'centre d\'incubation et d\'impulsion des entreprises'];
+        const polePerf = poles.map(pole => ({
+          name: pole,
+          projects: poleProjects?.filter(p => p.poles?.includes(pole)).length || 0,
+          active: poleProjects?.filter(p => p.poles?.includes(pole) && p.statut === 'en cours').length || 0,
+        }));
+
+        // Récupérer les alertes
+        const { data: overdueTasks } = await supabase.from('tasks').select('*').eq('status', 'todo').lt('due_date', new Date().toISOString()).limit(5);
+        const { data: staleOpps } = await supabase.from('opportunities').select('*').eq('stage', 'nouveau').lt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()).limit(5);
+
         setStats({
           opportunities: oppCount || 0,
           pipelineValue,
@@ -186,7 +211,15 @@ export default function DashboardPage() {
           clients: clientsCount || 0,
           documents: docsCount || 0,
           budget: pipelineValue,
+          conversionRate: typeof conversionRate === 'string' ? parseFloat(conversionRate) : conversionRate,
+          totalRevenue,
         });
+
+        setPolePerformance(polePerf);
+        setAlerts([
+          ...(overdueTasks?.map(t => ({ type: 'task', message: `Tâche en retard: ${t.title}`, id: t.id })) || []),
+          ...(staleOpps?.map(o => ({ type: 'opportunity', message: `Opportunité stagnante: ${o.name}`, id: o.id })) || []),
+        ]);
 
         setUrgentTasks(urgentTasksData || []);
         setRecentActivities(interactionsData || []);
@@ -584,7 +617,7 @@ export default function DashboardPage() {
         return (
           <>
             {/* KPI Cards DG */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
               <StatCard
                 title="Opportunités"
                 value={stats.opportunities}
@@ -622,14 +655,65 @@ export default function DashboardPage() {
                 delay={0.2}
               />
               <StatCard
-                title="Collaborateurs"
-                value={stats.collaborators}
-                icon={Users}
+                title="Taux conversion"
+                value={stats.conversionRate.toString()}
+                icon={TrendingUp}
                 color="text-green-600"
                 bgColor="bg-gradient-to-br from-green-100 to-green-200"
                 delay={0.3}
+                suffix="%"
+              />
+              <StatCard
+                title="Revenu total"
+                value={formatAmount(stats.totalRevenue)}
+                icon={DollarSign}
+                color="text-emerald-600"
+                bgColor="bg-gradient-to-br from-emerald-100 to-emerald-200"
+                delay={0.4}
               />
             </div>
+
+            {/* Alertes */}
+            {alerts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.45 }}
+                className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                  <h3 className="text-lg font-bold text-red-900">Alertes et notifications</h3>
+                </div>
+                <div className="space-y-2">
+                  {alerts.map((alert, index) => (
+                    <div key={index} className="flex items-center gap-3 bg-white rounded-lg p-3">
+                      {alert.type === 'task' ? <Clock className="w-5 h-5 text-orange-600" /> : <Star className="w-5 h-5 text-amber-600" />}
+                      <p className="text-sm text-slate-700">{alert.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Performance par pôle */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.47 }}
+              className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 mb-8"
+            >
+              <h3 className="text-xl font-bold text-slate-900 mb-4">Performance par pôle</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {polePerformance.map((pole, index) => (
+                  <div key={index} className="bg-slate-50 rounded-xl p-4">
+                    <p className="text-xs text-slate-600 mb-2 truncate">{pole.name}</p>
+                    <p className="text-lg font-bold text-slate-900">{pole.projects}</p>
+                    <p className="text-xs text-green-600">{pole.active} actifs</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
 
             {/* Actions rapides DG */}
             <motion.div

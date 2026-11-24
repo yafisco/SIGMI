@@ -38,6 +38,7 @@ interface StatCardProps {
     isPositive: boolean;
   };
   delay?: number;
+  suffix?: string;
 }
 
 export function StatCard({
@@ -48,6 +49,7 @@ export function StatCard({
   bgColor = 'bg-blue-100',
   trend,
   delay = 0,
+  suffix,
 }: StatCardProps) {
   return (
     <motion.div
@@ -63,7 +65,7 @@ export function StatCard({
         <div className="flex items-center justify-between relative">
           <div>
             <p className="text-sm text-slate-600 font-medium">{title}</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+            <p className="text-2xl font-bold text-slate-900 mt-1">{value}{suffix}</p>
             {trend && (
               <p className={`text-sm mt-1 ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
                 {trend.isPositive ? '+' : ''}{trend.value}%
