@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, Edit, Trash2, Download, Building2, FolderKanban, Calendar, User, Tag } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, FileText, Edit, Trash2, Download, Building2, FolderKanban, Calendar, User, Tag, Users, Circle } from 'lucide-react';
 import { useSingleData } from '@/hooks/useData';
 import { documentsService } from '@/lib/services';
 import { PageHeader } from '@/components/PageHeader';
@@ -12,16 +13,38 @@ import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 import Link from 'next/link';
 import { errorMessage } from '@/lib/utils/errorHandler';
+import { useDocumentPresence } from '@/hooks/useDocumentPresence';
+import { supabase } from '@/lib/supabase';
 
 export default function DocumentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
-  const { data: document, loading, error } = useSingleData({
+  const { data: document, loading, error, refresh } = useSingleData({
     fetchFn: documentsService.getById,
     id,
   });
+
+  const { presence, isPresent } = useDocumentPresence(id);
+
+  // S'abonner aux changements du document en temps réel
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`document_${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, (payload: any) => {
+        if (payload.new?.id === id || payload.old?.id === id) {
+          refresh();
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, refresh]);
 
   const handleDelete = async () => {
     const result = await Swal.fire({
@@ -106,6 +129,28 @@ export default function DocumentDetailPage() {
         actionHref="/documents"
         actionLabel="Retour"
       />
+
+      {/* Indicateur de présence collaborateurs */}
+      {presence.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg"
+          >
+            <Users className="w-4 h-4 text-green-600" />
+            <span className="text-sm text-green-700">
+              {presence.length} collaborateur{presence.length > 1 ? 's' : ''} en ligne :
+            </span>
+            {presence.map((p) => (
+              <span key={p.user_id} className="flex items-center gap-1 text-sm text-green-700">
+                <Circle className="w-2 h-2 fill-green-500" />
+                {p.user_name}
+              </span>
+            ))}
+          </motion.div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header du document */}
