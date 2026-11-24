@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Menu, X, ChevronDown, ChevronRight, Building2, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getVisibleSections, type NavSection, type NavItem } from '@/lib/navigation';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 
 function SectionGroup({
   section,
@@ -106,7 +106,7 @@ export default function AppSidebar() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useNotificationContext();
 
   const sections = getVisibleSections(user?.role);
 

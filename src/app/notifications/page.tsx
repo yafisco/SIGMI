@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 import { Bell, Check, Trash2, Clock, Target, FileText, AlertCircle, CheckCheck, Sparkles, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 
 export default function NotificationsPage() {
   const { user } = useAuth();
-  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead, deleteNotification, deleteAll, refresh } = useNotifications();
+  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead, deleteNotification, deleteAll, refresh } = useNotificationContext();
   const [creatingTest, setCreatingTest] = useState(false);
 
   const showEmpty = !loading && (!error || error === '') && notifications.length === 0;
