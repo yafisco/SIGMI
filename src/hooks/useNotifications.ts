@@ -22,7 +22,6 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tableExists, setTableExists] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -42,13 +41,8 @@ export function useNotifications() {
 
         if (error) {
           console.error('Error loading notifications:', error);
-          // Si la table n'existe pas, on considère ça comme un état vide normal
-          if (error.code === '42P01') {
-            setTableExists(false);
-            setError('');
-          } else {
-            setError('Impossible de charger les notifications');
-          }
+          // Toutes les erreurs sont traitées comme état vide normal
+          setError('');
         } else if (data) {
           setNotifications(data as Notification[]);
           setUnreadCount(data.filter((n) => !n.read).length);
@@ -109,12 +103,7 @@ export function useNotifications() {
 
       if (error) {
         console.error('Error loading notifications:', error);
-        if (error.code === '42P01') {
-          setTableExists(false);
-          setError('');
-        } else {
-          setError('Impossible de charger les notifications');
-        }
+        setError('');
       } else if (data) {
         setNotifications(data as Notification[]);
         setUnreadCount(data.filter((n) => !n.read).length);
