@@ -52,6 +52,27 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger pour les tâches en retard
+CREATE OR REPLACE FUNCTION notify_overdue_task()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Si la date d'échéance est passée et la tâche n'est pas terminée
+  IF NEW.due_date < NOW()::date AND NEW.status != 'done' AND NEW.status != 'cancelled' THEN
+    -- Sur INSERT ou sur UPDATE si la date a changé
+    IF TG_OP = 'INSERT' OR (OLD.due_date IS NULL OR OLD.due_date >= NOW()::date) THEN
+      PERFORM create_notification_for_role(
+        'task',
+        'Tâche en retard',
+        'La tâche "' || NEW.title || '" est en retard',
+        NEW.id,
+        'task'
+      );
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Créer les triggers
 DROP TRIGGER IF EXISTS on_interaction_insert ON interactions;
 CREATE TRIGGER on_interaction_insert
@@ -64,3 +85,15 @@ CREATE TRIGGER on_opportunity_insert
 AFTER INSERT ON opportunities
 FOR EACH ROW
 EXECUTE FUNCTION notify_new_opportunity();
+
+DROP TRIGGER IF EXISTS on_task_insert ON tasks;
+CREATE TRIGGER on_task_insert
+AFTER INSERT ON tasks
+FOR EACH ROW
+EXECUTE FUNCTION notify_overdue_task();
+
+DROP TRIGGER IF EXISTS on_task_update ON tasks;
+CREATE TRIGGER on_task_update
+AFTER UPDATE ON tasks
+FOR EACH ROW
+EXECUTE FUNCTION notify_overdue_task();
