@@ -25,11 +25,27 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Trigger pour les nouvelles interactions
 CREATE OR REPLACE FUNCTION notify_new_interaction()
 RETURNS TRIGGER AS $$
+DECLARE
+  type_label TEXT;
 BEGIN
+  -- Déterminer le libellé du type en français
+  CASE NEW.type
+    WHEN 'email' THEN type_label := 'Email';
+    WHEN 'call' THEN type_label := 'Appel';
+    WHEN 'meeting' THEN type_label := 'Réunion';
+    WHEN 'visit' THEN type_label := 'Visite';
+    WHEN 'note' THEN type_label := 'Note';
+    ELSE type_label := NEW.type;
+  END CASE;
+
   PERFORM create_notification_for_role(
     'interaction',
-    'Nouvelle interaction',
-    'Une nouvelle interaction a été enregistrée',
+    'Nouvelle ' || type_label,
+    type_label || ' : ' || NEW.title ||
+    CASE
+      WHEN NEW.client_nom IS NOT NULL THEN ' - Client : ' || NEW.client_nom
+      ELSE ''
+    END,
     NEW.id,
     'interaction'
   );
@@ -44,7 +60,15 @@ BEGIN
   PERFORM create_notification_for_role(
     'opportunity',
     'Nouvelle opportunité',
-    'Une nouvelle opportunité a été créée : ' || NEW.name,
+    'Opportunité : ' || NEW.name ||
+    CASE
+      WHEN NEW.amount IS NOT NULL THEN ' - Montant : ' || NEW.amount::TEXT || ' FCFA'
+      ELSE ''
+    END ||
+    CASE
+      WHEN NEW.client_nom IS NOT NULL THEN ' - Client : ' || NEW.client_nom
+      ELSE ''
+    END,
     NEW.id,
     'opportunity'
   );
