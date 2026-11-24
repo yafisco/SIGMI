@@ -22,6 +22,7 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tableExists, setTableExists] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -43,6 +44,7 @@ export function useNotifications() {
           console.error('Error loading notifications:', error);
           // Si la table n'existe pas, on considère ça comme un état vide normal
           if (error.code === '42P01') {
+            setTableExists(false);
             setError('');
           } else {
             setError('Impossible de charger les notifications');
@@ -53,7 +55,8 @@ export function useNotifications() {
         }
       } catch (err) {
         console.error('Error loading notifications:', err);
-        setError('Impossible de charger les notifications');
+        // Erreur réseau ou autre, on traite comme état vide
+        setError('');
       } finally {
         setLoading(false);
       }
@@ -107,6 +110,7 @@ export function useNotifications() {
       if (error) {
         console.error('Error loading notifications:', error);
         if (error.code === '42P01') {
+          setTableExists(false);
           setError('');
         } else {
           setError('Impossible de charger les notifications');
@@ -117,7 +121,7 @@ export function useNotifications() {
       }
     } catch (err) {
       console.error('Error loading notifications:', err);
-      setError('Impossible de charger les notifications');
+      setError('');
     } finally {
       setLoading(false);
     }
