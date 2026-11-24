@@ -9,7 +9,7 @@ CREATE OR REPLACE FUNCTION create_notification_for_role(
 RETURNS VOID AS $$
 BEGIN
   INSERT INTO notifications (user_id, type, title, message, related_id, related_type)
-  SELECT 
+  SELECT
     u.id,
     p_type,
     p_title,
@@ -17,7 +17,7 @@ BEGIN
     p_related_id,
     p_related_type
   FROM auth.users u
-  JOIN profiles p ON u.id = p.user_id
+  JOIN profiles p ON u.id = p.id
   WHERE p.role IN ('direction_generale', 'commercial', 'responsable_pole', 'back_office');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
