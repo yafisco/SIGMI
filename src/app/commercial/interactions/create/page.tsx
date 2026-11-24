@@ -47,12 +47,7 @@ export default function CreateInteractionPage() {
         type: form.type,
         interaction_date: form.interaction_date,
         created_by: user?.id || '',
-        client_nom: form.client_nom,
-        client_email: form.client_email,
-        client_telephone: form.client_telephone,
-        client_ville: form.client_ville,
-        client_pays: form.client_pays,
-        client_secteur: form.client_secteur,
+        related_type: 'client',
       });
 
       await Swal.fire({

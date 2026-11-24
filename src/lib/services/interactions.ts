@@ -31,10 +31,13 @@ export const interactionsService = {
     return data;
   },
 
-  async create(interaction: Pick<Interaction, 'title' | 'type'> & Partial<Omit<Interaction, 'id' | 'created_at' | 'updated_at'>>) {
+  async create(interaction: Pick<Interaction, 'title' | 'type' | 'interaction_date' | 'created_by'> & Partial<Omit<Interaction, 'id' | 'created_at' | 'updated_at'>>) {
+    // Séparer les champs de la table des champs d'affichage client
+    const { client_nom, client_email, client_telephone, client_ville, client_pays, client_secteur, ...interactionData } = interaction;
+
     const { data, error } = await supabase
       .from('interactions')
-      .insert(interaction)
+      .insert(interactionData)
       .select()
       .single();
 

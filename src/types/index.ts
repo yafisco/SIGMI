@@ -390,7 +390,7 @@ export interface Interaction {
   interaction_date: string;
   created_by: string;
   created_by_nom?: string;
-  related_type: InteractionRelatedType;
+  related_type?: InteractionRelatedType;
   related_id?: string;
   client_nom?: string;
   client_email?: string;
@@ -416,7 +416,7 @@ export interface CreateInteractionInput {
   type: InteractionType;
   interaction_date: string;
   created_by: string;
-  related_type: InteractionRelatedType;
+  related_type?: InteractionRelatedType;
   related_id?: string;
   client_nom?: string;
   client_email?: string;
