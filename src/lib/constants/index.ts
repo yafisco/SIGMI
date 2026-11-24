@@ -101,26 +101,26 @@ export const TASK_PRIORITY_OPTIONS: Array<{ value: TaskPriority; label: string }
 // === INTERACTION ===
 export const INTERACTION_TYPE_COLORS: Record<InteractionType, string> = {
   email: 'bg-blue-100 text-blue-700',
-  appel: 'bg-green-100 text-green-700',
-  réunion: 'bg-purple-100 text-purple-700',
-  visite: 'bg-orange-100 text-orange-700',
-  autre: 'bg-gray-100 text-gray-700',
+  call: 'bg-green-100 text-green-700',
+  meeting: 'bg-purple-100 text-purple-700',
+  visit: 'bg-orange-100 text-orange-700',
+  note: 'bg-gray-100 text-gray-700',
 };
 
 export const INTERACTION_TYPE_LABELS: Record<InteractionType, string> = {
   email: 'Email',
-  appel: 'Appel',
-  réunion: 'Réunion',
-  visite: 'Visite',
-  autre: 'Autre',
+  call: 'Appel',
+  meeting: 'Réunion',
+  visit: 'Visite',
+  note: 'Autre',
 };
 
 export const INTERACTION_TYPE_OPTIONS: Array<{ value: InteractionType; label: string }> = [
   { value: 'email', label: 'Email' },
-  { value: 'appel', label: 'Appel' },
-  { value: 'réunion', label: 'Réunion' },
-  { value: 'visite', label: 'Visite' },
-  { value: 'autre', label: 'Autre' },
+  { value: 'call', label: 'Appel' },
+  { value: 'meeting', label: 'Réunion' },
+  { value: 'visit', label: 'Visite' },
+  { value: 'note', label: 'Autre' },
 ];
 
 // === PROJET ===

@@ -78,7 +78,7 @@ export default function AppelsPage() {
     }
   };
 
-  const appels = (interactions || []).filter((i) => i.type === 'appel');
+  const appels = (interactions || []).filter((i) => i.type === 'call');
   const stats = {
     total: appels.length,
     ceMois: appels.filter(i => {
@@ -293,7 +293,7 @@ function CreateAppelModal({ onClose, onSubmit }: { onClose: () => void; onSubmit
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'appel' as const,
+    type: 'call' as const,
     interaction_date: new Date().toISOString().split('T')[0],
     telephone: '',
     duree_minutes: '',

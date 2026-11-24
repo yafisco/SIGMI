@@ -13,10 +13,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 const typeOptions: Array<{ value: InteractionType; label: string; icon: any }> = [
   { value: 'email', label: 'Email', icon: Mail },
-  { value: 'appel', label: 'Appel', icon: Phone },
-  { value: 'réunion', label: 'Réunion', icon: Video },
-  { value: 'visite', label: 'Visite', icon: MapPin },
-  { value: 'autre', label: 'Autre', icon: Clock },
+  { value: 'call', label: 'Appel', icon: Phone },
+  { value: 'meeting', label: 'Réunion', icon: Video },
+  { value: 'visit', label: 'Visite', icon: MapPin },
+  { value: 'note', label: 'Autre', icon: Clock },
 ];
 
 export default function CreateInteractionPage() {
@@ -60,9 +60,10 @@ export default function CreateInteractionPage() {
 
       router.push('/commercial/interactions');
     } catch (error) {
+      console.error('Erreur création interaction:', error);
       await Swal.fire({
         title: 'Erreur',
-        text: 'Erreur lors de la création de l\'interaction.',
+        text: (error as any)?.message || 'Erreur lors de la création de l\'interaction.',
         icon: 'error',
         confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,

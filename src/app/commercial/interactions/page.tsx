@@ -21,36 +21,36 @@ import { useEmailTemplates } from '@/lib/api/useEmailTemplates';
 
 const typeLabels: Record<string, string> = {
   email: 'Email',
-  appel: 'Appel',
-  réunion: 'Réunion',
-  visite: 'Visite',
-  autre: 'Autre',
+  call: 'Appel',
+  meeting: 'Réunion',
+  visit: 'Visite',
+  note: 'Autre',
 };
 
 const typeIcons: Record<string, LucideIcon> = {
   email: Mail,
-  appel: Phone,
-  réunion: MessageSquare,
-  visite: Calendar,
-  autre: Clock,
+  call: Phone,
+  meeting: MessageSquare,
+  visit: Calendar,
+  note: Clock,
 };
 
 const typeColors: Record<string, string> = {
   email: 'bg-blue-100 text-blue-700',
-  appel: 'bg-green-100 text-green-700',
-  réunion: 'bg-purple-100 text-purple-700',
-  visite: 'bg-orange-100 text-orange-700',
-  autre: 'bg-slate-100 text-slate-700',
+  call: 'bg-green-100 text-green-700',
+  meeting: 'bg-purple-100 text-purple-700',
+  visit: 'bg-orange-100 text-orange-700',
+  note: 'bg-slate-100 text-slate-700',
 };
 
 const typeOptions: Array<{ value: InteractionType | 'all' | 'envois'; label: string }> = [
   { value: 'all', label: 'Tous les types' },
   { value: 'email', label: 'Emails' },
   { value: 'envois', label: 'Envois planifiés' },
-  { value: 'appel', label: 'Appels' },
-  { value: 'réunion', label: 'Réunions' },
-  { value: 'visite', label: 'Visites' },
-  { value: 'autre', label: 'Autre' },
+  { value: 'call', label: 'Appels' },
+  { value: 'meeting', label: 'Réunions' },
+  { value: 'visit', label: 'Visites' },
+  { value: 'note', label: 'Autre' },
 ];
 
 export default function InteractionsPage() {

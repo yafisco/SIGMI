@@ -378,7 +378,7 @@ export interface UpdateContactInput extends Partial<CreateContactInput> {
 }
 
 // === INTERACTION ===
-export type InteractionType = 'email' | 'appel' | 'réunion' | 'visite' | 'autre';
+export type InteractionType = 'email' | 'call' | 'meeting' | 'visit' | 'note';
 export type InteractionRelatedType = 'client' | 'opportunity' | 'projet' | 'collaborateur';
 export type AppelResultat = 'interesse' | 'a_rappeler' | 'pas_de_reponse' | 'refus' | 'accord' | 'autre';
 

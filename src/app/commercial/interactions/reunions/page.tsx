@@ -77,7 +77,7 @@ export default function ReunionsPage() {
     }
   };
 
-  const reunions = (interactions || []).filter((i) => i.type === 'réunion');
+  const reunions = (interactions || []).filter((i) => i.type === 'meeting');
   const stats = {
     total: reunions.length,
     ceMois: reunions.filter(i => {
@@ -287,7 +287,7 @@ function CreateReunionModal({ onClose, onSubmit }: { onClose: () => void; onSubm
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'réunion' as const,
+    type: 'meeting' as const,
     interaction_date: new Date().toISOString().split('T')[0],
     lieu: '',
     participants: '',
