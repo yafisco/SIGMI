@@ -7,6 +7,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function NotificationsPage() {
   const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead, deleteNotification, deleteAll } = useNotifications();
 
+  // Si erreur de table inexistante, on traite comme état vide
+  const showEmpty = !loading && (!error || error === '') && notifications.length === 0;
+  const showError = !loading && error && error !== '';
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'interaction': return Clock;
@@ -132,7 +136,7 @@ export default function NotificationsPage() {
               />
               <p className="text-slate-600 font-medium text-lg">Chargement des notifications...</p>
             </motion.div>
-          ) : error ? (
+          ) : showError ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -147,7 +151,7 @@ export default function NotificationsPage() {
                 Assurez-vous que la table notifications existe dans Supabase
               </p>
             </motion.div>
-          ) : notifications.length === 0 ? (
+          ) : showEmpty ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

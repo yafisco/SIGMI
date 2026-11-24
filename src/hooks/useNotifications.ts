@@ -22,6 +22,7 @@ export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [tableExists, setTableExists] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -41,7 +42,13 @@ export function useNotifications() {
 
         if (error) {
           console.error('Error loading notifications:', error);
-          setError('Impossible de charger les notifications');
+          // Si la table n'existe pas, on considère ça comme un état vide normal
+          if (error.code === '42P01') {
+            setTableExists(false);
+            setError('');
+          } else {
+            setError('Impossible de charger les notifications');
+          }
         } else if (data) {
           setNotifications(data as Notification[]);
           setUnreadCount(data.filter((n) => !n.read).length);
@@ -56,42 +63,44 @@ export function useNotifications() {
 
     loadNotifications();
 
-    // S'abonner aux changements de notifications
-    const channel = supabase
-      .channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
-        const newNotification = payload.new as Notification;
-        if (newNotification.user_id === user.id) {
-          setNotifications((prev) => [newNotification, ...prev].slice(0, 10));
-          setUnreadCount((prev) => prev + 1);
-        }
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications' }, (payload) => {
-        const updated = payload.new as Notification;
-        if (updated.user_id === user.id) {
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === updated.id ? updated : n))
-          );
-          if (updated.read) {
-            setUnreadCount((prev) => Math.max(0, prev - 1));
+    // S'abonner aux changements de notifications seulement si la table existe
+    if (tableExists) {
+      const channel = supabase
+        .channel('notifications')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+          const newNotification = payload.new as Notification;
+          if (newNotification.user_id === user.id) {
+            setNotifications((prev) => [newNotification, ...prev].slice(0, 10));
+            setUnreadCount((prev) => prev + 1);
           }
-        }
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'notifications' }, (payload) => {
-        const deleted = payload.old as Notification;
-        if (deleted.user_id === user.id) {
-          setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
-          if (!deleted.read) {
-            setUnreadCount((prev) => Math.max(0, prev - 1));
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications' }, (payload) => {
+          const updated = payload.new as Notification;
+          if (updated.user_id === user.id) {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === updated.id ? updated : n))
+            );
+            if (updated.read) {
+              setUnreadCount((prev) => Math.max(0, prev - 1));
+            }
           }
-        }
-      })
-      .subscribe();
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'notifications' }, (payload) => {
+          const deleted = payload.old as Notification;
+          if (deleted.user_id === user.id) {
+            setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
+            if (!deleted.read) {
+              setUnreadCount((prev) => Math.max(0, prev - 1));
+            }
+          }
+        })
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [user, tableExists]);
 
   const markAsRead = async (id: string) => {
     await supabase
