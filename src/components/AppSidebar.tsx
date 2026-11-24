@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, Menu, X, ChevronDown, ChevronRight, Building2 } from 'lucide-react';
+import { LogOut, Menu, X, ChevronDown, ChevronRight, Building2, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { getVisibleSections, type NavSection, type NavItem } from '@/lib/navigation';
+import { useNotifications } from '@/hooks/useNotifications';
 
 function SectionGroup({
   section,
@@ -105,6 +106,7 @@ export default function AppSidebar() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { unreadCount } = useNotifications();
 
   const sections = getVisibleSections(user?.role);
 
@@ -142,13 +144,23 @@ export default function AppSidebar() {
       </div>
 
       {/* User info */}
-      <div className="px-5 py-3 border-b border-white/10">
-        <p className="text-sm font-medium text-white truncate">
-          {user.prenom?.charAt(0).toUpperCase() + user.prenom?.slice(1)} {user.nom?.charAt(0).toUpperCase() + user.nom?.slice(1)}
-        </p>
-        <p className="text-xs text-[#D4AF37]/80 capitalize">
-          {user.role === 'commercial' ? 'Assistante Commerciale et Marketing' : user.role.replace(/_/g, ' ')}
-        </p>
+      <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-white truncate">
+            {user.prenom?.charAt(0).toUpperCase() + user.prenom?.slice(1)} {user.nom?.charAt(0).toUpperCase() + user.nom?.slice(1)}
+          </p>
+          <p className="text-xs text-[#D4AF37]/80 capitalize">
+            {user.role === 'commercial' ? 'Assistante Commerciale et Marketing' : user.role.replace(/_/g, ' ')}
+          </p>
+        </div>
+        <Link href="/notifications" className="relative">
+          <Bell className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
       </div>
 
       {/* Navigation */}

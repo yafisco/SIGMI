@@ -68,6 +68,15 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    key: 'notifications',
+    label: 'Notifications',
+    icon: Bell,
+    roles: ROLES_METIER,
+    items: [
+      { href: '/notifications', label: 'Toutes les notifications', icon: Bell, roles: ROLES_METIER },
+    ],
+  },
+  {
     key: 'commercial',
     label: 'Commercial',
     icon: Briefcase,
@@ -188,8 +197,9 @@ for (const section of NAV_SECTIONS) {
 ROUTE_ROLE_MAP['/commercial'] = ['direction_generale', 'commercial', 'responsable_pole'];
 ROUTE_ROLE_MAP['/gestion-commerciale'] = ['direction_generale', 'commercial', 'responsable_pole', 'back_office'];
 ROUTE_ROLE_MAP['/finance'] = ['direction_generale', 'finance_comptabilite'];
-ROUTE_ROLE_MAP['/marketing'] = ['direction_generale'];
+ROUTE_ROLE_MAP['marketing'] = ['direction_generale'];
 ROUTE_ROLE_MAP['/recrutement'] = ['direction_generale', 'back_office'];
+ROUTE_ROLE_MAP['/notifications'] = ROLES_METIER;
 // Sous-routes existantes
 ROUTE_ROLE_MAP['/clients/create'] = ROLES_METIER;
 ROUTE_ROLE_MAP['/opportunites/create'] = ['direction_generale', 'commercial', 'responsable_pole'];
