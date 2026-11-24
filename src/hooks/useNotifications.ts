@@ -133,6 +133,37 @@ export function useNotifications() {
       .eq('user_id', user?.id);
   };
 
+  const refresh = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading notifications:', error);
+        if (error.code === '42P01') {
+          setTableExists(false);
+          setError('');
+        } else {
+          setError('Impossible de charger les notifications');
+        }
+      } else if (data) {
+        setNotifications(data as Notification[]);
+        setUnreadCount(data.filter((n) => !n.read).length);
+      }
+    } catch (err) {
+      console.error('Error loading notifications:', err);
+      setError('Impossible de charger les notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     notifications,
     unreadCount,
@@ -142,5 +173,6 @@ export function useNotifications() {
     markAllAsRead,
     deleteNotification,
     deleteAll,
+    refresh,
   };
 }
