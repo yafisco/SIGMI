@@ -5,7 +5,7 @@ import { Bell, Check, Trash2, Clock, Target, FileText, AlertCircle } from 'lucid
 import { motion } from 'framer-motion';
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, deleteAll } = useNotifications();
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -37,14 +37,24 @@ export default function NotificationsPage() {
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Notifications</h1>
             <p className="text-slate-600">{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</p>
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="px-4 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-[#2563EB] transition-colors"
-            >
-              Tout marquer comme lu
-            </button>
-          )}
+          <div className="flex gap-2">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="px-4 py-2 bg-[#1D4ED8] text-white rounded-lg hover:bg-[#2563EB] transition-colors"
+              >
+                Tout marquer comme lu
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                onClick={deleteAll}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Tout supprimer
+              </button>
+            )}
+          </div>
         </div>
 
         {notifications.length === 0 ? (
@@ -60,7 +70,7 @@ export default function NotificationsPage() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                className={`p-4 rounded-xl border transition-all ${
                   notification.read
                     ? 'bg-white border-slate-200 opacity-60'
                     : 'bg-white border-[#D4AF37] shadow-lg'
@@ -79,9 +89,20 @@ export default function NotificationsPage() {
                       <h3 className={`font-semibold ${notification.read ? 'text-slate-600' : 'text-slate-900'}`}>
                         {notification.title}
                       </h3>
-                      <span className="text-xs text-slate-400">
-                        {new Date(notification.created_at).toLocaleString('fr-FR')}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400">
+                          {new Date(notification.created_at).toLocaleString('fr-FR')}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(notification.id);
+                          }}
+                          className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <p className={`text-sm ${notification.read ? 'text-slate-500' : 'text-slate-700'}`}>
                       {notification.message}

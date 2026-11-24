@@ -38,3 +38,12 @@ ON notifications FOR UPDATE
 TO authenticated
 USING (user_id = auth.uid())
 WITH CHECK (user_id = auth.uid());
+
+-- Les utilisateurs peuvent supprimer leurs notifications
+CREATE POLICY "Utilisateurs peuvent supprimer leurs notifications"
+ON notifications FOR DELETE
+TO authenticated
+USING (user_id = auth.uid());
+
+-- Activer Realtime pour les notifications
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;

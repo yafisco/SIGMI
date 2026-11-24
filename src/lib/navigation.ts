@@ -28,6 +28,7 @@ import {
   Users,
   ShieldCheck,
   Building2,
+  Bell,
   CheckSquare,
   Database,
 } from 'lucide-react';

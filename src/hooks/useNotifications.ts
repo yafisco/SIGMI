@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface Notification {
   id: string;
+  user_id: string;
   type: 'interaction' | 'opportunity' | 'task' | 'document' | 'alert';
   title: string;
   message: string;
@@ -81,8 +82,22 @@ export function useNotifications() {
       await supabase
         .from('notifications')
         .update({ read: true })
-        .in('id', `(${unreadIds.join(',')})`);
+        .in('id', unreadIds);
     }
+  };
+
+  const deleteNotification = async (id: string) => {
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+  };
+
+  const deleteAll = async () => {
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', user?.id);
   };
 
   return {
@@ -90,5 +105,7 @@ export function useNotifications() {
     unreadCount,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
+    deleteAll,
   };
 }

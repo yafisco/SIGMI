@@ -303,8 +303,17 @@ export default function InteractionsPage() {
       <PageHeader
         title="Interactions"
         description="Historique des interactions et envois d'e-mails"
-        actionHref="/commercial/interactions/create"
         actionLabel="Nouvelle interaction"
+        actionHref="/commercial/interactions/create"
+        extraAction={
+          <Button
+            onClick={() => setShowCreateEnvoiModal(true)}
+            className="bg-gradient-to-r from-[#D4AF37] to-[#B89B6E] text-[#1D4ED8] border-2 border-[#D4AF37]"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Planifier un envoi
+          </Button>
+        }
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
