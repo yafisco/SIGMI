@@ -20,22 +20,37 @@ export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     // Charger les notifications existantes
     const loadNotifications = async () => {
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      if (data) {
-        setNotifications(data as Notification[]);
-        setUnreadCount(data.filter((n) => !n.read).length);
+        if (error) {
+          console.error('Error loading notifications:', error);
+          setError('Impossible de charger les notifications');
+        } else if (data) {
+          setNotifications(data as Notification[]);
+          setUnreadCount(data.filter((n) => !n.read).length);
+        }
+      } catch (err) {
+        console.error('Error loading notifications:', err);
+        setError('Impossible de charger les notifications');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -58,6 +73,15 @@ export function useNotifications() {
             prev.map((n) => (n.id === updated.id ? updated : n))
           );
           if (updated.read) {
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+          }
+        }
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'notifications' }, (payload) => {
+        const deleted = payload.old as Notification;
+        if (deleted.user_id === user.id) {
+          setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
+          if (!deleted.read) {
             setUnreadCount((prev) => Math.max(0, prev - 1));
           }
         }
@@ -103,6 +127,8 @@ export function useNotifications() {
   return {
     notifications,
     unreadCount,
+    loading,
+    error,
     markAsRead,
     markAllAsRead,
     deleteNotification,

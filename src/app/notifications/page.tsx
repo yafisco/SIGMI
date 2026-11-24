@@ -5,7 +5,7 @@ import { Bell, Check, Trash2, Clock, Target, FileText, AlertCircle } from 'lucid
 import { motion } from 'framer-motion';
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, deleteAll } = useNotifications();
+  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead, deleteNotification, deleteAll } = useNotifications();
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -57,7 +57,17 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {notifications.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4 animate-pulse" />
+            <p className="text-slate-500">Chargement des notifications...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <Bell className="w-16 h-16 text-red-300 mx-auto mb-4" />
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="text-center py-16">
             <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500">Aucune notification</p>
