@@ -240,8 +240,26 @@ export default function DashboardPage() {
       })
       .subscribe();
 
+    // Realtime subscription pour les alertes (tâches)
+    const tasksChannel = supabase
+      .channel('dashboard-tasks')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    // Realtime subscription pour les alertes (opportunités)
+    const oppsChannel = supabase
+      .channel('dashboard-opportunities')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'opportunities' }, () => {
+        fetchDashboardData();
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(clientsChannel);
+      supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(oppsChannel);
     };
   }, [timeFilter]);
 
