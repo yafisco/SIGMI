@@ -655,6 +655,12 @@ function EnvoisList({
                 <Mail className="w-4 h-4 text-[#1D4ED8]" />
                 {envoi.contact_email}
               </div>
+              {envoi.contact_telephone && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Phone className="w-4 h-4 text-[#1D4ED8]" />
+                  {envoi.contact_telephone}
+                </div>
+              )}
               {envoi.modele_nom && (
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Paperclip className="w-4 h-4 text-[#1D4ED8]" />
@@ -665,6 +671,12 @@ function EnvoisList({
                 <span className="w-4 h-4 text-[#1D4ED8]">📅</span>
                 {envoi.date_planifiee}
               </div>
+              {(envoi.contact_ville || envoi.contact_pays) && (
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <MapPin className="w-4 h-4 text-[#1D4ED8]" />
+                  {[envoi.contact_ville, envoi.contact_pays].filter(Boolean).join(', ')}
+                </div>
+              )}
             </div>
 
             {showActions && (
