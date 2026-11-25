@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Search, Plus, MessageSquare, Calendar, User, Phone, Mail, Trash2, Clock, Building2, Send, Check, X, Paperclip } from 'lucide-react';
+import { Search, Plus, MessageSquare, Calendar, User, Phone, Mail, Trash2, Clock, Building2, Send, Check, X, Paperclip, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { interactionsService } from '@/lib/services';
@@ -465,15 +465,33 @@ export default function InteractionsPage() {
                       </motion.div>
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-slate-900 mb-1">{interaction.title}</h3>
-                        <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
-                          <Building2 className="w-4 h-4" />
-                          {interaction.client_nom || '-'}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Mail className="w-4 h-4" />
-                          {interaction.client_email || '-'}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                        {(interaction as any).clients?.nom && (
+                          <div className="border-t border-slate-200 pt-2 mt-2">
+                            <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
+                              <Building2 className="w-4 h-4 text-blue-600" />
+                              {(interaction as any).clients.nom}
+                            </div>
+                            {(interaction as any).clients.email && (
+                              <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
+                                <Mail className="w-3 h-3" />
+                                {(interaction as any).clients.email}
+                              </div>
+                            )}
+                            {(interaction as any).clients.telephone && (
+                              <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
+                                <Phone className="w-3 h-3" />
+                                {(interaction as any).clients.telephone}
+                              </div>
+                            )}
+                            {((interaction as any).clients.ville || (interaction as any).clients.pays) && (
+                              <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
+                                <MapPin className="w-3 h-3" />
+                                {[(interaction as any).clients.ville, (interaction as any).clients.pays].filter(Boolean).join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
                           <User className="w-4 h-4" />
                           {interaction.created_by_nom || '-'}
                         </div>

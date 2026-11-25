@@ -9,7 +9,8 @@ export const interactionsService = {
       .from('interactions')
       .select(`
         *,
-        collaborateurs:created_by(nom, prenom)
+        collaborateurs:created_by(nom, prenom),
+        clients:related_id(nom, email, telephone, ville, pays)
       `)
       .order('interaction_date', { ascending: false });
 
