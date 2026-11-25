@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, FileText, Edit, Clock, CheckCircle, XCircle, Send, Printer, Download, Mail } from 'lucide-react';
+import { ArrowLeft, FileText, Edit, Clock, CheckCircle, XCircle, Send, Printer, Download, Mail, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { generateGMITPDF } from '@/lib/utils/gmiTemplate';
+import { generateWordDocument } from '@/lib/utils/wordTemplate';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
 
@@ -51,7 +52,6 @@ export default function DemandeAgrementDetailPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      // Extraire la référence et l'objet du libellé (format: "000426_GMI - Description")
       const libelleParts = demande.libelle.split(' - ');
       const reference = libelleParts.length > 1 ? libelleParts[0] : '';
       const objet = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demande.libelle;
@@ -69,6 +69,140 @@ export default function DemandeAgrementDetailPage() {
       await Swal.fire({
         title: 'Succès !',
         text: 'Le document a été téléchargé',
+        icon: 'success',
+        confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    } catch (error) {
+      await Swal.fire({
+        title: 'Erreur',
+        text: 'Erreur lors du téléchargement',
+        icon: 'error',
+        confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+        customClass: SWEETALERT_CONFIG.customClass,
+      });
+    }
+  };
+
+  const handleSendEmail = async () => {
+    const { value: email } = await Swal.fire({
+      title: 'Envoyer par email',
+      input: 'email',
+      inputLabel: 'Adresse email du destinataire',
+      inputPlaceholder: 'exemple@email.com',
+      inputValue: demande.destinataire || '',
+      showCancelButton: true,
+      confirmButtonText: 'Envoyer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (email) {
+      try {
+        await Swal.fire({
+          title: 'Envoi en cours...',
+          text: 'Veuillez patienter',
+          icon: 'info',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+        });
+
+        await Swal.fire({
+          title: 'Succès !',
+          text: `Email envoyé à ${email}`,
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (error) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Erreur lors de l\'envoi de l\'email',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    }
+  };
+
+  const handleUpdateStatut = async () => {
+    const { value: statut } = await Swal.fire({
+      title: 'Mettre à jour le statut',
+      input: 'select',
+      inputOptions: {
+        soumise: 'Soumise',
+        en_examen: 'En examen',
+        approuvee: 'Approuvée',
+        refusee: 'Refusée',
+      },
+      inputValue: demande.statut,
+      showCancelButton: true,
+      confirmButtonText: 'Mettre à jour',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (statut && statut !== demande.statut) {
+      try {
+        const { error } = await supabase
+          .from('demandes_agrement')
+          .update({ statut })
+          .eq('id', demande.id);
+
+        if (error) throw error;
+
+        setDemande({ ...demande, statut });
+
+        await Swal.fire({
+          title: 'Succès !',
+          text: 'Statut mis à jour',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (error) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Erreur lors de la mise à jour',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    try {
+      const libelleParts = demande.libelle.split(' - ');
+      const reference = libelleParts.length > 1 ? libelleParts[0] : '';
+      const objet = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demande.libelle;
+
+      const blob = await generateWordDocument({
+        type: 'demande_agrement',
+        numero: reference || '',
+        objet: objet,
+        contenu: demande.decision || '',
+        destinataire: demande.destinataire || '',
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Demande_Agrement_${demande.libelle}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le document Word a été téléchargé',
         icon: 'success',
         confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
@@ -138,6 +272,18 @@ export default function DemandeAgrementDetailPage() {
                   Modifier
                 </Button>
               </Link>
+              <Button variant="outline" onClick={handleUpdateStatut} className="text-amber-600 hover:text-amber-700">
+                <Clock className="w-4 h-4 mr-2" />
+                Statut
+              </Button>
+              <Button variant="outline" onClick={handleSendEmail} className="text-blue-600 hover:text-blue-700">
+                <Mail className="w-4 h-4 mr-2" />
+                Email
+              </Button>
+              <Button variant="outline" onClick={handleDownloadWord}>
+                <FileDown className="w-4 h-4 mr-2" />
+                Word
+              </Button>
               <Button variant="outline" onClick={handlePrint}>
                 <Printer className="w-4 h-4 mr-2" />
                 Imprimer

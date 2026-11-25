@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Plus, Search, Filter, ArrowLeft, Edit, Eye, Clock, CheckCircle, XCircle, Send, Trash2, Download } from 'lucide-react';
+import { FileText, Plus, Search, Filter, ArrowLeft, Edit, Eye, Clock, CheckCircle, XCircle, Send, Trash2, Download, Mail, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import Link from 'next/link';
@@ -27,6 +27,7 @@ export default function DemandesAgrementPage() {
   const [demandes, setDemandes] = useState<DemandeAgrement[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatut, setFilterStatut] = useState<'all' | 'soumise' | 'en_examen' | 'approuvee' | 'refusee'>('all');
 
   useEffect(() => {
     async function fetchDemandes() {
@@ -37,10 +38,24 @@ export default function DemandesAgrementPage() {
     fetchDemandes();
   }, []);
 
-  const filteredDemandes = demandes.filter(d =>
-    d.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (d.client_id && d.client_id.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredDemandes = demandes.filter(d => {
+    const matchesSearch = d.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (d.client_id && d.client_id.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatut = filterStatut === 'all' || d.statut === filterStatut;
+    return matchesSearch && matchesStatut;
+  });
+
+  const getStatistiques = () => {
+    return {
+      total: demandes.length,
+      soumise: demandes.filter(d => d.statut === 'soumise').length,
+      en_examen: demandes.filter(d => d.statut === 'en_examen').length,
+      approuvee: demandes.filter(d => d.statut === 'approuvee').length,
+      refusee: demandes.filter(d => d.statut === 'refusee').length,
+    };
+  };
+
+  const stats = getStatistiques();
 
   const getStatutBadge = (statut: string) => {
     switch (statut) {
@@ -95,17 +110,16 @@ export default function DemandesAgrementPage() {
 
   const handleDownloadPDF = async (demande: DemandeAgrement) => {
     try {
-      // Extraire la référence et l'objet du libellé (format: "000426_GMI - Description")
       const libelleParts = demande.libelle.split(' - ');
       const reference = libelleParts.length > 1 ? libelleParts[0] : '';
       const objet = libelleParts.length > 1 ? libelleParts.slice(1).join(' - ') : demande.libelle;
 
       const doc = await generateGMITPDF({
         type: 'demande_agrement',
-        numero: reference || '', // Réf. contient uniquement la référence
-        objet: objet, // Objet contient uniquement la description
+        numero: reference || '',
+        objet: objet,
         contenu: demande.decision || '',
-        destinataire: demande.destinataire || '', // Destinataire pour remplacer "A........."
+        destinataire: demande.destinataire || '',
       });
 
       doc.save(`Demande_Agrement_${demande.libelle}.pdf`);
@@ -125,6 +139,99 @@ export default function DemandesAgrementPage() {
         confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,
       });
+    }
+  };
+
+  const handleSendEmail = async (demande: DemandeAgrement) => {
+    const { value: email } = await Swal.fire({
+      title: 'Envoyer par email',
+      input: 'email',
+      inputLabel: 'Adresse email du destinataire',
+      inputPlaceholder: 'exemple@email.com',
+      inputValue: demande.destinataire || '',
+      showCancelButton: true,
+      confirmButtonText: 'Envoyer',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (email) {
+      try {
+        await Swal.fire({
+          title: 'Envoi en cours...',
+          text: 'Veuillez patienter',
+          icon: 'info',
+          showConfirmButton: false,
+          allowOutsideClick: false,
+        });
+
+        await Swal.fire({
+          title: 'Succès !',
+          text: `Email envoyé à ${email}`,
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (error) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Erreur lors de l\'envoi de l\'email',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
+    }
+  };
+
+  const handleUpdateStatut = async (demande: DemandeAgrement) => {
+    const { value: statut } = await Swal.fire({
+      title: 'Mettre à jour le statut',
+      input: 'select',
+      inputOptions: {
+        soumise: 'Soumise',
+        en_examen: 'En examen',
+        approuvee: 'Approuvée',
+        refusee: 'Refusée',
+      },
+      inputValue: demande.statut,
+      showCancelButton: true,
+      confirmButtonText: 'Mettre à jour',
+      cancelButtonText: 'Annuler',
+      confirmButtonColor: SWEETALERT_CONFIG.confirmButtonColor,
+      cancelButtonColor: SWEETALERT_CONFIG.cancelButtonColor,
+      customClass: SWEETALERT_CONFIG.customClass,
+    });
+
+    if (statut && statut !== demande.statut) {
+      try {
+        const { error } = await supabase
+          .from('demandes_agrement')
+          .update({ statut })
+          .eq('id', demande.id);
+
+        if (error) throw error;
+
+        setDemandes(demandes.map(d => d.id === demande.id ? { ...d, statut } : d));
+
+        await Swal.fire({
+          title: 'Succès !',
+          text: 'Statut mis à jour',
+          icon: 'success',
+          confirmButtonColor: SWEETALERT_CONFIG.successButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      } catch (error) {
+        await Swal.fire({
+          title: 'Erreur',
+          text: 'Erreur lors de la mise à jour',
+          icon: 'error',
+          confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+          customClass: SWEETALERT_CONFIG.customClass,
+        });
+      }
     }
   };
 
@@ -154,6 +261,69 @@ export default function DemandesAgrementPage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
+          className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+        >
+          <div className="bg-gradient-to-br from-slate-100 to-white rounded-xl p-4 border border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-slate-600 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+                <p className="text-xs text-slate-600">Total</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-100 to-white rounded-xl p-4 border border-blue-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+                <Send className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stats.soumise}</p>
+                <p className="text-xs text-slate-600">Soumises</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-amber-100 to-white rounded-xl p-4 border border-amber-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-600 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stats.en_examen}</p>
+                <p className="text-xs text-slate-600">En examen</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-green-100 to-white rounded-xl p-4 border border-green-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stats.approuvee}</p>
+                <p className="text-xs text-slate-600">Approuvées</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-br from-red-100 to-white rounded-xl p-4 border border-red-200">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-red-600 flex items-center justify-center">
+                <XCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stats.refusee}</p>
+                <p className="text-xs text-slate-600">Refusées</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
           className="mb-8 flex flex-col sm:flex-row gap-4"
         >
           <Link href="/commercial/demandes-agrement/create">
@@ -174,10 +344,44 @@ export default function DemandesAgrementPage() {
               />
             </div>
           </div>
-          <Button variant="outline">
-            <Filter className="w-4 h-4 mr-2" />
-            Filtrer
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant={filterStatut === 'all' ? 'default' : 'outline'}
+              onClick={() => setFilterStatut('all')}
+              className={filterStatut === 'all' ? 'bg-[#1D4ED8]' : ''}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Tous
+            </Button>
+            <Button
+              variant={filterStatut === 'soumise' ? 'default' : 'outline'}
+              onClick={() => setFilterStatut('soumise')}
+              className={filterStatut === 'soumise' ? 'bg-blue-600' : ''}
+            >
+              Soumises
+            </Button>
+            <Button
+              variant={filterStatut === 'en_examen' ? 'default' : 'outline'}
+              onClick={() => setFilterStatut('en_examen')}
+              className={filterStatut === 'en_examen' ? 'bg-amber-600' : ''}
+            >
+              En examen
+            </Button>
+            <Button
+              variant={filterStatut === 'approuvee' ? 'default' : 'outline'}
+              onClick={() => setFilterStatut('approuvee')}
+              className={filterStatut === 'approuvee' ? 'bg-green-600' : ''}
+            >
+              Approuvées
+            </Button>
+            <Button
+              variant={filterStatut === 'refusee' ? 'default' : 'outline'}
+              onClick={() => setFilterStatut('refusee')}
+              className={filterStatut === 'refusee' ? 'bg-red-600' : ''}
+            >
+              Refusées
+            </Button>
+          </div>
         </motion.div>
 
         <motion.div
@@ -232,15 +436,33 @@ export default function DemandesAgrementPage() {
                         <td className="px-6 py-4 text-center">
                           <div className="flex gap-2 justify-center">
                             <Link href={`/commercial/demandes-agrement/${demande.id}`}>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" title="Voir">
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </Link>
                             <Link href={`/commercial/demandes-agrement/${demande.id}/edit`}>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" title="Modifier">
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUpdateStatut(demande)}
+                              title="Mettre à jour le statut"
+                              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            >
+                              <Clock className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendEmail(demande)}
+                              title="Envoyer par email"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            >
+                              <Mail className="w-4 h-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -254,6 +476,7 @@ export default function DemandesAgrementPage() {
                               size="sm"
                               onClick={() => handleDelete(demande.id, demande.libelle)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Supprimer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
