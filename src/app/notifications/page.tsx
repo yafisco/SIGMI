@@ -3,36 +3,15 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationContext } from '@/contexts/NotificationContext';
-import { Bell, Check, Trash2, Clock, Target, FileText, AlertCircle, CheckCheck, Sparkles, Plus } from 'lucide-react';
+import { Bell, Check, Trash2, Clock, Target, FileText, AlertCircle, CheckCheck, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
 
 export default function NotificationsPage() {
   const { user } = useAuth();
   const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead, deleteNotification, deleteAll, refresh } = useNotificationContext();
-  const [creatingTest, setCreatingTest] = useState(false);
 
   const showEmpty = !loading && (!error || error === '') && notifications.length === 0;
   const showError = !loading && error && error !== '';
-
-  const createTestNotification = async () => {
-    if (!user) return;
-    setCreatingTest(true);
-    try {
-      await supabase.from('notifications').insert({
-        user_id: user.id,
-        type: 'alert',
-        title: 'Notification de test',
-        message: 'Ceci est une notification de test pour vérifier le fonctionnement du système.',
-        read: false,
-      });
-      refresh();
-    } catch (err) {
-      console.error('Error creating test notification:', err);
-    } finally {
-      setCreatingTest(false);
-    }
-  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -105,16 +84,6 @@ export default function NotificationsPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={createTestNotification}
-                disabled={creatingTest}
-                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/20 backdrop-blur-sm text-white rounded-xl hover:bg-emerald-500/30 transition-all border border-emerald-400/30 disabled:opacity-50"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="font-medium">{creatingTest ? 'Création...' : 'Test'}</span>
-              </motion.button>
               {unreadCount > 0 && (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -189,7 +158,7 @@ export default function NotificationsPage() {
                 <Sparkles className="w-12 h-12 text-slate-400" />
               </motion.div>
               <h3 className="text-2xl font-bold text-slate-900 mb-2">Aucune notification</h3>
-              <p className="text-slate-500 mb-4">Cliquez sur "Test" pour créer une notification de test</p>
+              <p className="text-slate-500 mb-4">Vous n'avez aucune notification pour le moment</p>
             </motion.div>
           ) : (
             <motion.div
