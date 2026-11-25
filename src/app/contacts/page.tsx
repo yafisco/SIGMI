@@ -84,11 +84,12 @@ export default function ContactsPage() {
   };
 
   const filteredContacts = (contacts || []).filter((contact) => {
+    const clientName = (contact as any).clients?.nom || contact.client_nom;
     const matchesSearch =
       contact.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contact.client_nom?.toLowerCase().includes(searchTerm.toLowerCase());
+      clientName?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesRole = filterRole === 'all' || contact.role === filterRole;
 
@@ -248,10 +249,10 @@ export default function ContactsPage() {
                       {roleLabels[contact.role as ContactRole]}
                     </span>
                   </div>
-                  {contact.client_nom && (
+                  {(contact as any).clients?.nom && (
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Building2 className="w-4 h-4" />
-                      {contact.client_nom}
+                      {(contact as any).clients.nom}
                     </div>
                   )}
                 </div>
