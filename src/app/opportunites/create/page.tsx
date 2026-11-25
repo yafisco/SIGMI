@@ -110,11 +110,12 @@ function CreateOpportunityPageContent() {
 
       router.push('/opportunites');
     } catch (err) {
+      console.error('Erreur création opportunité:', err);
       setError(errorMessage(err, 'Erreur lors de la création de l\'opportunité'));
       setLoading(false);
       await Swal.fire({
         title: 'Erreur',
-        text: 'Erreur lors de la création de l\'opportunité.',
+        text: (err as any)?.message || 'Erreur lors de la création de l\'opportunité.',
         icon: 'error',
         confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
         customClass: SWEETALERT_CONFIG.customClass,

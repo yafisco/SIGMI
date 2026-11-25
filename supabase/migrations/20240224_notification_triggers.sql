@@ -56,7 +56,14 @@ $$ LANGUAGE plpgsql;
 -- Trigger pour les nouvelles opportunités
 CREATE OR REPLACE FUNCTION notify_new_opportunity()
 RETURNS TRIGGER AS $$
+DECLARE
+  client_name TEXT;
 BEGIN
+  -- Récupérer le nom du client depuis la table clients
+  SELECT nom INTO client_name
+  FROM clients
+  WHERE id = NEW.client_id;
+
   PERFORM create_notification_for_role(
     'opportunity',
     'Nouvelle opportunité',
@@ -66,7 +73,7 @@ BEGIN
       ELSE ''
     END ||
     CASE
-      WHEN NEW.client_nom IS NOT NULL THEN ' - Client : ' || NEW.client_nom
+      WHEN client_name IS NOT NULL THEN ' - Client : ' || client_name
       ELSE ''
     END,
     NEW.id,
