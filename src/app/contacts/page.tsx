@@ -249,29 +249,29 @@ export default function ContactsPage() {
                       {roleLabels[contact.role as ContactRole]}
                     </span>
                   </div>
-                  {(contact as any).clients?.nom && (
+                  {contact.client_nom && (
                     <>
                       <div className="border-t border-slate-200 pt-2 mt-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
                           <Building2 className="w-4 h-4 text-blue-600" />
-                          {(contact as any).clients.nom}
+                          {contact.client_nom}
                         </div>
-                        {(contact as any).clients.email && (
+                        {contact.client_email && (
                           <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
                             <Mail className="w-3 h-3" />
-                            {(contact as any).clients.email}
+                            {contact.client_email}
                           </div>
                         )}
-                        {(contact as any).clients.telephone && (
+                        {contact.client_telephone && (
                           <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
                             <Phone className="w-3 h-3" />
-                            {(contact as any).clients.telephone}
+                            {contact.client_telephone}
                           </div>
                         )}
-                        {((contact as any).clients.ville || (contact as any).clients.pays) && (
+                        {(contact.client_ville || contact.client_pays) && (
                           <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
                             <MapPin className="w-3 h-3" />
-                            {[(contact as any).clients.ville, (contact as any).clients.pays].filter(Boolean).join(', ')}
+                            {[contact.client_ville, contact.client_pays].filter(Boolean).join(', ')}
                           </div>
                         )}
                       </div>
