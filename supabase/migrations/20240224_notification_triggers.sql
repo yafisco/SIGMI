@@ -69,6 +69,10 @@ BEGIN
     'Nouvelle opportunité',
     'Opportunité : ' || NEW.name ||
     CASE
+      WHEN NEW.structure_concernee IS NOT NULL THEN ' - Entreprise : ' || NEW.structure_concernee
+      ELSE ''
+    END ||
+    CASE
       WHEN NEW.amount IS NOT NULL THEN ' - Montant : ' || NEW.amount::TEXT || ' FCFA'
       ELSE ''
     END ||

@@ -36,7 +36,7 @@ export const opportunitiesService = {
   // Créer une nouvelle opportunité
   async create(input: CreateOpportunityInput): Promise<Opportunity> {
     // Filtrer uniquement les champs qui existent dans la table
-    const { reference, structure_concernee, secteur_activite, pole_groupe_mi, intitule_besoin, source_opportunite, ...dbInput } = input;
+    const { reference, secteur_activite, pole_groupe_mi, intitule_besoin, source_opportunite, ...dbInput } = input;
 
     const { data, error } = await supabase
       .from('opportunities')
