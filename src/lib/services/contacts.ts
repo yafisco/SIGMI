@@ -9,7 +9,7 @@ export const contactsService = {
       .from('contacts')
       .select(`
         *,
-        clients:client_id(nom)
+        clients:client_id(nom, email, telephone, ville, pays)
       `)
       .order('created_at', { ascending: false });
 
