@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Search, Plus, Mail, Phone, Building2, User, MapPin, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -11,7 +11,6 @@ import { FilterBar } from '@/components/ui/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
-import { useData } from '@/hooks/useData';
 import Swal from 'sweetalert2';
 import { errorMessage } from '@/lib/utils/errorHandler';
 
@@ -41,11 +40,25 @@ const roleOptions: Array<{ value: ContactRole | 'all'; label: string }> = [
 ];
 
 export default function ContactsPage() {
-  const { data: contacts, loading, error, refresh } = useData({
-    fetchFn: () => contactsService.getAll(),
-  });
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<ContactRole | 'all'>('all');
+
+  const fetchContacts = async () => {
+    try {
+      const data = await contactsService.getAll();
+      setContacts(data || []);
+    } catch (err) {
+      console.error('Erreur lors du chargement des contacts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
 
   const handleDelete = async (id: string, name: string) => {
     const result = await Swal.fire({
@@ -63,7 +76,7 @@ export default function ContactsPage() {
     if (result.isConfirmed) {
       try {
         await contactsService.delete(id);
-        refresh();
+        await fetchContacts();
         await Swal.fire({
           title: 'Supprimé !',
           text: 'Le contact a été supprimé avec succès.',
@@ -84,7 +97,7 @@ export default function ContactsPage() {
   };
 
   const filteredContacts = (contacts || []).filter((contact) => {
-    const clientName = (contact as any).clients?.nom || contact.client_nom;
+    const clientName = (contact as any).clients?.nom;
     const matchesSearch =
       contact.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -113,19 +126,6 @@ export default function ContactsPage() {
             className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full mb-4"
           />
           <p className="text-slate-600 font-medium">Chargement des contacts...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <User className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-red-600 font-medium">{error}</p>
         </div>
       </div>
     );
@@ -249,29 +249,29 @@ export default function ContactsPage() {
                       {roleLabels[contact.role as ContactRole]}
                     </span>
                   </div>
-                  {contact.client_nom && (
+                  {(contact as any).clients?.nom && (
                     <>
                       <div className="border-t border-slate-200 pt-2 mt-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-1">
                           <Building2 className="w-4 h-4 text-blue-600" />
-                          {contact.client_nom}
+                          {(contact as any).clients.nom}
                         </div>
-                        {contact.client_email && (
+                        {(contact as any).clients.email && (
                           <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
                             <Mail className="w-3 h-3" />
-                            {contact.client_email}
+                            {(contact as any).clients.email}
                           </div>
                         )}
-                        {contact.client_telephone && (
+                        {(contact as any).clients.telephone && (
                           <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
                             <Phone className="w-3 h-3" />
-                            {contact.client_telephone}
+                            {(contact as any).clients.telephone}
                           </div>
                         )}
-                        {(contact.client_ville || contact.client_pays) && (
+                        {((contact as any).clients.ville || (contact as any).clients.pays) && (
                           <div className="flex items-center gap-2 text-sm text-slate-600 ml-6">
                             <MapPin className="w-3 h-3" />
-                            {[contact.client_ville, contact.client_pays].filter(Boolean).join(', ')}
+                            {[(contact as any).clients.ville, (contact as any).clients.pays].filter(Boolean).join(', ')}
                           </div>
                         )}
                       </div>
