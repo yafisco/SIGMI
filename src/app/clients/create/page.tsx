@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building2, MapPin, Mail, Phone, Save, Globe, TrendingUp, Users, User, Briefcase } from 'lucide-react';
+import { ArrowLeft, Building2, MapPin, Mail, Phone, Save, Globe, TrendingUp, Users, User, Briefcase, Upload, X } from 'lucide-react';
 import Link from 'next/link';
 import { useCreateClient } from '@/lib/api/useClients';
 import { clientSchema, ClientFormData } from '@/lib/schemas/clientSchema';
@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import Swal from 'sweetalert2';
 import { SWEETALERT_CONFIG } from '@/lib/constants';
+import { createClient as supabaseClient } from '@/lib/supabase/client';
 
 function CreateClientPageContent() {
   const router = useRouter();
@@ -23,6 +24,9 @@ function CreateClientPageContent() {
   const from = searchParams.get('from') || '';
   const statutParam = searchParams.get('statut') || '';
   const createClient = useCreateClient();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [isProspect, setIsProspect] = useState(statutParam === 'prospect');
 
@@ -37,6 +41,34 @@ function CreateClientPageContent() {
     if (workspace === 'commercial') return '/commercial';
     if (workspace === 'finance') return '/finance';
     return '/clients';
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLogoRemove = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+  };
+
+  const uploadLogo = async (file: File): Promise<string> => {
+    const supabase = supabaseClient();
+    const fileName = `${Date.now()}-${file.name}`;
+    const { data, error } = await supabase.storage.from('client-logos').upload(fileName, file);
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage.from('client-logos').getPublicUrl(fileName);
+    return publicUrl;
   };
 
   const {
@@ -59,11 +91,32 @@ function CreateClientPageContent() {
       nombre_employes: undefined,
       statut: isProspect ? 'prospect' : 'client',
       assigned_to: '',
+      logo_url: '',
     },
   });
 
   const onSubmit = async (data: ClientFormData) => {
     try {
+      let logoUrl = data.logo_url;
+
+      if (logoFile) {
+        setUploading(true);
+        try {
+          logoUrl = await uploadLogo(logoFile);
+        } catch (error) {
+          console.error('Erreur lors de l\'upload du logo:', error);
+          await Swal.fire({
+            title: 'Erreur',
+            text: 'Erreur lors de l\'upload du logo. Le client sera créé sans logo.',
+            icon: 'warning',
+            confirmButtonColor: SWEETALERT_CONFIG.errorButtonColor,
+            customClass: SWEETALERT_CONFIG.customClass,
+          });
+        } finally {
+          setUploading(false);
+        }
+      }
+
       await createClient.mutateAsync({
         nom: data.structure,
         structure: data.structure || undefined,
@@ -78,6 +131,7 @@ function CreateClientPageContent() {
         nombre_employes: data.nombre_employes,
         statut: data.statut,
         assigned_to: data.assigned_to || undefined,
+        logo_url: logoUrl || undefined,
       });
 
       await Swal.fire({
@@ -155,6 +209,49 @@ function CreateClientPageContent() {
                       placeholder="Ex: BCEAO"
                     />
                     {errors.structure && <p className="text-red-600 text-sm mt-1">{errors.structure.message}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-[#1D4ED8]" />
+                      Logo de l'entreprise
+                    </label>
+                    <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-[#1D4ED8] transition-colors">
+                      {logoPreview ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={logoPreview}
+                            alt="Logo preview"
+                            className="w-32 h-32 object-contain mx-auto rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleLogoRemove}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <Upload className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+                          <p className="text-slate-600 text-sm mb-2">Cliquez pour sélectionner un logo</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoChange}
+                            className="hidden"
+                            id="logo-upload"
+                          />
+                          <label
+                            htmlFor="logo-upload"
+                            className="inline-block px-4 py-2 bg-[#1D4ED8] text-white rounded-lg cursor-pointer hover:bg-[#2563EB] transition-colors"
+                          >
+                            Choisir un fichier
+                          </label>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,13 +431,13 @@ function CreateClientPageContent() {
               >
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploading}
                   className="w-full bg-gradient-to-r from-[#D4AF37] via-[#B89B6E] to-[#D4AF37] bg-[length:200%_auto] animate-gradient hover:scale-105 text-[#1D4ED8] shadow-xl shadow-[#D4AF37]/30 border-2 border-[#D4AF37] transition-all duration-300 font-semibold"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || uploading ? (
                     <>
                       <div className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                      Création...
+                      {uploading ? 'Upload du logo...' : 'Création...'}
                     </>
                   ) : (
                     <>

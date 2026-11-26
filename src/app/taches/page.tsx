@@ -12,7 +12,6 @@ import { FilterBar } from '@/components/ui/FilterBar';
 import { PageHeader } from '@/components/PageHeader';
 import { motion } from 'framer-motion';
 import { AnimatedCounter } from '@/components/AnimatedCounter';
-import { useData } from '@/hooks/useData';
 import { tasksService } from '@/lib/services';
 import Swal from 'sweetalert2';
 import { usePoleFilter } from '@/hooks/usePoleFilter';
@@ -20,20 +19,28 @@ import { errorMessage } from '@/lib/utils/errorHandler';
 
 export default function TachesPage() {
   const { pole: userPole, shouldFilter, user } = usePoleFilter();
-  const { data: tasks, loading, error, refresh } = useData({
-    fetchFn: () => tasksService.getAll(shouldFilter ? userPole || undefined : undefined),
-  });
-  const [localTasks, setLocalTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterPole, setFilterPole] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Synchroniser localTasks avec tasks
+  const fetchTasks = async () => {
+    try {
+      const data = await tasksService.getAll(shouldFilter ? userPole || undefined : undefined);
+      setTasks(data || []);
+    } catch (err) {
+      console.error('Erreur lors du chargement des tâches:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setLocalTasks(tasks || []);
-  }, [tasks]);
+    fetchTasks();
+  }, [userPole, shouldFilter]);
 
   // Masquer le filtre par pôle pour les non-administrateurs
   const canFilterByPole = user?.canSeeAllPoles || false;
@@ -54,7 +61,7 @@ export default function TachesPage() {
     if (result.isConfirmed) {
       try {
         await tasksService.delete(id);
-        setLocalTasks(localTasks.filter(t => t.id !== id));
+        await fetchTasks();
         await Swal.fire({
           title: 'Supprimé !',
           text: 'La tâche a été supprimée avec succès.',
@@ -77,7 +84,7 @@ export default function TachesPage() {
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
       await tasksService.update({ id, status: newStatus as any });
-      setLocalTasks(localTasks.map(t => t.id === id ? { ...t, status: newStatus as any } : t));
+      await fetchTasks();
       await Swal.fire({
         title: 'Statut mis à jour !',
         text: `La tâche est maintenant ${TASK_STATUS_LABELS[newStatus as keyof typeof TASK_STATUS_LABELS] || newStatus}.`,
@@ -101,7 +108,7 @@ export default function TachesPage() {
     return new Date(task.due_date) < new Date();
   };
 
-  const filteredTasks = localTasks.filter((task) => {
+  const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       (task.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (task.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -124,11 +131,11 @@ export default function TachesPage() {
   });
 
   const stats = {
-    total: localTasks.length,
-    todo: localTasks.filter((t) => t.status === 'todo').length,
-    in_progress: localTasks.filter((t) => t.status === 'in_progress').length,
-    done: localTasks.filter((t) => t.status === 'done').length,
-    overdue: localTasks.filter((t) => {
+    total: tasks.length,
+    todo: tasks.filter((t) => t.status === 'todo').length,
+    in_progress: tasks.filter((t) => t.status === 'in_progress').length,
+    done: tasks.filter((t) => t.status === 'done').length,
+    overdue: tasks.filter((t) => {
       if (!t.due_date || t.status === 'done') return false;
       return new Date(t.due_date) < new Date();
     }).length,
@@ -144,19 +151,6 @@ export default function TachesPage() {
             className="inline-block w-16 h-16 border-4 border-[#D4AF37] border-t-transparent rounded-full mb-4"
           />
           <p className="text-slate-600 font-medium">Chargement des tâches...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle2 className="w-8 h-8 text-red-600" />
-          </div>
-          <p className="text-red-600 font-medium">{error}</p>
         </div>
       </div>
     );

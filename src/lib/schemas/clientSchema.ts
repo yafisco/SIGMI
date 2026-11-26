@@ -18,6 +18,7 @@ export const clientSchema = z.object({
   nombre_employes: z.number().optional(),
   statut: z.enum(['prospect', 'client', 'inactif', 'bloqué'] as const),
   assigned_to: z.string().uuid().optional().or(z.literal('')),
+  logo_url: z.string().optional(),
 });
 
 export type ClientFormData = z.infer<typeof clientSchema>;

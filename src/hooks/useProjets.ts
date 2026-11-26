@@ -7,25 +7,25 @@ export function useProjets(poleFilter?: Pole) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchProjets() {
-      try {
-        setLoading(true);
-        const data = await projetsService.getAll(poleFilter);
-        setProjets(data);
-        setError(null);
-      } catch (err) {
-        setError('Erreur lors du chargement des projets');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchProjets = async () => {
+    try {
+      setLoading(true);
+      const data = await projetsService.getAll(poleFilter);
+      setProjets(data);
+      setError(null);
+    } catch (err) {
+      setError('Erreur lors du chargement des projets');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchProjets();
   }, [poleFilter]);
 
-  return { projets, loading, error };
+  return { projets, loading, error, refresh: fetchProjets };
 }
 
 export function useProjetStats() {

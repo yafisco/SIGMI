@@ -223,9 +223,17 @@ function ClientsPageContent() {
                     <motion.div
                       whileHover={{ rotate: 360, scale: 1.1 }}
                       transition={{ duration: 0.6 }}
-                      className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+                      className="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden"
                     >
-                      <Building2 className="w-7 h-7 text-blue-600" />
+                      {(client as any).logo_url ? (
+                        <img
+                          src={(client as any).logo_url}
+                          alt={client.nom}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <Building2 className="w-7 h-7 text-blue-600" />
+                      )}
                     </motion.div>
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-slate-900 mb-1">{client.nom}</h3>

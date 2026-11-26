@@ -85,7 +85,7 @@ const priorityOptions: Array<{ value: ProjectPriority | 'tous'; label: string }>
 
 export default function ProjetsPage() {
   const { pole: userPole, shouldFilter, user } = usePoleFilter();
-  const { projets, loading, error } = useProjets(shouldFilter ? userPole || undefined : undefined);
+  const { projets, loading, error, refresh } = useProjets(shouldFilter ? userPole || undefined : undefined);
   const { stats: statsData, loading: statsLoading } = useProjetStats();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPole, setFilterPole] = useState<Pole | 'tous'>('tous');
@@ -111,6 +111,7 @@ export default function ProjetsPage() {
     if (result.isConfirmed) {
       try {
         await projetsService.delete(id);
+        await refresh();
         await Swal.fire({
           title: 'Supprimé !',
           text: 'Le projet a été supprimé avec succès.',

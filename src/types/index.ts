@@ -222,6 +222,7 @@ export interface Client {
   statut: ClientStatut;
   assigned_to?: string;
   assigned_to_nom?: string;
+  logo_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -241,6 +242,7 @@ export interface CreateClientInput {
   nombre_employes?: number;
   statut: ClientStatut;
   assigned_to?: string;
+  logo_url?: string;
 }
 
 export interface UpdateClientInput extends Partial<CreateClientInput> {
